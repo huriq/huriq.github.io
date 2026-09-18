@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>صفحة حمودي الخاصة</title>
+    
+    <!-- مكتبة فك وتشفير النصوص -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    
+    <!-- خط تجول الأنيق -->
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap');
+        
+        :root {
+            --bg-color: #121212;
+            --box-bg: #1e1e1e;
+            --primary: #d4af37; /* لون ذهبي يليق بلمسة الخطاط */
+            --text-color: #f1f1f1;
+            --error: #ff4d4d;
+        }
+
+        body {
+            font-family: 'Tajawal', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            background-color: var(--box-bg);
+            padding: 40px;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            width: 90%;
+            max-width: 450px;
+            text-align: center;
+            transition: all 0.3s ease;
+            border: 1px solid #333;
+        }
+
+        h2 {
+            color: var(--primary);
+            margin-top: 0;
+            font-weight: 700;
+        }
+
+        p {
+            font-size: 1.1rem;
+            margin-bottom: 25px;
+            color: #bbb;
+        }
+
+        input, textarea {
+            width: 100%;
+            padding: 12px 15px;
+            margin-bottom: 20px;
+            background-color: #2a2a2a;
+            border: 1px solid #444;
+            color: white;
+            border-radius: 8px;
+            font-family: 'Tajawal', sans-serif;
+            font-size: 1rem;
+            box-sizing: border-box;
+            outline: none;
+            transition: border 0.3s;
+        }
+
+        input:focus, textarea:focus {
+            border-color: var(--primary);
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            background-color: var(--primary);
+            color: #121212;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: 700;
+            font-family: 'Tajawal', sans-serif;
+            cursor: pointer;
+            transition: transform 0.2s, background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #ebd075;
+            transform: translateY(-2px);
+        }
+
+        #error-msg {
+            color: var(--error);
+            font-weight: 500;
+            display: none;
+            margin-top: 15px;
+            font-size: 1rem;
+        }
+
+        /* ستايل المحتوى من ينفتح */
+        #secret-content-box {
+            display: none;
+            max-width: 800px;
+            text-align: right;
+            line-height: 1.8;
+            font-size: 1.2rem;
+            padding: 30px;
+        }
+
+        #secret-content-box img {
+            max-width: 100%;
+            border-radius: 8px;
+            margin-top: 15px;
+        }
+
+        #admin-box {
+            display: none;
+            max-width: 600px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- واجهة الزوار (طلب الباسورد) -->
+    <div class="container" id="login-box">
+        <h2>🔒 الباب مقفول</h2>
+        <p>اكتب الرمز السري حتى تگدر تفوت وتشوف المحتوى</p>
+        <input type="password" id="passcode" placeholder="دخل الرمز هنا..." onkeypress="handleEnter(event)">
+        <button onclick="unlockContent()">دخول</button>
+        <p id="error-msg">الرمز غلط يا حلو، حاول مرة ثانية!</p>
+    </div>
+
+    <!-- واجهة عرض المحتوى السري -->
+    <div class="container" id="secret-content-box">
+        <div id="decrypted-content"></div>
+    </div>
+
+    <!-- واجهة الأدمن السرية (للتشفير) -->
+    <div class="container" id="admin-box">
+        <h2>🛠️ واجهة التشفير (خاصة بيك حمودي)</h2>
+        <p>اكتب النص او كود الـ HTML اللي تريد تنشره، واختار باسورد</p>
+        
+        <textarea id="raw-content" rows="6" placeholder="اكتب مقالاتك، نصوصك، أو صورك هنا (تگدر تستخدم HTML)..."></textarea>
+        <input type="text" id="admin-passcode" placeholder="الباسورد اللي راح تنطيه للناس...">
+        <button onclick="encryptMyData()">شفر المحتوى هسة</button>
+        
+        <p style="margin-top: 20px; font-size: 0.9rem;">النتيجة المشفرة (انسخها ولصقها بالكود مالتك):</p>
+        <textarea id="encrypted-result" rows="4" readonly placeholder="الكود المشفر راح يطلع هنا..."></textarea>
+    </div>
+
+    <script>
+        // ==========================================
+        // حمودي، هنا راح تحط النص المشفر مالتك!
+        // حالياً خليته فارغ. من تولد كود مشفر جديد من واجهة الأدمن، جيبه ولصقه هنا بين الكوتيشنات.
+        // ==========================================
+        const myEncryptedData = ""; // جيب الكود من واجهة الادمن ولصقه هنا بمكان الفراغ
+
+        // دالة التحقق من الرابط (هل هو الزائر العادي لو أنت تريد تشفر؟)
+        window.onload = function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.has('admin')) {
+                // إذا الرابط بي ?admin=1 راح نخفي واجهة الدخول ونطلع واجهة التشفير
+                document.getElementById('login-box').style.display = 'none';
+                document.getElementById('admin-box').style.display = 'block';
+            }
+        };
+
+        // دالة فك التشفير وعرض المحتوى للزوار
+        function unlockContent() {
+            const pass = document.getElementById('passcode').value;
+            const errorMsg = document.getElementById('error-msg');
+            
+            if (!pass) {
+                errorMsg.innerText = "اكتب الرمز أول شي!";
+                errorMsg.style.display = 'block';
+                return;
+            }
+
+            if (!myEncryptedData) {
+                errorMsg.innerText = "حمودي بعده ممخلي أي محتوى مشفر بالصفحة!";
+                errorMsg.style.display = 'block';
+                return;
+            }
+
+            try {
+                // محاولة فك التشفير
+                const bytes = CryptoJS.AES.decrypt(myEncryptedData, pass);
+                const originalText = bytes.toString(CryptoJS.enc.Utf8);
+
+                if (originalText.length > 0) {
+                    // إذا الرمز صح، نخفي واجهة الدخول ونعرض المحتوى
+                    document.getElementById('login-box').style.display = 'none';
+                    document.getElementById('secret-content-box').style.display = 'block';
+                    document.getElementById('decrypted-content').innerHTML = originalText;
+                } else {
+                    // إذا الرمز غلط بس ما طلع إيرور برمجي
+                    errorMsg.innerText = "الرمز غلط يا حلو، حاول مرة ثانية!";
+                    errorMsg.style.display = 'block';
+                }
+            } catch (e) {
+                // إذا صار خطأ بفك التشفير (بسبب رمز غلط)
+                errorMsg.innerText = "الرمز غلط يا حلو، حاول مرة ثانية!";
+                errorMsg.style.display = 'block';
+            }
+        }
+
+        // دالة التشفير (الخاصة بيك)
+        function encryptMyData() {
+            const rawContent = document.getElementById('raw-content').value;
+            const adminPass = document.getElementById('admin-passcode').value;
+            
+            if (!rawContent || !adminPass) {
+                alert("لازم تكتب المحتوى والباسورد اثنينهم!");
+                return;
+            }
+
+            // التشفير باستخدام AES
+            const cipherText = CryptoJS.AES.encrypt(rawContent, adminPass).toString();
+            document.getElementById('encrypted-result').value = cipherText;
+        }
+
+        // حتى الزائر يگدر يدوس انتر بدل ما يضغط على الزر
+        function handleEnter(event) {
+            if (event.key === 'Enter') {
+                unlockContent();
+            }
+        }
+    </script>
+</body>
+</html>
