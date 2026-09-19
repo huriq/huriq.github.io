@@ -20,6 +20,7 @@
             --text-muted: #94a3b8;
             --border: rgba(0, 210, 255, 0.2);
             --error: #f43f5e;
+            --warning: #f59e0b;
             --success: #10b981;
         }
 
@@ -217,6 +218,70 @@
             border: 1px solid rgba(255,255,255,0.05);
         }
 
+        /* لوحة إدارة المنشورات (داخل وضع الأدمن) */
+        .manage-section {
+            margin-top: 35px;
+            border-top: 1px solid rgba(148, 163, 184, 0.2);
+            padding-top: 25px;
+            text-align: right;
+        }
+
+        .manage-item {
+            background: rgba(2, 6, 23, 0.6);
+            border: 1px solid rgba(148, 163, 184, 0.15);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .manage-info {
+            flex-grow: 1;
+            overflow: hidden;
+        }
+
+        .manage-text {
+            font-size: 0.95rem;
+            color: var(--text-main);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            margin-bottom: 4px;
+        }
+
+        .manage-actions {
+            display: flex;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+
+        .btn-edit {
+            background: rgba(245, 158, 11, 0.15);
+            color: var(--warning);
+            border: 1px solid rgba(245, 158, 11, 0.4);
+            padding: 6px 14px;
+            font-size: 0.85rem;
+            border-radius: 8px;
+            width: auto;
+            box-shadow: none;
+        }
+        .btn-edit:hover { background: var(--warning); color: #000; box-shadow: none; }
+
+        .btn-delete {
+            background: rgba(244, 63, 94, 0.15);
+            color: var(--error);
+            border: 1px solid rgba(244, 63, 94, 0.4);
+            padding: 6px 14px;
+            font-size: 0.85rem;
+            border-radius: 8px;
+            width: auto;
+            box-shadow: none;
+        }
+        .btn-delete:hover { background: var(--error); color: #fff; box-shadow: none; }
+
         .loader {
             border: 4px solid rgba(255,255,255,0.1);
             border-top: 4px solid var(--primary);
@@ -246,13 +311,16 @@
             <p class="error-text" id="login-error">رمز المرور غير صحيح!</p>
         </div>
 
-        <!-- لوحة التحكم (تظهر فقط عند إضافة ?admin=1 بالرابط) -->
+        <!-- لوحة التحكم المتكاملة (تظهر عند إضافة ?admin=1 بالرابط) -->
         <div class="admin-card" id="admin-panel" style="display: none;">
-            <h2>🛠️ لوحة التحكم والإدارة</h2>
-            <p style="color: var(--text-muted); margin-bottom: 20px;">انشر محتوى جديد ووجهه للقسم المناسب</p>
+            <h2>🛠️ لوحة التحكم والإدارة الذكية</h2>
+            <p style="color: var(--text-muted); margin-bottom: 20px;">انشر، عدل، أو احذف أي محتوى بضغطة زر واحدة</p>
             
             <input type="password" id="gh-token" placeholder="GitHub Personal Access Token...">
             
+            <!-- حقل مخفي لحفظ معرف التعديل إذا كنا نعدل منشور حالي -->
+            <input type="hidden" id="edit-index" value="-1">
+
             <select id="post-type">
                 <option value="text">📄 منشور نصي (كتابات ونصوص)</option>
                 <option value="image">🖼️ منشور صور (معرض الصور)</option>
@@ -261,11 +329,20 @@
             <textarea id="post-content" rows="4" placeholder="اكتب محتوى المنشور هنا..."></textarea>
             <input type="text" id="post-image-url" placeholder="رابط الصورة المباشر (اختياري للنصوص، إلزامي للصور)...">
             
-            <button id="publish-btn" onclick="createNewPost()">🚀 نشر المحتوى فوراً</button>
+            <button id="publish-btn" onclick="saveOrUpdatePost()">🚀 نشر المحتوى فوراً</button>
+            <button id="cancel-edit-btn" onclick="cancelEdit()" style="display:none; background:#334155; color:#fff; margin-top:10px;">إلغاء التعديل</button>
+            
             <p id="admin-feedback" style="margin-top: 15px; font-weight: 700;"></p>
+
+            <!-- قسم إدارة وتعديل وحذف المنشورات الحالية -->
+            <div class="manage-section">
+                <h3 style="font-family: 'Tajawal', sans-serif; color: var(--primary); margin-bottom: 15px; font-size: 1.2rem;"> إدارة المنشورات الحالية</h3>
+                <div class="loader" id="admin-loader"></div>
+                <div id="manage-posts-list"></div>
+            </div>
         </div>
 
-        <!-- قسم العرض والتبويبات -->
+        <!-- قسم العرض والتبويبات (للزوار) -->
         <div id="content-area">
             <div class="tabs-container">
                 <button class="tab-btn active" onclick="switchTab('all', this)">الكل</button>
@@ -281,7 +358,7 @@
     <script>
         const GITHUB_USERNAME = 'huriq'; 
         const REPO_NAME = 'huriq.github.io';
-        const PAGE_PASSWORD = "123"; // تقدر تبدله بالرمز اللي يعجبك
+        const PAGE_PASSWORD = "123"; // رمز المرور (تقدر تغيره)
 
         let allPostsData = [];
         let currentFilter = 'all';
@@ -295,6 +372,7 @@
                     document.getElementById('admin-panel').style.display = 'block';
                     const savedT = localStorage.getItem('hur_gh_token');
                     if(savedT) document.getElementById('gh-token').value = savedT;
+                    fetchPostsForAdmin();
                 } else {
                     document.getElementById('content-area').style.display = 'block';
                     loadPosts();
@@ -304,6 +382,7 @@
             }
         }
 
+        // جلب المنشورات للزوار
         async function loadPosts() {
             const loader = document.getElementById('main-loader');
             const feed = document.getElementById('posts-feed');
@@ -364,8 +443,76 @@
             });
         }
 
-        async function createNewPost() {
+        // جلب المنشورات للوحة التحكم (مع أزرار التعديل والحذف)
+        async function fetchPostsForAdmin() {
+            const loader = document.getElementById('admin-loader');
+            const listContainer = document.getElementById('manage-posts-list');
+            loader.style.display = 'block';
+
+            try {
+                const res = await fetch(`https://raw.githubusercontent.com/${GITHUB_USERNAME}/${REPO_NAME}/main/posts.json?t=${Date.now()}`);
+                if(!res.ok) throw new Error();
+                allPostsData = await res.json();
+                loader.style.display = 'none';
+                renderAdminList();
+            } catch(e) {
+                loader.style.display = 'none';
+                listContainer.innerHTML = '<p style="color:var(--text-muted); font-size:0.9rem;">لا توجد منشورات حالية للإدارة.</p>';
+            }
+        }
+
+        function renderAdminList() {
+            const listContainer = document.getElementById('manage-posts-list');
+            listContainer.innerHTML = '';
+
+            if(!allPostsData || allPostsData.length === 0) {
+                listContainer.innerHTML = '<p style="color:var(--text-muted); font-size:0.9rem;">قائمة المنشورات فارغة.</p>';
+                return;
+            }
+
+            // نعرضها بترتيب عكسي (الأحدث أولاً) مع الحفاظ على مؤشر المصفوفة الأصلي (realIndex)
+            allPostsData.map((post, index) => ({ ...post, realIndex: index })).slice().reverse().forEach(item => {
+                const snippet = item.content ? item.content : (item.image ? '[منشور صورة]' : 'بدون محتوى');
+                listContainer.innerHTML += `
+                    <div class="manage-item">
+                        <div class="manage-info">
+                            <div class="manage-text"><strong>#${item.realIndex + 1}</strong>: ${snippet}</div>
+                            <div style="font-size:0.75rem; color:var(--text-muted);">${item.date}</div>
+                        </div>
+                        <div class="manage-actions">
+                            <button class="btn-edit" onclick="prepareEdit(${item.realIndex})">تعديل</button>
+                            <button class="btn-delete" onclick="deletePost(${item.realIndex})">حذف</button>
+                        </div>
+                    </div>`;
+            });
+        }
+
+        // تحضير المنشور للتعديل
+        function prepareEdit(index) {
+            const post = allPostsData[index];
+            document.getElementById('edit-index').value = index;
+            document.getElementById('post-type').value = post.type || 'text';
+            document.getElementById('post-content').value = post.content || '';
+            document.getElementById('post-image-url').value = post.image || '';
+            
+            const pubBtn = document.getElementById('publish-btn');
+            pubBtn.innerText = "💾 حفظ التعديلات";
+            document.getElementById('cancel-edit-btn').style.display = 'block';
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function cancelEdit() {
+            document.getElementById('edit-index').value = "-1";
+            document.getElementById('post-content').value = '';
+            document.getElementById('post-image-url').value = '';
+            document.getElementById('publish-btn').innerText = "🚀 نشر المحتوى فوراً";
+            document.getElementById('cancel-edit-btn').style.display = 'none';
+        }
+
+        // دالة موحدة للنشر أو التعديل أو الحذف وحفظها في GitHub API
+        async function saveOrUpdatePost() {
             const token = document.getElementById('gh-token').value.trim();
+            const editIndex = parseInt(document.getElementById('edit-index').value);
             const type = document.getElementById('post-type').value;
             const content = document.getElementById('post-content').value.trim();
             const image = document.getElementById('post-image-url').value.trim();
@@ -386,12 +533,13 @@
 
             localStorage.setItem('hur_gh_token', token);
             btn.disabled = true;
-            btn.innerText = "جاري التحديث والنشر...";
+            btn.innerText = "جاري التحديث في المستودع...";
             feedback.innerText = "";
 
             const apiUrl = `https://api.github.com/repos/${GITHUB_USERNAME}/${REPO_NAME}/contents/posts.json`;
 
             try {
+                // جلب النسخة الأحدث مع الـ SHA
                 const getRes = await fetch(apiUrl, { headers: { 'Authorization': `token ${token}` } });
                 if(!getRes.ok) throw new Error("فشل الاتصال بـ GitHub، تأكد من صحة الـ Token.");
                 
@@ -404,12 +552,26 @@
                     existing = JSON.parse(decoded);
                 }
 
-                existing.push({
-                    type: type,
-                    content: content,
-                    image: image,
-                    date: new Date().toLocaleString('ar-IQ')
-                });
+                let commitMsg = "";
+                if(editIndex >= 0) {
+                    // تعديل منشور موجود
+                    existing[editIndex] = {
+                        type: type,
+                        content: content,
+                        image: image,
+                        date: existing[editIndex].date // نحافظ على تاريخ النشر الأصلي أو نحدثه
+                    };
+                    commitMsg = `Update post index ${editIndex}`;
+                } else {
+                    // إضافة منشور جديد
+                    existing.push({
+                        type: type,
+                        content: content,
+                        image: image,
+                        date: new Date().toLocaleString('ar-IQ')
+                    });
+                    commitMsg = `Add new ${type} post`;
+                }
 
                 const encoded = btoa(unescape(encodeURIComponent(JSON.stringify(existing, null, 2))));
 
@@ -420,7 +582,7 @@
                         'Content-Type': 'application/json',
                     },
                     body: JSON.stringify({
-                        message: `Add new ${type} post`,
+                        message: commitMsg,
                         content: encoded,
                         sha: sha
                     })
@@ -429,16 +591,76 @@
                 if(!putRes.ok) throw new Error("فشل حفظ التحديث في المستودع.");
 
                 feedback.style.color = "var(--success)";
-                feedback.innerText = "✅ تم النشر بنجاح وتحديث الأقسام!";
-                document.getElementById('post-content').value = '';
-                document.getElementById('post-image-url').value = '';
+                feedback.innerText = editIndex >= 0 ? "✅ تم تحديث المنشور بنجاح!" : "✅ تم نشر المحتوى بنجاح!";
+                
+                cancelEdit();
+                fetchPostsForAdmin(); // تحديث القائمة فوراً
 
             } catch(err) {
                 feedback.style.color = "var(--error)";
                 feedback.innerText = "❌ خطأ: " + err.message;
             } finally {
                 btn.disabled = false;
-                btn.innerText = "🚀 نشر المحتوى فوراً";
+                if(document.getElementById('edit-index').value == "-1") {
+                    btn.innerText = "🚀 نشر المحتوى فوراً";
+                }
+            }
+        }
+
+        // دالة حذف منشور
+        async function deletePost(index) {
+            if(!confirm("هل أنت متأكد من حذف هذا المنشور نهائياً؟")) return;
+
+            const token = document.getElementById('gh-token').value.trim();
+            const feedback = document.getElementById('admin-feedback');
+
+            if(!token) {
+                alert("الرجاء إدخال الـ GitHub Token أولاً في الحقل المخصص!");
+                return;
+            }
+
+            const apiUrl = `https://api.github.com/repos/${GITHUB_USERNAME}/${REPO_NAME}/contents/posts.json`;
+
+            try {
+                const getRes = await fetch(apiUrl, { headers: { 'Authorization': `token ${token}` } });
+                if(!getRes.ok) throw new Error("فشل الاتصال بـ GitHub.");
+                
+                const fileData = await getRes.json();
+                const sha = fileData.sha;
+
+                let existing = [];
+                if(fileData.content) {
+                    const decoded = new TextDecoder().decode(Uint8Array.from(atob(fileData.content), c => c.charCodeAt(0)));
+                    existing = JSON.parse(decoded);
+                }
+
+                // حذف العنصر من المصفوفة
+                existing.splice(index, 1);
+
+                const encoded = btoa(unescape(encodeURIComponent(JSON.stringify(existing, null, 2))));
+
+                const putRes = await fetch(apiUrl, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `token ${token}`,
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        message: `Delete post index ${index}`,
+                        content: encoded,
+                        sha: sha
+                    })
+                });
+
+                if(!putRes.ok) throw new Error("فشل الحذف من المستودع.");
+
+                feedback.style.color = "var(--success)";
+                feedback.innerText = "🗑️ تم حذف المنشور بنجاح!";
+                fetchPostsForAdmin(); // تحديث القائمة
+
+            } catch(err) {
+                feedback.style.color = "var(--error)";
+                feedback.innerText = "❌ خطأ بالحذف: " + err.message;
             }
         }
     </script>
