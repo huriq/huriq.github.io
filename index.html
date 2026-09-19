@@ -42,7 +42,7 @@
 
         .main-wrapper {
             width: 100%;
-            max-width: 850px;
+            max-width: 900px;
         }
 
         /* الهيدر الأسطوري مع الوقت والتاريخ */
@@ -93,7 +93,7 @@
             letter-spacing: 2px;
         }
 
-        /* شاشة الدخول */
+        /* شاشة الدخول واللوحة */
         .auth-card, .admin-card {
             background: var(--surface-glass);
             backdrop-filter: blur(12px);
@@ -154,12 +154,34 @@
 
         .error-text { color: var(--error); margin-top: 10px; font-size: 0.9rem; display: none; }
 
-        /* التبويبات الفخمة الجديدة */
+        /* شريط الأدوات المصغر (محرر النصوص الوورد) */
+        .editor-toolbar {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+        }
+
+        .tool-btn {
+            background: rgba(0, 210, 255, 0.1);
+            color: var(--primary);
+            border: 1px solid rgba(0, 210, 255, 0.3);
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            width: auto;
+            cursor: pointer;
+            box-shadow: none;
+            font-family: 'Tajawal', sans-serif;
+        }
+        .tool-btn:hover { background: var(--primary); color: #070b19; box-shadow: none; transform: none; }
+
+        /* التبويبات الفخمة */
         .tabs-container {
             display: flex;
             justify-content: center;
             gap: 10px;
-            margin-bottom: 30px;
+            margin-bottom: 25px;
             flex-wrap: wrap;
         }
 
@@ -186,7 +208,35 @@
             box-shadow: 0 0 20px rgba(0, 210, 255, 0.4);
         }
 
-        /* زر الرجوع 3D الفخم داخل التبويبات */
+        /* شريط الفولدرات الثانوية */
+        .subfolders-bar {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 25px;
+            overflow-x: auto;
+            padding-bottom: 5px;
+        }
+
+        .folder-chip {
+            background: rgba(15, 23, 42, 0.9);
+            border: 1px solid rgba(148, 163, 184, 0.2);
+            color: var(--text-muted);
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 0.2s;
+            font-family: 'Tajawal', sans-serif;
+        }
+
+        .folder-chip.active, .folder-chip:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+            background: rgba(0, 210, 255, 0.05);
+        }
+
+        /* زر الرجوع 3D */
         .back-home-bar {
             margin-bottom: 25px;
             display: none;
@@ -196,7 +246,7 @@
             background: linear-gradient(145deg, #0f172a, #1e293b);
             color: var(--primary);
             border: 1px solid var(--border);
-            padding: 12px 25px;
+            padding: 10px 22px;
             border-radius: 14px;
             font-family: 'Tajawal', sans-serif;
             font-weight: 700;
@@ -205,22 +255,13 @@
             align-items: center;
             gap: 10px;
             width: auto;
-            box-shadow: 0 6px 0 #020617, 0 10px 20px rgba(0,0,0,0.5);
+            box-shadow: 0 5px 0 #020617, 0 8px 15px rgba(0,0,0,0.5);
             transition: all 0.1s ease;
         }
+        .btn-3d-back:hover { transform: translateY(-2px); box-shadow: 0 7px 0 #020617, 0 10px 20px rgba(0, 210, 255, 0.3); }
+        .btn-3d-back:active { transform: translateY(3px); box-shadow: 0 2px 0 #020617, 0 4px 8px rgba(0,0,0,0.5); }
 
-        .btn-3d-back:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 0 #020617, 0 12px 25px rgba(0, 210, 255, 0.3);
-            background: linear-gradient(145deg, #1e293b, #0f172a);
-        }
-
-        .btn-3d-back:active {
-            transform: translateY(4px);
-            box-shadow: 0 2px 0 #020617, 0 5px 10px rgba(0,0,0,0.5);
-        }
-
-        /* حاوية المنشورات */
+        /* حاوية المنشورات وضبط النص الوورد Justify */
         #content-area { display: none; }
 
         .post-card {
@@ -262,22 +303,76 @@
         .post-date { font-size: 0.8rem; color: var(--text-muted); }
 
         .post-body {
-            font-size: 1.15rem;
-            line-height: 1.8;
+            font-size: 1.1rem;
+            line-height: 1.9;
             color: var(--text-main);
-            white-space: pre-wrap;
+            text-align: justify; /* ضبط النص مثل الوورد بالضبط */
+            word-break: break-word;
             margin-bottom: 15px;
         }
 
         .post-image {
             width: 100%;
             border-radius: 12px;
-            max-height: 500px;
+            max-height: 450px;
             object-fit: cover;
             border: 1px solid rgba(255,255,255,0.05);
+            margin-bottom: 15px;
         }
 
-        /* لوحة إدارة المنشورات */
+        /* نظام الردود والتفاعلات */
+        .replies-section {
+            margin-top: 20px;
+            border-top: 1px dashed rgba(148, 163, 184, 0.2);
+            padding-top: 15px;
+        }
+
+        .reply-item {
+            background: rgba(2, 6, 23, 0.5);
+            border: 1px solid rgba(148, 163, 184, 0.1);
+            border-radius: 10px;
+            padding: 12px 15px;
+            margin-top: 10px;
+            font-size: 0.95rem;
+        }
+
+        .reply-author {
+            color: var(--primary);
+            font-weight: 700;
+            font-family: 'Tajawal', sans-serif;
+            margin-bottom: 4px;
+            font-size: 0.85rem;
+        }
+
+        .reply-text {
+            color: var(--text-main);
+            text-align: justify;
+            line-height: 1.6;
+        }
+
+        .btn-reply-toggle {
+            background: transparent;
+            color: var(--primary);
+            border: 1px solid rgba(0, 210, 255, 0.3);
+            padding: 6px 14px;
+            font-size: 0.85rem;
+            border-radius: 8px;
+            width: auto;
+            margin-top: 10px;
+            box-shadow: none;
+        }
+        .btn-reply-toggle:hover { background: rgba(0, 210, 255, 0.1); box-shadow: none; transform: none; }
+
+        .reply-form-box {
+            margin-top: 12px;
+            background: rgba(15, 23, 42, 0.9);
+            padding: 15px;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            display: none;
+        }
+
+        /* لوحة التحكم والإدارة */
         .manage-section {
             margin-top: 35px;
             border-top: 1px solid rgba(148, 163, 184, 0.2);
@@ -301,37 +396,18 @@
         .manage-text { font-size: 0.95rem; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 4px; }
         .manage-actions { display: flex; gap: 8px; flex-shrink: 0; }
 
-        .btn-edit {
-            background: rgba(245, 158, 11, 0.15); color: var(--warning); border: 1px solid rgba(245, 158, 11, 0.4);
-            padding: 6px 14px; font-size: 0.85rem; border-radius: 8px; width: auto; box-shadow: none;
-        }
+        .btn-edit { background: rgba(245, 158, 11, 0.15); color: var(--warning); border: 1px solid rgba(245, 158, 11, 0.4); padding: 6px 14px; font-size: 0.85rem; border-radius: 8px; width: auto; box-shadow: none; }
         .btn-edit:hover { background: var(--warning); color: #000; box-shadow: none; }
 
-        .btn-delete {
-            background: rgba(244, 63, 94, 0.15); color: var(--error); border: 1px solid rgba(244, 63, 94, 0.4);
-            padding: 6px 14px; font-size: 0.85rem; border-radius: 8px; width: auto; box-shadow: none;
-        }
+        .btn-delete { background: rgba(244, 63, 94, 0.15); color: var(--error); border: 1px solid rgba(244, 63, 94, 0.4); padding: 6px 14px; font-size: 0.85rem; border-radius: 8px; width: auto; box-shadow: none; }
         .btn-delete:hover { background: var(--error); color: #fff; box-shadow: none; }
 
-        .loader {
-            border: 4px solid rgba(255,255,255,0.1); border-top: 4px solid var(--primary);
-            border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 40px auto; display: none;
-        }
+        .loader { border: 4px solid rgba(255,255,255,0.1); border-top: 4px solid var(--primary); border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 40px auto; display: none; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
         .empty-msg { text-align: center; color: var(--text-muted); font-size: 1.1rem; margin-top: 40px; }
 
-        /* تذييل الصفحة الفخم */
-        footer {
-            text-align: center;
-            margin-top: 50px;
-            padding: 20px;
-            border-top: 1px solid rgba(148, 163, 184, 0.1);
-            color: var(--text-muted);
-            font-family: 'Montserrat', 'Tajawal', sans-serif;
-            font-size: 0.95rem;
-            letter-spacing: 1px;
-        }
+        footer { text-align: center; margin-top: 50px; padding: 20px; border-top: 1px solid rgba(148, 163, 184, 0.1); color: var(--text-muted); font-family: 'Montserrat', 'Tajawal', sans-serif; font-size: 0.95rem; letter-spacing: 1px; }
     </style>
 </head>
 <body>
@@ -347,7 +423,7 @@
             <div class="brand-subtitle">DIGITAL PLATFORM & ARCHIVE</div>
         </header>
 
-        <!-- شاشة الحماية (الباسوورد) -->
+        <!-- شاشة الحماية -->
         <div class="auth-card" id="login-screen">
             <h2>🔒 Restricted Access</h2>
             <p style="color: var(--text-muted); margin-bottom: 20px;">الرجاء إدخال رمز المرور للمتابعة</p>
@@ -356,15 +432,15 @@
             <p class="error-text" id="login-error">رمز المرور غير صحيح!</p>
         </div>
 
-        <!-- لوحة التحكم المتكاملة -->
+        <!-- لوحة التحكم الإدارية الذكية -->
         <div class="admin-card" id="admin-panel" style="display: none;">
             <h2>🛠️ لوحة التحكم والإدارة الذكية</h2>
-            <p style="color: var(--text-muted); margin-bottom: 20px;">انشر محتوى وحدد التبويب المناسب له بدقة</p>
+            <p style="color: var(--text-muted); margin-bottom: 20px;">انشر محتوى وحدد التبويب والفولدر المناسب بدقة</p>
             
             <input type="password" id="gh-token" placeholder="GitHub Personal Access Token...">
             <input type="hidden" id="edit-index" value="-1">
 
-            <select id="post-type">
+            <select id="post-type" onchange="toggleFolderInput()">
                 <option value="home">🏠 الصفحة الرئيسية</option>
                 <option value="beliefs">🌟 المعتقدات</option>
                 <option value="writings">📄 المكتوبات</option>
@@ -374,7 +450,16 @@
                 <option value="archives">📁 المحفوظات</option>
             </select>
 
-            <textarea id="post-content" rows="4" placeholder="اكتب محتوى المنشور هنا..."></textarea>
+            <input type="text" id="post-folder" placeholder="اسم الفولدر أو التصنيف الفرعي (اختياري، مثلاً: جيمايا)...">
+
+            <!-- مححر النصوص (Word Toolbar) -->
+            <div class="editor-toolbar">
+                <button type="button" class="tool-btn" onclick="formatText('bold')"><b>عريض Bold</b></button>
+                <button type="button" class="tool-btn" onclick="formatText('justify')"><b>ضبط Justify</b></button>
+                <button type="button" class="tool-btn" onclick="formatText('p')"><b>فقرة جديدة</b></button>
+            </div>
+
+            <textarea id="post-content" rows="5" placeholder="اكتب محتوى المنشور هنا..."></textarea>
             <input type="text" id="post-image-url" placeholder="رابط الصورة المباشر (اختياري)...">
             
             <button id="publish-btn" onclick="saveOrUpdatePost()">🚀 نشر المحتوى فوراً</button>
@@ -383,7 +468,7 @@
             <p id="admin-feedback" style="margin-top: 15px; font-weight: 700;"></p>
 
             <div class="manage-section">
-                <h3 style="font-family: 'Tajawal', sans-serif; color: var(--primary); margin-bottom: 15px; font-size: 1.2rem;"> إدارة المنشورات الحالية</h3>
+                <h3 style="font-family: 'Tajawal', sans-serif; color: var(--primary); margin-bottom: 15px; font-size: 1.2rem;">📁 إدارة المنشورات الحالية</h3>
                 <div class="loader" id="admin-loader"></div>
                 <div id="manage-posts-list"></div>
             </div>
@@ -401,18 +486,20 @@
                 <button class="tab-btn" onclick="switchTab('archives', this)">📁 المحفوظات</button>
             </div>
 
-            <!-- زر الرجوع 3D يظهر حصراً عند الدخول لأي تبويب غير الرئيسية -->
+            <!-- زر الرجوع 3D -->
             <div class="back-home-bar" id="back-bar">
                 <button class="btn-3d-back" onclick="resetToHome()">
                     <span>↩ العودة للرئيسية</span>
                 </button>
             </div>
 
+            <!-- الفولدرات الثانوية -->
+            <div id="subfolders-container" class="subfolders-bar" style="display: none;"></div>
+
             <div class="loader" id="main-loader"></div>
             <div id="posts-feed"></div>
         </div>
 
-        <!-- تذييل الصفحة الفخم -->
         <footer>
             © Designed by HUR
         </footer>
@@ -421,30 +508,23 @@
     <script>
         const GITHUB_USERNAME = 'huriq'; 
         const REPO_NAME = 'huriq.github.io';
-        const PAGE_PASSWORD = "123"; // رمز المرور
+        const PAGE_PASSWORD = "123";
 
         let allPostsData = [];
         let currentFilter = 'home';
+        let currentFolderFilter = 'all';
         const isAdminMode = new URLSearchParams(window.location.search).has('admin');
 
-        // تشغيل الساعة والتاريخ الحي
+        // الساعة والتاريخ
         function updateClockAndDate() {
             const now = new Date();
-            
-            // الوقت بتنسيق 12 ساعة مع AM/PM وعداد الثواني
             let hours = now.getHours();
             const minutes = String(now.getMinutes()).padStart(2, '0');
             const seconds = String(now.getSeconds()).padStart(2, '0');
             const ampm = hours >= 12 ? 'PM' : 'AM';
-            hours = hours % 12;
-            hours = hours ? hours : 12; // الساعة 12
-            const strHours = String(hours).padStart(2, '0');
-            
-            document.getElementById('live-clock').innerText = `⏰ ${strHours}:${minutes}:${seconds} ${ampm}`;
-
-            // التاريخ بالعربي
-            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-            document.getElementById('live-date').innerText = `📅 ${now.toLocaleDateString('ar-IQ', options)}`;
+            hours = hours % 12 || 12;
+            document.getElementById('live-clock').innerText = `⏰ ${String(hours).padStart(2, '0')}:${minutes}:${seconds} ${ampm}`;
+            document.getElementById('live-date').innerText = `📅 ${now.toLocaleDateString('ar-IQ', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}`;
         }
         setInterval(updateClockAndDate, 1000);
         updateClockAndDate();
@@ -469,9 +549,7 @@
 
         async function loadPosts() {
             const loader = document.getElementById('main-loader');
-            const feed = document.getElementById('posts-feed');
             loader.style.display = 'block';
-            
             try {
                 const res = await fetch(`https://raw.githubusercontent.com/${GITHUB_USERNAME}/${REPO_NAME}/main/posts.json?t=${Date.now()}`);
                 if(!res.ok) throw new Error();
@@ -487,30 +565,25 @@
 
         function switchTab(filter, btnElement) {
             currentFilter = filter;
+            currentFolderFilter = 'all';
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
             if(btnElement) {
                 btnElement.classList.add('active');
             } else {
-                // تفعيل الزر المناسب برمجياً عند الضغط على الشعار أو زر الرجوع
                 document.querySelectorAll('.tab-btn').forEach(b => {
-                    if(b.getAttribute('onclick').includes(filter)) b.classList.add('active');
+                    if(b.getAttribute('onclick')?.includes(filter)) b.classList.add('active');
                 });
             }
 
-            // إظهار أو إخفاء زر الرجوع 3D
             const backBar = document.getElementById('back-bar');
-            if(filter !== 'home') {
-                backBar.style.display = 'block';
-            } else {
-                backBar.style.display = 'none';
-            }
+            backBar.style.display = (filter !== 'home') ? 'block' : 'none';
 
+            buildSubfolders();
             renderPosts();
         }
 
         function resetToHome() {
-            const homeBtn = document.querySelector('.tab-btn');
-            switchTab('home', homeBtn);
+            switchTab('home', document.querySelector('.tab-btn'));
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
@@ -527,14 +600,48 @@
             }
         }
 
+        function buildSubfolders() {
+            const bar = document.getElementById('subfolders-container');
+            bar.innerHTML = '';
+            
+            // استخراج الفولدرات الخاصة بهذا التبويب فقط
+            const folders = [...new Set(allPostsData.filter(p => (p.type || 'home') === currentFilter && p.folder).map(p => p.folder))];
+            
+            // إضافة خيار إضافي لتبويب المكاتبات وهو "مكتوبات الآخرين"
+            if(currentFilter === 'correspondence') {
+                if(!folders.includes('مكتوبات الآخرين')) folders.push('مكتوبات الآخرين');
+            }
+
+            if(folders.length === 0) {
+                bar.style.display = 'none';
+                return;
+            }
+
+            bar.style.display = 'flex';
+            bar.innerHTML += `<div class="folder-chip active" onclick="filterFolder('all', this)">الكل</div>`;
+            folders.forEach(f => {
+                bar.innerHTML += `<div class="folder-chip" onclick="filterFolder('${f}', this)">📂 ${f}</div>`;
+            });
+        }
+
+        function filterFolder(folderName, element) {
+            currentFolderFilter = folderName;
+            document.querySelectorAll('.folder-chip').forEach(c => c.classList.remove('active'));
+            element.classList.add('active');
+            renderPosts();
+        }
+
         function renderPosts() {
             const feed = document.getElementById('posts-feed');
             feed.innerHTML = '';
 
-            // تصفية المنشورات حسب التبويب المختار
             let filtered = allPostsData.filter(p => {
-                if(!p.type && currentFilter === 'home') return true; // التوافق مع البيانات القديمة
-                return p.type === currentFilter;
+                const t = p.type || 'home';
+                if(t !== currentFilter) return false;
+                if(currentFolderFilter !== 'all') {
+                    if(p.folder !== currentFolderFilter) return false;
+                }
+                return true;
             });
 
             if(filtered.length === 0) {
@@ -542,12 +649,15 @@
                 return;
             }
 
-            filtered.slice().reverse().forEach(post => {
+            filtered.slice().reverse().forEach((post, actualRevIndex) => {
+                const realIndex = allPostsData.indexOf(post);
                 const typeLabel = getTabName(post.type || 'home');
+                const folderTag = post.folder ? ` / 📂 ${post.folder}` : '';
+                
                 let html = `
                     <div class="post-card">
                         <div class="post-header">
-                            <span class="post-tag">${typeLabel}</span>
+                            <span class="post-tag">${typeLabel}${folderTag}</span>
                             <span class="post-date">🕒 ${post.date}</span>
                         </div>`;
                 
@@ -559,9 +669,115 @@
                     html += `<img src="${post.image}" class="post-image" alt="Post Image">`;
                 }
 
+                // زر إرسال مكتوب زائر إذا كان في قسم المكاتبات / مكتوبات الآخرين
+                if(currentFilter === 'correspondence' && currentFolderFilter === 'مكتوبات الآخرين' && realIndex === 0) {
+                    // زر عام لإضافة مكتوب جديد من الزوار
+                }
+
+                // نظام الردود والتعليقات
+                html += `<div class="replies-section">
+                            <div style="font-family:'Tajawal'; font-weight:700; color:var(--primary); font-size:0.9rem; margin-bottom:10px;">💬 الردود والمناقشات</div>`;
+                
+                if(post.replies && post.replies.length > 0) {
+                    post.replies.forEach(rep => {
+                        html += `
+                            <div class="reply-item">
+                                <div class="reply-author">👤 ${rep.author} <span style="font-size:0.75rem; color:var(--text-muted); font-weight:400;">(${rep.date})</span></div>
+                                <div class="reply-text">${rep.text}</div>
+                            </div>`;
+                    });
+                } else {
+                    html += `<div style="font-size:0.85rem; color:var(--text-muted);">لا توجد ردود بعد. كن أول المردودين!</div>`;
+                }
+
+                html += `
+                    <button class="btn-reply-toggle" onclick="toggleReplyForm(${realIndex})">✍️ كتابة رد</button>
+                    <div class="reply-form-box" id="reply-form-${realIndex}">
+                        <input type="text" id="reply-author-${realIndex}" placeholder="اسمك الكريم..." style="margin-bottom:10px; padding:10px; font-size:0.9rem;">
+                        <textarea id="reply-text-${realIndex}" rows="3" placeholder="اكتب ردك هنا..." style="margin-bottom:10px; padding:10px; font-size:0.9rem;"></textarea>
+                        <button onclick="submitReply(${realIndex})" style="padding:10px; font-size:0.95rem;">إرسال الرد</button>
+                    </div>
+                </div>`;
+
                 html += `</div>`;
                 feed.innerHTML += html;
             });
+        }
+
+        function toggleReplyForm(index) {
+            const box = document.getElementById(`reply-form-${index}`);
+            box.style.display = (box.style.display === 'block') ? 'none' : 'block';
+        }
+
+        // دالة إرسال الرد وتحديث البيانات على گيتهوب مباشرة
+        async function submitReply(index) {
+            const author = document.getElementById(`reply-author-${index}`).value.trim();
+            const text = document.getElementById(`reply-text-${index}`).value.trim();
+
+            if(!author || !text) {
+                alert("الرجاء إدخال الاسم ومحتوى الرد!");
+                return;
+            }
+
+            const token = prompt("أدخل رمز المرور أو صلاحية النشر (GitHub Token) لتأكيد إضافة الرد:");
+            if(!token) return;
+
+            const apiUrl = `https://api.github.com/repos/${GITHUB_USERNAME}/${REPO_NAME}/contents/posts.json`;
+
+            try {
+                const getRes = await fetch(apiUrl, { headers: { 'Authorization': `token ${token}` } });
+                if(!getRes.ok) throw new Error("فشل الاتصال بـ GitHub.");
+                
+                const fileData = await getRes.json();
+                const sha = fileData.sha;
+                let existing = JSON.parse(new TextDecoder().decode(Uint8Array.from(atob(fileData.content), c => c.charCodeAt(0))));
+
+                if(!existing[index].replies) existing[index].replies = [];
+                existing[index].replies.push({
+                    author: author,
+                    text: text,
+                    date: new Date().toLocaleString('ar-IQ')
+                });
+
+                const encoded = btoa(unescape(encodeURIComponent(JSON.stringify(existing, null, 2))));
+
+                const putRes = await fetch(apiUrl, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `token ${token}`,
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        message: `Add reply to post index ${index}`,
+                        content: encoded,
+                        sha: sha
+                    })
+                });
+
+                if(!putRes.ok) throw new Error("فشل حفظ الرد.");
+
+                alert("✅ تم إرسال ردك بنجاح!");
+                loadPosts();
+
+            } catch(err) {
+                alert("❌ خطأ: " + err.message);
+            }
+        }
+
+        // محرر النصوص الوورد المصغر
+        function formatText(type) {
+            const textarea = document.getElementById('post-content');
+            const start = textarea.selectionStart;
+            const end = textarea.selectionEnd;
+            const val = textarea.value;
+
+            if(type === 'bold') {
+                textarea.value = val.substring(0, start) + `<strong>` + val.substring(start, end) + `</strong>` + val.substring(end);
+            } else if(type === 'justify') {
+                textarea.value = val.substring(0, start) + `<div style="text-align:justify;">` + val.substring(start, end) + `</div>` + val.substring(end);
+            } else if(type === 'p') {
+                textarea.value = val.substring(0, start) + `\n<p>\n` + val.substring(start, end) + `\n</p>\n` + val.substring(end);
+            }
         }
 
         async function fetchPostsForAdmin() {
@@ -592,12 +808,13 @@
             }
 
             allPostsData.map((post, index) => ({ ...post, realIndex: index })).slice().reverse().forEach(item => {
-                const snippet = item.content ? item.content : (item.image ? '[منشور صورة]' : 'بدون محتوى');
+                const snippet = item.content ? item.content.replace(/<[^>]*>/g, '') : '[صورة]';
                 const tLabel = getTabName(item.type || 'home');
+                const fLabel = item.folder ? ` [فولدر: ${item.folder}]` : '';
                 listContainer.innerHTML += `
                     <div class="manage-item">
                         <div class="manage-info">
-                            <div class="manage-text"><strong>[${tLabel}]</strong>: ${snippet}</div>
+                            <div class="manage-text"><strong>[${tLabel}${fLabel}]</strong>: ${snippet}</div>
                             <div style="font-size:0.75rem; color:var(--text-muted);">${item.date}</div>
                         </div>
                         <div class="manage-actions">
@@ -612,6 +829,7 @@
             const post = allPostsData[index];
             document.getElementById('edit-index').value = index;
             document.getElementById('post-type').value = post.type || 'home';
+            document.getElementById('post-folder').value = post.folder || '';
             document.getElementById('post-content').value = post.content || '';
             document.getElementById('post-image-url').value = post.image || '';
             
@@ -623,6 +841,7 @@
 
         function cancelEdit() {
             document.getElementById('edit-index').value = "-1";
+            document.getElementById('post-folder').value = '';
             document.getElementById('post-content').value = '';
             document.getElementById('post-image-url').value = '';
             document.getElementById('publish-btn').innerText = "🚀 نشر المحتوى فوراً";
@@ -633,6 +852,7 @@
             const token = document.getElementById('gh-token').value.trim();
             const editIndex = parseInt(document.getElementById('edit-index').value);
             const type = document.getElementById('post-type').value;
+            const folder = document.getElementById('post-folder').value.trim();
             const content = document.getElementById('post-content').value.trim();
             const image = document.getElementById('post-image-url').value.trim();
             const btn = document.getElementById('publish-btn');
@@ -666,8 +886,7 @@
                     const fileData = await getRes.json();
                     sha = fileData.sha;
                     if(fileData.content) {
-                        const decoded = new TextDecoder().decode(Uint8Array.from(atob(fileData.content), c => c.charCodeAt(0)));
-                        existing = JSON.parse(decoded);
+                        existing = JSON.parse(new TextDecoder().decode(Uint8Array.from(atob(fileData.content), c => c.charCodeAt(0))));
                     }
                 }
 
@@ -675,28 +894,26 @@
                 if(editIndex >= 0) {
                     existing[editIndex] = {
                         type: type,
+                        folder: folder,
                         content: content,
                         image: image,
-                        date: existing[editIndex].date
+                        date: existing[editIndex].date,
+                        replies: existing[editIndex].replies || []
                     };
                     commitMsg = `Update post index ${editIndex}`;
                 } else {
                     existing.push({
                         type: type,
+                        folder: folder,
                         content: content,
                         image: image,
-                        date: new Date().toLocaleString('ar-IQ')
+                        date: new Date().toLocaleString('ar-IQ'),
+                        replies: []
                     });
                     commitMsg = `Add new ${type} post`;
                 }
 
                 const encoded = btoa(unescape(encodeURIComponent(JSON.stringify(existing, null, 2))));
-
-                const reqBody = {
-                    message: commitMsg,
-                    content: encoded
-                };
-                if(sha) reqBody.sha = sha;
 
                 const putRes = await fetch(apiUrl, {
                     method: 'PUT',
@@ -704,7 +921,7 @@
                         'Authorization': `token ${token}`,
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify(reqBody)
+                    body: JSON.stringify({ message: commitMsg, content: encoded, sha: sha })
                 });
 
                 if(!putRes.ok) throw new Error("فشل حفظ التحديث في المستودع.");
@@ -744,13 +961,7 @@
                 if(!getRes.ok) throw new Error("فشل الاتصال بـ GitHub.");
                 
                 const fileData = await getRes.json();
-                const sha = fileData.sha;
-
-                let existing = [];
-                if(fileData.content) {
-                    const decoded = new TextDecoder().decode(Uint8Array.from(atob(fileData.content), c => c.charCodeAt(0)));
-                    existing = JSON.parse(decoded);
-                }
+                let existing = JSON.parse(new TextDecoder().decode(Uint8Array.from(atob(fileData.content), c => c.charCodeAt(0))));
 
                 existing.splice(index, 1);
 
@@ -762,11 +973,7 @@
                         'Authorization': `token ${token}`,
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify({
-                        message: `Delete post index ${index}`,
-                        content: encoded,
-                        sha: sha
-                    })
+                    body: JSON.stringify({ message: `Delete post index ${index}`, content: encoded, sha: fileData.sha })
                 });
 
                 if(!putRes.ok) throw new Error("فشل الحذف من المستودع.");
