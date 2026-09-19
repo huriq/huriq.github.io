@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>صفحة حمودي الخاصة</title>
+    <title>مدونة حمودي الخاصة</title>
     
-    <!-- مكتبة فك وتشفير النصوص (هنا سر الحماية المُحكمة) -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <!-- مكتبة Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
-    <!-- خط تجول الأنيق -->
+    <!-- خط تجول -->
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap');
         
@@ -25,9 +25,9 @@
             background-color: var(--bg-color);
             color: var(--text-color);
             margin: 0;
+            padding: 20px;
             display: flex;
             justify-content: center;
-            align-items: center;
             min-height: 100vh;
         }
 
@@ -36,43 +36,31 @@
             padding: 40px;
             border-radius: 16px;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-            width: 90%;
-            max-width: 450px;
-            text-align: center;
-            transition: all 0.3s ease;
-            border: 1px solid #333;
-        }
-
-        h2 {
-            color: var(--primary);
-            margin-top: 0;
-            font-weight: 700;
-        }
-
-        p {
-            font-size: 1.1rem;
-            margin-bottom: 25px;
-            color: #bbb;
-        }
-
-        input, textarea {
             width: 100%;
-            padding: 12px 15px;
+            max-width: 600px;
+            text-align: center;
+            border: 1px solid #333;
+            margin-top: 50px;
+            height: fit-content;
+        }
+
+        h2 { color: var(--primary); font-weight: 700; }
+        p { color: #bbb; }
+
+        input[type="password"], input[type="text"], textarea, input[type="file"] {
+            width: 100%;
+            padding: 12px;
             margin-bottom: 20px;
             background-color: #2a2a2a;
             border: 1px solid #444;
             color: white;
             border-radius: 8px;
             font-family: 'Tajawal', sans-serif;
-            font-size: 1rem;
             box-sizing: border-box;
             outline: none;
-            transition: border 0.3s;
         }
 
-        input:focus, textarea:focus {
-            border-color: var(--primary);
-        }
+        input:focus, textarea:focus { border-color: var(--primary); }
 
         button {
             width: 100%;
@@ -85,144 +73,189 @@
             font-weight: 700;
             font-family: 'Tajawal', sans-serif;
             cursor: pointer;
-            transition: transform 0.2s, background-color 0.3s;
+            transition: 0.3s;
         }
+        button:hover { background-color: #ebd075; }
+        button:disabled { background-color: #555; cursor: not-allowed; }
 
-        button:hover {
-            background-color: #ebd075;
-            transform: translateY(-2px);
-        }
+        #error-msg { color: var(--error); display: none; margin-top: 10px; }
 
-        #error-msg {
-            color: var(--error);
-            font-weight: 500;
-            display: none;
-            margin-top: 15px;
-            font-size: 1rem;
-        }
-
-        /* ستايل المحتوى من ينفتح (هنا راح ينعرض تصميمك) */
-        #secret-content-box {
-            display: none;
-            max-width: 800px;
+        /* ستايل المنشورات */
+        #feed-box, #admin-box { display: none; width: 100%; max-width: 700px; }
+        
+        .post {
+            background-color: #1e1e1e;
+            border: 1px solid #333;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 25px;
             text-align: right;
-            line-height: 1.8;
-            font-size: 1.2rem;
-            padding: 30px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
         }
+        .post p { color: #f1f1f1; font-size: 1.1rem; line-height: 1.6; white-space: pre-wrap; }
+        .post img { width: 100%; border-radius: 8px; margin-top: 15px; }
+        .post-date { font-size: 0.8rem; color: #777; margin-bottom: 10px; display: block; }
 
-        #secret-content-box img {
-            max-width: 100%;
-            border-radius: 8px;
-            margin-top: 15px;
+        .loader {
+            border: 4px solid #333; border-top: 4px solid var(--primary);
+            border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite;
+            margin: 20px auto; display: none;
         }
-
-        #admin-box {
-            display: none;
-            max-width: 600px;
-        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
 
-    <!-- واجهة الزوار (طلب الباسورد الرئيسي للصفحة كُلها) -->
+    <!-- شاشة الدخول -->
     <div class="container" id="login-box">
-        <h2>🔒 الباب مقفول</h2>
-        <p>اكتب الرمز السري حتى تگدر تفوت وتشوف كل الصفحة</p>
-        <input type="password" id="passcode" placeholder="دخل الرمز هنا..." onkeypress="handleEnter(event)">
-        <button onclick="unlockContent()">دخول</button>
-        <p id="error-msg">الرمز غلط يا حلو، حاول مرة ثانية!</p>
+        <h2>🔒 صفحة حمودي</h2>
+        <p>دخل الباسوورد حتى تشوف المنشورات</p>
+        <input type="password" id="passcode" placeholder="الباسوورد..." onkeypress="if(event.key === 'Enter') checkPassword()">
+        <button onclick="checkPassword()">دخول</button>
+        <p id="error-msg">الباسوورد غلط يابة!</p>
     </div>
 
-    <!-- واجهة عرض المحتوى السري -->
-    <div class="container" id="secret-content-box">
-        <div id="decrypted-content"></div>
+    <!-- شاشة عرض المنشورات للزوار -->
+    <div id="feed-box">
+        <h2 style="text-align: center; margin-bottom: 30px;">📜 كتابات وصور حمودي</h2>
+        <div id="posts-container"></div>
+        <div class="loader" id="feed-loader"></div>
     </div>
 
-    <!-- واجهة الأدمن السرية (للتشفير) -->
+    <!-- شاشة الأدمن (للرفع) -->
     <div class="container" id="admin-box">
-        <h2>🛠️ واجهة التشفير (خاصة بيك حمودي)</h2>
-        <p>حط كود صفحتك (المحتوى كُله) هنا، واختار الباسورد الرئيسي للصفحة</p>
-        
-        <textarea id="raw-content" rows="6" placeholder="اكتب كل نصوصك أو كود الـ HTML مال تصميمك كامل هنا..."></textarea>
-        <input type="text" id="admin-passcode" placeholder="الباسورد مال الصفحة كُلها...">
-        <button onclick="encryptMyData()">شفر المحتوى كُله هسة</button>
-        
-        <p style="margin-top: 20px; font-size: 0.9rem;">النتيجة المشفرة (انسخها ولصقها بالكود مالتك):</p>
-        <textarea id="encrypted-result" rows="4" readonly placeholder="الكود المشفر مال كل الصفحة راح يطلع هنا..."></textarea>
+        <h2>🛠️ إضافة منشور جديد</h2>
+        <p>اكتب النص واختار صورة (اختياري) وارفعها گبل لصفحتك</p>
+        <textarea id="post-text" rows="5" placeholder="شنو ببالك هسة؟"></textarea>
+        <input type="file" id="post-image" accept="image/*">
+        <button id="upload-btn" onclick="uploadPost()">🚀 انشر هسة</button>
+        <p id="admin-msg" style="margin-top: 15px;"></p>
     </div>
 
     <script>
         // ==========================================
-        // حمودي، هنا راح تحط النص المشفر مالتك!
-        // حالياً خليته فارغ. من تولد كود مشفر لصفحتك كُلها، جيبه ولصقه هنا بين الكوتيشنات.
+        // معلومات الـ Supabase مالتك مدمجة هنا رسمياً
         // ==========================================
-        const myEncryptedData = "U2FsdGVkX1+YEjAX0gkypb1pGBFo7Pa8PHOJobxpuDmgpWMJ9l7N5kcxl51ipavGaYPs6sSLcNZaUW0LtW4WIfXFbTOMpEHlQT7Umb5wDXxSaXZ5xMSaftKuETLcG23ThU7qzj/4jhRZOHX3z1jK2EBjXW+N+17ZvZ4InIol/Zq3ry2tgLO2fSc9veM7Czhun77ijz5XTPKov8ZPfQvOCvT8CtTYfG3EEanAK9cesKeind6x+5DJMg4xw8dU4esNHORBdPoRk2CHefzBbJwiBeM7T0A8w3LG1GGpCFYqQdEsZ8/Gz+YG/R+aw0EvBvz70vI/II8dIgfQjkumLY/rCsT+5Zf7rRe0dLWRQVA7tPAAJTFZtKWw1UdWXEOKs66CeLHDE3PUARzGGLbYu3JTx/BUhKuW4o2T3P9cx/5FIigGBiqNNB9f6NY7mUkhBGufjLxgYZaBCkWEUMjwCj8ctC4mStVXDYu6+Jp5zZCLcb5jXfQ2k8LWjdZAmb3VERzIzIAx94LBaNSoaeZDstgfKamDlbFuwZHLw8QJHzwr7Q0uJz5I9yqzCQ4llKb0l/1nqCvV5VET2+rfXTfpBxUqgr+1V326SZ4T9pTzw6bJtSEQQHrpTocmato9oZPQ18dmuRTnSRavVunRO9y6ThTzptsyOEHuffKu2lNbrM6R25stZHLgjEDvlPRX+L3D50MLrePQpeR7l5IUSBEPYO6YmW7iw34BKOXuyrWmlEp3cLdChPiycwcYYsVaDMLxgwvlP941K9TXrA5wCVW+3p9usbzy8Og2eCgzPwyzxtyyGV7dI2enGcq3K8kiNWGiHOCkow6Gmqz5ylGyImah0wfWVp8gltmpK9nqUr3xur136m4dursYvdb7Ed/U2FEfeUQP6+dHRKVmJOpu4mEfWiC0sA=="; 
+        const SUPABASE_URL = 'https://dafppielzdalbheyiucq.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRhZnBwaWVsemRhbGJoZXlpdWNxIiqicm9sZSI6ImFub24iLCJpYXQiOjE3ODk3NTkwNDQsImV4cCI6MjEwNTMzNTA0NH0.KkhbsF_bW1sS8eDtSautz9YV_fNoFiohXjcIIfq3WqQ';
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        // دالة التحقق من الرابط
-        window.onload = function() {
-            const urlParams = new URLSearchParams(window.location.search);
-            if (urlParams.has('admin')) {
+        // الباسوورد الرئيسي للصفحة (تگدر تغيره للرمز اللي يعجبك)
+        const PAGE_PASSWORD = "123"; 
+
+        // فحص الرابط إذا چان أدمن
+        const isAdmin = new URLSearchParams(window.location.search).has('admin');
+
+        function checkPassword() {
+            const entered = document.getElementById('passcode').value;
+            if(entered === PAGE_PASSWORD) {
                 document.getElementById('login-box').style.display = 'none';
-                document.getElementById('admin-box').style.display = 'block';
+                if(isAdmin) {
+                    document.getElementById('admin-box').style.display = 'block';
+                } else {
+                    document.getElementById('feed-box').style.display = 'block';
+                    fetchPosts();
+                }
+            } else {
+                document.getElementById('error-msg').style.display = 'block';
             }
-        };
+        }
 
-        // دالة فك التشفير وعرض المحتوى للزوار
-        function unlockContent() {
-            const pass = document.getElementById('passcode').value;
-            const errorMsg = document.getElementById('error-msg');
+        // جلب المنشورات من قاعدة البيانات
+        async function fetchPosts() {
+            document.getElementById('feed-loader').style.display = 'block';
             
-            if (!pass) {
-                errorMsg.innerText = "اكتب الرمز أول شي!";
-                errorMsg.style.display = 'block';
+            const { data, error } = await supabase
+                .from('posts')
+                .select('*')
+                .order('created_at', { ascending: false });
+
+            document.getElementById('feed-loader').style.display = 'none';
+            const container = document.getElementById('posts-container');
+            container.innerHTML = '';
+
+            if (error) {
+                container.innerHTML = '<p style="text-align:center; color:red;">صار خطأ بجلب البيانات!</p>';
                 return;
             }
 
-            if (!myEncryptedData) {
-                errorMsg.innerText = "حمودي بعده ممخلي أي محتوى مشفر بالصفحة!";
-                errorMsg.style.display = 'block';
+            if (data.length === 0) {
+                container.innerHTML = '<p style="text-align:center;">بعده حمودي مناشر شي!</p>';
                 return;
             }
+
+            data.forEach(post => {
+                const date = new Date(post.created_at).toLocaleString('ar-IQ');
+                let postHTML = `<div class="post">
+                    <span class="post-date">🕒 ${date}</span>
+                    <p>${post.content || ''}</p>`;
+                
+                if (post.image_url) {
+                    postHTML += `<img src="${post.image_url}" alt="صورة المنشور">`;
+                }
+                
+                postHTML += `</div>`;
+                container.innerHTML += postHTML;
+            });
+        }
+
+        // رفع منشور جديد (صورة + نص)
+        async function uploadPost() {
+            const textContent = document.getElementById('post-text').value;
+            const imageFile = document.getElementById('post-image').files[0];
+            const btn = document.getElementById('upload-btn');
+            const msg = document.getElementById('admin-msg');
+
+            if (!textContent && !imageFile) {
+                msg.style.color = "var(--error)";
+                msg.innerText = "اكتب شي أو اختار صورة على الأقل!";
+                return;
+            }
+
+            btn.disabled = true;
+            btn.innerText = "⏳ گاعد يرفع...";
+            msg.innerText = "";
+
+            let publicImageUrl = null;
 
             try {
-                // محاولة فك التشفير بالباسورد اللي كتبه الزائر
-                const bytes = CryptoJS.AES.decrypt(myEncryptedData, pass);
-                const originalText = bytes.toString(CryptoJS.enc.Utf8);
+                if (imageFile) {
+                    const fileExt = imageFile.name.split('.').pop();
+                    const fileName = `${Date.now()}.${fileExt}`;
+                    
+                    const { data: uploadData, error: uploadError } = await supabase.storage
+                        .from('images')
+                        .upload(fileName, imageFile);
 
-                if (originalText.length > 0) {
-                    // الرمز صح: نعرض تصميمك الكامل
-                    document.getElementById('login-box').style.display = 'none';
-                    document.getElementById('secret-content-box').style.display = 'block';
-                    document.getElementById('decrypted-content').innerHTML = originalText;
-                } else {
-                    errorMsg.innerText = "الرمز غلط يا حلو، حاول مرة ثانية!";
-                    errorMsg.style.display = 'block';
+                    if (uploadError) throw uploadError;
+
+                    const { data: publicUrlData } = supabase.storage
+                        .from('images')
+                        .getPublicUrl(fileName);
+                    
+                    publicImageUrl = publicUrlData.publicUrl;
                 }
-            } catch (e) {
-                errorMsg.innerText = "الرمز غلط يا حلو، حاول مرة ثانية!";
-                errorMsg.style.display = 'block';
-            }
-        }
 
-        // دالة التشفير (الخاصة بيك)
-        function encryptMyData() {
-            const rawContent = document.getElementById('raw-content').value;
-            const adminPass = document.getElementById('admin-passcode').value;
-            
-            if (!rawContent || !adminPass) {
-                alert("لازم تحط المحتوى كُله وتكتب الباسورد!");
-                return;
-            }
+                const { error: insertError } = await supabase
+                    .from('posts')
+                    .insert([
+                        { content: textContent, image_url: publicImageUrl }
+                    ]);
 
-            // التشفير القوي AES
-            const cipherText = CryptoJS.AES.encrypt(rawContent, adminPass).toString();
-            document.getElementById('encrypted-result').value = cipherText;
-        }
+                if (insertError) throw insertError;
 
-        function handleEnter(event) {
-            if (event.key === 'Enter') {
-                unlockContent();
+                msg.style.color = "lightgreen";
+                msg.innerText = "✅ عاشت ايدك! المنشور انرفع لصفحتك.";
+                document.getElementById('post-text').value = '';
+                document.getElementById('post-image').value = '';
+
+            } catch (err) {
+                console.error(err);
+                msg.style.color = "var(--error)";
+                msg.innerText = "❌ صار خطأ بالرفع، تأكد من الإعدادات!";
+            } finally {
+                btn.disabled = false;
+                btn.innerText = "🚀 انشر هسة";
             }
         }
     </script>
