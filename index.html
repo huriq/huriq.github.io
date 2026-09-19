@@ -45,7 +45,7 @@
             max-width: 900px;
         }
 
-        /* الهيدر الأسطوري مع الوقت والتاريخ */
+        /* الهيدر الأسطوري مع الوقت والتاريخ وتحديثات اللحظة */
         header {
             text-align: center;
             margin-bottom: 30px;
@@ -154,7 +154,7 @@
 
         .error-text { color: var(--error); margin-top: 10px; font-size: 0.9rem; display: none; }
 
-        /* شريط الأدوات المصغر (محرر النصوص الوورد) */
+        /* شريط الأدوات المصغر (محرر النصوص الوورد المتطور) */
         .editor-toolbar {
             display: flex;
             gap: 8px;
@@ -261,7 +261,7 @@
         .btn-3d-back:hover { transform: translateY(-2px); box-shadow: 0 7px 0 #020617, 0 10px 20px rgba(0, 210, 255, 0.3); }
         .btn-3d-back:active { transform: translateY(3px); box-shadow: 0 2px 0 #020617, 0 4px 8px rgba(0,0,0,0.5); }
 
-        /* حاوية المنشورات وضبط النص الوورد Justify */
+        /* حاوية المنشورات وضبط النص الوورد Justify والـ Read More */
         #content-area { display: none; }
 
         .post-card {
@@ -306,10 +306,37 @@
             font-size: 1.1rem;
             line-height: 1.9;
             color: var(--text-main);
-            text-align: justify; /* ضبط النص مثل الوورد بالضبط */
+            text-align: justify;
             word-break: break-word;
             margin-bottom: 15px;
         }
+
+        /* تنسيق خاص للمحتوى الطويل مع زر قراءة المزيد */
+        .post-content-wrapper {
+            position: relative;
+        }
+        .post-content-snippet {
+            max-height: 220px;
+            overflow: hidden;
+            transition: max-height 0.4s ease;
+        }
+        .post-content-snippet.expanded {
+            max-height: none;
+        }
+        .read-more-btn {
+            background: transparent;
+            color: var(--primary);
+            border: none;
+            cursor: pointer;
+            font-family: 'Tajawal', sans-serif;
+            font-weight: 700;
+            margin-top: 10px;
+            display: inline-block;
+            font-size: 0.95rem;
+            padding: 0;
+            box-shadow: none;
+        }
+        .read-more-btn:hover { text-decoration: underline; background: transparent; transform: none; box-shadow: none; }
 
         .post-image {
             width: 100%;
@@ -318,9 +345,12 @@
             object-fit: cover;
             border: 1px solid rgba(255,255,255,0.05);
             margin-bottom: 15px;
+            cursor: pointer;
+            transition: transform 0.3s;
         }
+        .post-image:hover { transform: scale(1.01); }
 
-        /* نظام الردود والتفاعلات */
+        /* نظام الردود والتفاعلات المتطور */
         .replies-section {
             margin-top: 20px;
             border-top: 1px dashed rgba(148, 163, 184, 0.2);
@@ -372,6 +402,34 @@
             display: none;
         }
 
+        /* نافذة تكبير الصور المنبثقة (Lightbox Modal) */
+        .image-modal {
+            display: none;
+            position: fixed;
+            z-index: 9999;
+            left: 0; top: 0; width: 100%; height: 100%;
+            background-color: rgba(7, 11, 25, 0.95);
+            backdrop-filter: blur(8px);
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        .image-modal img {
+            max-width: 90%;
+            max-height: 90%;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            box-shadow: 0 0 40px rgba(0, 210, 255, 0.3);
+        }
+        .modal-close {
+            position: absolute;
+            top: 25px; left: 35px;
+            color: #fff; font-size: 2.5rem; font-weight: bold;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+        .modal-close:hover { color: var(--primary); }
+
         /* لوحة التحكم والإدارة */
         .manage-section {
             margin-top: 35px;
@@ -412,6 +470,12 @@
 </head>
 <body>
 
+    <!-- نافذة تكبير الصور (Lightbox) -->
+    <div class="image-modal" id="imgModal" onclick="closeImageModal()">
+        <span class="modal-close">&times;</span>
+        <img id="modalImgSrc" src="" alt="Zoomed Image">
+    </div>
+
     <div class="main-wrapper">
         <!-- الهيدر الأسطوري -->
         <header>
@@ -432,7 +496,7 @@
             <p class="error-text" id="login-error">رمز المرور غير صحيح!</p>
         </div>
 
-        <!-- لوحة التحكم الإدارية الذكية -->
+        <!-- لوحة التحكم والإدارة الذكية -->
         <div class="admin-card" id="admin-panel" style="display: none;">
             <h2>🛠️ لوحة التحكم والإدارة الذكية</h2>
             <p style="color: var(--text-muted); margin-bottom: 20px;">انشر محتوى وحدد التبويب والفولدر المناسب بدقة</p>
@@ -452,14 +516,15 @@
 
             <input type="text" id="post-folder" placeholder="اسم الفولدر أو التصنيف الفرعي (اختياري، مثلاً: جيمايا)...">
 
-            <!-- محرر النصوص (Word Toolbar) -->
+            <!-- محرر النصوص (Word Toolbar متطور) -->
             <div class="editor-toolbar">
                 <button type="button" class="tool-btn" onclick="formatText('bold')"><b>عريض Bold</b></button>
                 <button type="button" class="tool-btn" onclick="formatText('justify')"><b>ضبط Justify</b></button>
                 <button type="button" class="tool-btn" onclick="formatText('p')"><b>فقرة جديدة</b></button>
+                <button type="button" class="tool-btn" onclick="formatText('h3')"><b>عنوان فرعي</b></button>
             </div>
 
-            <textarea id="post-content" rows="5" placeholder="اكتب محتوى المنشور هنا..."></textarea>
+            <textarea id="post-content" rows="6" placeholder="اكتب محتوى المنشور هنا..."></textarea>
             <input type="text" id="post-image-url" placeholder="رابط الصورة المباشر (اختياري)...">
             
             <button id="publish-btn" onclick="saveOrUpdatePost()">🚀 نشر المحتوى فوراً</button>
@@ -515,7 +580,7 @@
         let currentFolderFilter = 'all';
         const isAdminMode = new URLSearchParams(window.location.search).has('admin');
 
-        // الساعة والتاريخ
+        // الساعة والتاريخ اللحظي الدقيق
         function updateClockAndDate() {
             const now = new Date();
             let hours = now.getHours();
@@ -604,10 +669,8 @@
             const bar = document.getElementById('subfolders-container');
             bar.innerHTML = '';
             
-            // استخراج الفولدرات الخاصة بهذا التبويب فقط
             const folders = [...new Set(allPostsData.filter(p => (p.type || 'home') === currentFilter && p.folder).map(p => p.folder))];
             
-            // إضافة خيار إضافي لتبويب المكاتبات وهو "مكتوبات الآخرين"
             if(currentFilter === 'correspondence') {
                 if(!folders.includes('مكتوبات الآخرين')) folders.push('مكتوبات الآخرين');
             }
@@ -649,7 +712,7 @@
                 return;
             }
 
-            filtered.slice().reverse().forEach((post, actualRevIndex) => {
+            filtered.slice().reverse().forEach((post) => {
                 const realIndex = allPostsData.indexOf(post);
                 const typeLabel = getTabName(post.type || 'home');
                 const folderTag = post.folder ? ` / 📂 ${post.folder}` : '';
@@ -662,14 +725,22 @@
                         </div>`;
                 
                 if(post.content) {
-                    html += `<div class="post-body">${post.content}</div>`;
+                    // فحص طول النص لتفعيل خاصية "قراءة المزيد" إذا كان طويلاً
+                    const isLongText = post.content.length > 400;
+                    html += `
+                        <div class="post-content-wrapper">
+                            <div class="post-content-snippet ${isLongText ? '' : 'expanded'}" id="snippet-${realIndex}">
+                                <div class="post-body">${post.content}</div>
+                            </div>
+                            ${isLongText ? `<button class="read-more-btn" id="read-btn-${realIndex}" onclick="toggleReadMore(${realIndex})">عرض المزيد ...</button>` : ''}
+                        </div>`;
                 }
 
                 if(post.image) {
-                    html += `<img src="${post.image}" class="post-image" alt="Post Image">`;
+                    html += `<img src="${post.image}" class="post-image" alt="Post Image" onclick="openImageModal('${post.image}')">`;
                 }
 
-                // نظام الردود والتعليقات
+                // نظام الردود والتفاعلات
                 html += `<div class="replies-section">
                             <div style="font-family:'Tajawal'; font-weight:700; color:var(--primary); font-size:0.9rem; margin-bottom:10px;">💬 الردود والمناقشات</div>`;
                 
@@ -699,12 +770,36 @@
             });
         }
 
+        // دالة قراءة المزيد
+        function toggleReadMore(index) {
+            const snippet = document.getElementById(`snippet-${index}`);
+            const btn = document.getElementById(`read-btn-${index}`);
+            if(snippet.classList.contains('expanded')) {
+                snippet.classList.remove('expanded');
+                btn.innerText = "عرض المزيد ...";
+            } else {
+                snippet.classList.add('expanded');
+                btn.innerText = "عرض إقل";
+            }
+        }
+
+        // دوال تكبير الصور (Lightbox)
+        function openImageModal(url) {
+            const modal = document.getElementById('imgModal');
+            const modalImg = document.getElementById('modalImgSrc');
+            modal.style.display = 'flex';
+            modalImg.src = url;
+        }
+        function closeImageModal() {
+            document.getElementById('imgModal').style.display = 'none';
+        }
+
         function toggleReplyForm(index) {
             const box = document.getElementById(`reply-form-${index}`);
             box.style.display = (box.style.display === 'block') ? 'none' : 'block';
         }
 
-        // دالة إرسال الرد وتحديث البيانات على گيتهوب مباشرة
+        // إرسال الرد المباشر عبر GitHub API
         async function submitReply(index) {
             const author = document.getElementById(`reply-author-${index}`).value.trim();
             const text = document.getElementById(`reply-text-${index}`).value.trim();
@@ -759,7 +854,7 @@
             }
         }
 
-        // محرر النصوص الوورد المصغر
+        // محرر النصوص المتطور (Word Toolbar)
         function formatText(type) {
             const textarea = document.getElementById('post-content');
             const start = textarea.selectionStart;
@@ -772,6 +867,8 @@
                 textarea.value = val.substring(0, start) + `<div style="text-align:justify;">` + val.substring(start, end) + `</div>` + val.substring(end);
             } else if(type === 'p') {
                 textarea.value = val.substring(0, start) + `\n<p>\n` + val.substring(start, end) + `\n</p>\n` + val.substring(end);
+            } else if(type === 'h3') {
+                textarea.value = val.substring(0, start) + `\n<h3>` + val.substring(start, end) + `</h3>\n` + val.substring(end);
             }
         }
 
