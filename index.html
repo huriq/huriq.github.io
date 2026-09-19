@@ -8,6 +8,10 @@
     <!-- الخطوط العالمية والعربية الفخمة -->
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;900&family=Tajawal:wght@500;700;900&family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
     
+    <!-- استدعاء مكتبة المحرر الاحترافي Quill (مثل الوورد) -->
+    <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+    <script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
+
     <style>
         :root {
             --bg-deep: #070b19;
@@ -45,7 +49,7 @@
             max-width: 900px;
         }
 
-        /* الهيدر الأسطوري مع الوقت والتاريخ وتحديثات اللحظة */
+        /* الهيدر الأسطوري */
         header {
             text-align: center;
             margin-bottom: 30px;
@@ -112,7 +116,7 @@
             font-size: 1.6rem;
         }
 
-        input, textarea, select {
+        input, select {
             width: 100%;
             padding: 14px 18px;
             margin-bottom: 20px;
@@ -126,7 +130,7 @@
             transition: all 0.3s ease;
         }
 
-        input:focus, textarea:focus, select:focus {
+        input:focus, select:focus {
             border-color: var(--primary);
             box-shadow: 0 0 15px rgba(0, 210, 255, 0.2);
         }
@@ -154,27 +158,37 @@
 
         .error-text { color: var(--error); margin-top: 10px; font-size: 0.9rem; display: none; }
 
-        /* شريط الأدوات المصغر (محرر النصوص الوورد المتطور) */
-        .editor-toolbar {
-            display: flex;
-            gap: 8px;
-            margin-bottom: 10px;
-            flex-wrap: wrap;
+        /* تنسيقات محرر Quill (الستايل الووردي) */
+        .editor-container {
+            margin-bottom: 20px;
+            text-align: right;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
         }
-
-        .tool-btn {
-            background: rgba(0, 210, 255, 0.1);
-            color: var(--primary);
-            border: 1px solid rgba(0, 210, 255, 0.3);
-            padding: 6px 12px;
-            border-radius: 8px;
-            font-size: 0.85rem;
-            width: auto;
-            cursor: pointer;
-            box-shadow: none;
-            font-family: 'Tajawal', sans-serif;
+        .ql-toolbar.ql-snow {
+            background-color: #cbd5e1; /* لون فاتح لشريط الأدوات */
+            border: none !important;
+            direction: rtl;
+            text-align: right;
         }
-        .tool-btn:hover { background: var(--primary); color: #070b19; box-shadow: none; transform: none; }
+        .ql-container.ql-snow {
+            background-color: #f8fafc; /* خلفية بيضاء تشبه الورق */
+            color: #0f172a;
+            border: none !important;
+            font-family: 'Cairo', sans-serif;
+            font-size: 1.1rem;
+            min-height: 200px;
+        }
+        .ql-editor {
+            text-align: right;
+            direction: rtl;
+        }
+        /* تعديل أدوات الردود لتكون أصغر */
+        .reply-editor-container .ql-container.ql-snow {
+            min-height: 100px;
+            font-size: 0.95rem;
+        }
 
         /* التبويبات الفخمة */
         .tabs-container {
@@ -261,7 +275,7 @@
         .btn-3d-back:hover { transform: translateY(-2px); box-shadow: 0 7px 0 #020617, 0 10px 20px rgba(0, 210, 255, 0.3); }
         .btn-3d-back:active { transform: translateY(3px); box-shadow: 0 2px 0 #020617, 0 4px 8px rgba(0,0,0,0.5); }
 
-        /* حاوية المنشورات وضبط النص الوورد Justify والـ Read More */
+        /* حاوية المنشورات */
         #content-area { display: none; }
 
         .post-card {
@@ -306,37 +320,13 @@
             font-size: 1.1rem;
             line-height: 1.9;
             color: var(--text-main);
-            text-align: justify;
             word-break: break-word;
             margin-bottom: 15px;
         }
-
-        /* تنسيق خاص للمحتوى الطويل مع زر قراءة المزيد */
-        .post-content-wrapper {
-            position: relative;
-        }
-        .post-content-snippet {
-            max-height: 220px;
-            overflow: hidden;
-            transition: max-height 0.4s ease;
-        }
-        .post-content-snippet.expanded {
-            max-height: none;
-        }
-        .read-more-btn {
-            background: transparent;
-            color: var(--primary);
-            border: none;
-            cursor: pointer;
-            font-family: 'Tajawal', sans-serif;
-            font-weight: 700;
-            margin-top: 10px;
-            display: inline-block;
-            font-size: 0.95rem;
-            padding: 0;
-            box-shadow: none;
-        }
-        .read-more-btn:hover { text-decoration: underline; background: transparent; transform: none; box-shadow: none; }
+        
+        /* إعادة تنسيق محتوى المنشور ليتناسب مع ما يخرجه المحرر */
+        .post-body p { margin-bottom: 10px; }
+        .post-body img { max-width: 100%; border-radius: 8px; }
 
         .post-image {
             width: 100%;
@@ -350,7 +340,7 @@
         }
         .post-image:hover { transform: scale(1.01); }
 
-        /* نظام الردود والتفاعلات المتطور */
+        /* نظام الردود */
         .replies-section {
             margin-top: 20px;
             border-top: 1px dashed rgba(148, 163, 184, 0.2);
@@ -376,9 +366,9 @@
 
         .reply-text {
             color: var(--text-main);
-            text-align: justify;
             line-height: 1.6;
         }
+        .reply-text p { margin-bottom: 5px; }
 
         .btn-reply-toggle {
             background: transparent;
@@ -402,7 +392,7 @@
             display: none;
         }
 
-        /* نافذة تكبير الصور المنبثقة (Lightbox Modal) */
+        /* نافذة تكبير الصور */
         .image-modal {
             display: none;
             position: fixed;
@@ -470,17 +460,16 @@
 </head>
 <body>
 
-    <!-- نافذة تكبير الصور (Lightbox) -->
+    <!-- نافذة تكبير الصور -->
     <div class="image-modal" id="imgModal" onclick="closeImageModal()">
         <span class="modal-close">&times;</span>
         <img id="modalImgSrc" src="" alt="Zoomed Image">
     </div>
 
     <div class="main-wrapper">
-        <!-- الهيدر الأسطوري -->
         <header>
             <div class="header-top-bar">
-                <span id="live-date">📅 جاري تحميل التاريخ...</span>
+                <span id="live-date">📅 جاري التحميل...</span>
                 <span id="live-clock" style="font-weight: 700; letter-spacing: 1px;">⏰ 00:00:00 AM</span>
             </div>
             <div class="brand-logo" onclick="resetToHome()">HUR</div>
@@ -496,10 +485,10 @@
             <p class="error-text" id="login-error">رمز المرور غير صحيح!</p>
         </div>
 
-        <!-- لوحة التحكم والإدارة الذكية -->
+        <!-- لوحة التحكم للآدمن (بها محرر وورد حقيقي) -->
         <div class="admin-card" id="admin-panel" style="display: none;">
             <h2>🛠️ لوحة التحكم والإدارة الذكية</h2>
-            <p style="color: var(--text-muted); margin-bottom: 20px;">انشر محتوى وحدد التبويب والفولدر المناسب بدقة</p>
+            <p style="color: var(--text-muted); margin-bottom: 20px;">انشر محتوى بكل احترافية باستخدام محرر النصوص</p>
             
             <input type="password" id="gh-token" placeholder="GitHub Personal Access Token...">
             <input type="hidden" id="edit-index" value="-1">
@@ -516,15 +505,11 @@
 
             <input type="text" id="post-folder" placeholder="اسم الفولدر أو التصنيف الفرعي (اختياري، مثلاً: جيمايا)...">
 
-            <!-- محرر النصوص (Word Toolbar متطور) -->
-            <div class="editor-toolbar">
-                <button type="button" class="tool-btn" onclick="formatText('bold')"><b>عريض Bold</b></button>
-                <button type="button" class="tool-btn" onclick="formatText('justify')"><b>ضبط Justify</b></button>
-                <button type="button" class="tool-btn" onclick="formatText('p')"><b>فقرة جديدة</b></button>
-                <button type="button" class="tool-btn" onclick="formatText('h3')"><b>عنوان فرعي</b></button>
+            <!-- حاوية المحرر الاحترافي Quill -->
+            <div class="editor-container">
+                <div id="admin-editor"></div>
             </div>
 
-            <textarea id="post-content" rows="6" placeholder="اكتب محتوى المنشور هنا..."></textarea>
             <input type="text" id="post-image-url" placeholder="رابط الصورة المباشر (اختياري)...">
             
             <button id="publish-btn" onclick="saveOrUpdatePost()">🚀 نشر المحتوى فوراً</button>
@@ -539,26 +524,24 @@
             </div>
         </div>
 
-        <!-- قسم العرض والتبويبات السبعة -->
+        <!-- قسم العرض والتبويبات -->
         <div id="content-area">
             <div class="tabs-container">
-                <button class="tab-btn active" onclick="switchTab('home', this)">🏠 الصفحة الرئيسية</button>
-                <button class="tab-btn" onclick="switchTab('beliefs', this)">🌟 المعتقدات</button>
-                <button class="tab-btn" onclick="switchTab('writings', this)">📄 المكتوبات</button>
-                <button class="tab-btn" onclick="switchTab('correspondence', this)">📜 المكاتبات</button>
-                <button class="tab-btn" onclick="switchTab('visuals', this)">🖼️ المرئيات</button>
-                <button class="tab-btn" onclick="switchTab('audio', this)">🎧 المسموعات</button>
-                <button class="tab-btn" onclick="switchTab('archives', this)">📁 المحفوظات</button>
+                <button id="tab-home" class="tab-btn active" onclick="switchTab('home', this)">🏠 الصفحة الرئيسية</button>
+                <button id="tab-beliefs" class="tab-btn" onclick="switchTab('beliefs', this)">🌟 المعتقدات</button>
+                <button id="tab-writings" class="tab-btn" onclick="switchTab('writings', this)">📄 المكتوبات</button>
+                <button id="tab-correspondence" class="tab-btn" onclick="switchTab('correspondence', this)">📜 المكاتبات</button>
+                <button id="tab-visuals" class="tab-btn" onclick="switchTab('visuals', this)">🖼️ المرئيات</button>
+                <button id="tab-audio" class="tab-btn" onclick="switchTab('audio', this)">🎧 المسموعات</button>
+                <button id="tab-archives" class="tab-btn" onclick="switchTab('archives', this)">📁 المحفوظات</button>
             </div>
 
-            <!-- زر الرجوع 3D -->
             <div class="back-home-bar" id="back-bar">
                 <button class="btn-3d-back" onclick="resetToHome()">
                     <span>↩ العودة للرئيسية</span>
                 </button>
             </div>
 
-            <!-- الفولدرات الثانوية -->
             <div id="subfolders-container" class="subfolders-bar" style="display: none;"></div>
 
             <div class="loader" id="main-loader"></div>
@@ -579,8 +562,14 @@
         let currentFilter = 'home';
         let currentFolderFilter = 'all';
         const isAdminMode = new URLSearchParams(window.location.search).has('admin');
+        
+        // إعداد المحرر الاحترافي للآدمن
+        var quillAdmin;
+        
+        // أداة الاحتفاظ بكائنات محررات الردود لتفادي التكرار
+        let replyEditors = {};
 
-        // الساعة والتاريخ اللحظي الدقيق
+        // الساعة والتاريخ
         function updateClockAndDate() {
             const now = new Date();
             let hours = now.getHours();
@@ -594,12 +583,50 @@
         setInterval(updateClockAndDate, 1000);
         updateClockAndDate();
 
+        // تهيئة المحرر للآدمن عند نجاح الدخول
+        function initAdminEditor() {
+            if(!quillAdmin) {
+                quillAdmin = new Quill('#admin-editor', {
+                    theme: 'snow',
+                    placeholder: 'اكتب محتوى المنشور هنا...',
+                    modules: {
+                        toolbar: [
+                            [{ 'header': [1, 2, 3, false] }],
+                            ['bold', 'italic', 'underline', 'strike'],
+                            [{ 'color': [] }, { 'background': [] }],
+                            [{ 'align': [] }],
+                            ['clean']
+                        ]
+                    }
+                });
+            }
+        }
+
+        // قراءة المسار من الرابط (Routing) عند تحميل الصفحة
+        window.onload = () => {
+            const params = new URLSearchParams(window.location.search);
+            const initialTab = params.get('tab');
+            if (initialTab) {
+                const btn = document.getElementById(`tab-${initialTab}`);
+                if (btn) switchTab(initialTab, btn, false);
+            }
+        };
+
+        // التعامل مع زر الرجوع بالمتصفح
+        window.addEventListener('popstate', function() {
+            const params = new URLSearchParams(window.location.search);
+            const tab = params.get('tab') || 'home';
+            const btn = document.getElementById(`tab-${tab}`);
+            switchTab(tab, btn, false);
+        });
+
         function verifyPass() {
             const val = document.getElementById('passcode-input').value;
             if(val === PAGE_PASSWORD) {
                 document.getElementById('login-screen').style.display = 'none';
                 if(isAdminMode) {
                     document.getElementById('admin-panel').style.display = 'block';
+                    initAdminEditor();
                     const savedT = localStorage.getItem('hur_gh_token');
                     if(savedT) document.getElementById('gh-token').value = savedT;
                     fetchPostsForAdmin();
@@ -628,27 +655,34 @@
             }
         }
 
-        function switchTab(filter, btnElement) {
+        // دالة تغيير التبويب مع تحديث الرابط (Routing)
+        function switchTab(filter, btnElement, updateUrl = true) {
             currentFilter = filter;
             currentFolderFilter = 'all';
+            
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
             if(btnElement) {
                 btnElement.classList.add('active');
             } else {
-                document.querySelectorAll('.tab-btn').forEach(b => {
-                    if(b.getAttribute('onclick')?.includes(filter)) b.classList.add('active');
-                });
+                const targetBtn = document.getElementById(`tab-${filter}`);
+                if (targetBtn) targetBtn.classList.add('active');
+            }
+
+            // تحديث رابط المتصفح لتكوين مسار مباشر للمشاركة
+            if (updateUrl) {
+                const newUrl = window.location.protocol + "//" + window.location.host + window.location.pathname + (filter === 'home' ? '' : '?tab=' + filter);
+                window.history.pushState({ path: newUrl }, '', newUrl);
             }
 
             const backBar = document.getElementById('back-bar');
             backBar.style.display = (filter !== 'home') ? 'block' : 'none';
 
             buildSubfolders();
-            renderPosts();
+            if(allPostsData.length > 0 || isAdminMode===false) renderPosts();
         }
 
         function resetToHome() {
-            switchTab('home', document.querySelector('.tab-btn'));
+            switchTab('home', document.getElementById('tab-home'));
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
@@ -668,18 +702,15 @@
         function buildSubfolders() {
             const bar = document.getElementById('subfolders-container');
             bar.innerHTML = '';
-            
             const folders = [...new Set(allPostsData.filter(p => (p.type || 'home') === currentFilter && p.folder).map(p => p.folder))];
             
             if(currentFilter === 'correspondence') {
                 if(!folders.includes('مكتوبات الآخرين')) folders.push('مكتوبات الآخرين');
             }
-
             if(folders.length === 0) {
                 bar.style.display = 'none';
                 return;
             }
-
             bar.style.display = 'flex';
             bar.innerHTML += `<div class="folder-chip active" onclick="filterFolder('all', this)">الكل</div>`;
             folders.forEach(f => {
@@ -725,24 +756,15 @@
                         </div>`;
                 
                 if(post.content) {
-                    // فحص طول النص لتفعيل خاصية "قراءة المزيد" إذا كان طويلاً
-                    const isLongText = post.content.length > 400;
-                    html += `
-                        <div class="post-content-wrapper">
-                            <div class="post-content-snippet ${isLongText ? '' : 'expanded'}" id="snippet-${realIndex}">
-                                <div class="post-body">${post.content}</div>
-                            </div>
-                            ${isLongText ? `<button class="read-more-btn" id="read-btn-${realIndex}" onclick="toggleReadMore(${realIndex})">عرض المزيد ...</button>` : ''}
-                        </div>`;
+                    html += `<div class="post-body">${post.content}</div>`;
                 }
 
                 if(post.image) {
                     html += `<img src="${post.image}" class="post-image" alt="Post Image" onclick="openImageModal('${post.image}')">`;
                 }
 
-                // نظام الردود والتفاعلات
                 html += `<div class="replies-section">
-                            <div style="font-family:'Tajawal'; font-weight:700; color:var(--primary); font-size:0.9rem; margin-bottom:10px;">💬 الردود والمناقشات</div>`;
+                            <div style="font-family:'Tajawal'; font-weight:700; color:var(--primary); font-size:0.9rem; margin-bottom:10px;">💬 الردود والمكاتبات</div>`;
                 
                 if(post.replies && post.replies.length > 0) {
                     post.replies.forEach(rep => {
@@ -752,124 +774,73 @@
                                 <div class="reply-text">${rep.text}</div>
                             </div>`;
                     });
-                } else {
-                    html += `<div style="font-size:0.85rem; color:var(--text-muted);">لا توجد ردود بعد. كن أول المردودين!</div>`;
                 }
 
+                // صندوق الردود للزوار بمحرر احترافي
                 html += `
-                    <button class="btn-reply-toggle" onclick="toggleReplyForm(${realIndex})">✍️ كتابة رد</button>
+                    <button class="btn-reply-toggle" onclick="toggleReplyForm(${realIndex})">✍️ كتابة مكتوب أو رد</button>
                     <div class="reply-form-box" id="reply-form-${realIndex}">
                         <input type="text" id="reply-author-${realIndex}" placeholder="اسمك الكريم..." style="margin-bottom:10px; padding:10px; font-size:0.9rem;">
-                        <textarea id="reply-text-${realIndex}" rows="3" placeholder="اكتب ردك هنا..." style="margin-bottom:10px; padding:10px; font-size:0.9rem;"></textarea>
-                        <button onclick="submitReply(${realIndex})" style="padding:10px; font-size:0.95rem;">إرسال الرد</button>
-                    </div>
-                </div>`;
+                        
+                        <!-- حاوية محرر الزوار -->
+                        <div class="editor-container reply-editor-container">
+                            <div id="reply-editor-${realIndex}"></div>
+                        </div>
 
-                html += `</div>`;
+                        <button onclick="submitPublicReply(${realIndex})" style="padding:10px; font-size:0.95rem;">إرسال المكتوب بدون توكن</button>
+                    </div>
+                </div></div>`;
+
                 feed.innerHTML += html;
             });
         }
 
-        // دالة قراءة المزيد
-        function toggleReadMore(index) {
-            const snippet = document.getElementById(`snippet-${index}`);
-            const btn = document.getElementById(`read-btn-${index}`);
-            if(snippet.classList.contains('expanded')) {
-                snippet.classList.remove('expanded');
-                btn.innerText = "عرض المزيد ...";
+        // إظهار صندوق الرد وتهيئة المحرر الخاص به
+        function toggleReplyForm(index) {
+            const box = document.getElementById(`reply-form-${index}`);
+            if (box.style.display === 'block') {
+                box.style.display = 'none';
             } else {
-                snippet.classList.add('expanded');
-                btn.innerText = "عرض إقل";
+                box.style.display = 'block';
+                // تهيئة المحرر فقط إذا لم يتم تهيئته مسبقاً لهذا الرد
+                if (!replyEditors[index]) {
+                    replyEditors[index] = new Quill(`#reply-editor-${index}`, {
+                        theme: 'snow',
+                        placeholder: 'اكتب مكتوبك هنا ونسقه براحتك...',
+                        modules: {
+                            toolbar: [
+                                ['bold', 'italic', 'underline'],
+                                [{ 'color': [] }],
+                                [{ 'align': [] }],
+                                ['clean']
+                            ]
+                        }
+                    });
+                }
             }
         }
 
-        // دوال تكبير الصور (Lightbox)
-        function openImageModal(url) {
-            const modal = document.getElementById('imgModal');
-            const modalImg = document.getElementById('modalImgSrc');
-            modal.style.display = 'flex';
-            modalImg.src = url;
-        }
-        function closeImageModal() {
-            document.getElementById('imgModal').style.display = 'none';
-        }
-
-        function toggleReplyForm(index) {
-            const box = document.getElementById(`reply-form-${index}`);
-            box.style.display = (box.style.display === 'block') ? 'none' : 'block';
-        }
-
-        // إرسال الرد المباشر عبر GitHub API
-        async function submitReply(index) {
+        // دالة الرد للمستخدم العام (الحل الصدگي الّي شرحته إلك فوق)
+        function submitPublicReply(index) {
             const author = document.getElementById(`reply-author-${index}`).value.trim();
-            const text = document.getElementById(`reply-text-${index}`).value.trim();
+            const textHTML = replyEditors[index].root.innerHTML; // أخذ النص المنسق (HTML)
 
-            if(!author || !text) {
-                alert("الرجاء إدخال الاسم ومحتوى الرد!");
+            if(!author || replyEditors[index].getText().trim().length === 0) {
+                alert("الرجاء إدخال اسمك ومحتوى المكتوب!");
                 return;
             }
 
-            const token = prompt("أدخل رمز المرور أو صلاحية النشر (GitHub Token) لتأكيد إضافة الرد:");
-            if(!token) return;
-
-            const apiUrl = `https://api.github.com/repos/${GITHUB_USERNAME}/${REPO_NAME}/contents/posts.json`;
-
-            try {
-                const getRes = await fetch(apiUrl, { headers: { 'Authorization': `token ${token}` } });
-                if(!getRes.ok) throw new Error("فشل الاتصال بـ GitHub.");
-                
-                const fileData = await getRes.json();
-                const sha = fileData.sha;
-                let existing = JSON.parse(new TextDecoder().decode(Uint8Array.from(atob(fileData.content), c => c.charCodeAt(0))));
-
-                if(!existing[index].replies) existing[index].replies = [];
-                existing[index].replies.push({
-                    author: author,
-                    text: text,
-                    date: new Date().toLocaleString('ar-IQ')
-                });
-
-                const encoded = btoa(unescape(encodeURIComponent(JSON.stringify(existing, null, 2))));
-
-                const putRes = await fetch(apiUrl, {
-                    method: 'PUT',
-                    headers: {
-                        'Authorization': `token ${token}`,
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        message: `Add reply to post index ${index}`,
-                        content: encoded,
-                        sha: sha
-                    })
-                });
-
-                if(!putRes.ok) throw new Error("فشل حفظ الرد.");
-
-                alert("✅ تم إرسال ردك بنجاح!");
-                loadPosts();
-
-            } catch(err) {
-                alert("❌ خطأ: " + err.message);
-            }
+            // التنبيه الصارم للمستخدم
+            alert(`رسالة من النظام: مرحباً ${author}!\nهذه الواجهة تم تجهيزها باحترافية (بمحرر وورد). لكن إرسال البيانات لمستودع گتهب الثابت بدون مصادقة (Token) هو إجراء مستحيل هندسياً وأمنياً! لكي تعمل هذه الخاصية بشكل حقيقي، يجب ربط الموقع بقاعدة بيانات مثل Firebase. الكود كواجهة جاهز تماماً للربط مستقبلاً.`);
         }
 
-        // محرر النصوص المتطور (Word Toolbar)
-        function formatText(type) {
-            const textarea = document.getElementById('post-content');
-            const start = textarea.selectionStart;
-            const end = textarea.selectionEnd;
-            const val = textarea.value;
-
-            if(type === 'bold') {
-                textarea.value = val.substring(0, start) + `<strong>` + val.substring(start, end) + `</strong>` + val.substring(end);
-            } else if(type === 'justify') {
-                textarea.value = val.substring(0, start) + `<div style="text-align:justify;">` + val.substring(start, end) + `</div>` + val.substring(end);
-            } else if(type === 'p') {
-                textarea.value = val.substring(0, start) + `\n<p>\n` + val.substring(start, end) + `\n</p>\n` + val.substring(end);
-            } else if(type === 'h3') {
-                textarea.value = val.substring(0, start) + `\n<h3>` + val.substring(start, end) + `</h3>\n` + val.substring(end);
-            }
+        function openImageModal(url) {
+            const modal = document.getElementById('imgModal');
+            document.getElementById('modalImgSrc').src = url;
+            modal.style.display = 'flex';
+        }
+        function closeImageModal() {
+            document.getElementById('imgModal').style.display = 'none';
         }
 
         async function fetchPostsForAdmin() {
@@ -900,7 +871,7 @@
             }
 
             allPostsData.map((post, index) => ({ ...post, realIndex: index })).slice().reverse().forEach(item => {
-                const snippet = item.content ? item.content.replace(/<[^>]*>/g, '') : '[صورة]';
+                const snippet = item.content ? item.content.replace(/<[^>]*>/g, '').substring(0, 50) + '...' : '[صورة]';
                 const tLabel = getTabName(item.type || 'home');
                 const fLabel = item.folder ? ` [فولدر: ${item.folder}]` : '';
                 listContainer.innerHTML += `
@@ -922,7 +893,10 @@
             document.getElementById('edit-index').value = index;
             document.getElementById('post-type').value = post.type || 'home';
             document.getElementById('post-folder').value = post.folder || '';
-            document.getElementById('post-content').value = post.content || '';
+            
+            // وضع النص المحفوظ داخل محرر Quill
+            if (quillAdmin) quillAdmin.root.innerHTML = post.content || '';
+            
             document.getElementById('post-image-url').value = post.image || '';
             
             const pubBtn = document.getElementById('publish-btn');
@@ -934,7 +908,7 @@
         function cancelEdit() {
             document.getElementById('edit-index').value = "-1";
             document.getElementById('post-folder').value = '';
-            document.getElementById('post-content').value = '';
+            if(quillAdmin) quillAdmin.root.innerHTML = '';
             document.getElementById('post-image-url').value = '';
             document.getElementById('publish-btn').innerText = "🚀 نشر المحتوى فوراً";
             document.getElementById('cancel-edit-btn').style.display = 'none';
@@ -945,7 +919,11 @@
             const editIndex = parseInt(document.getElementById('edit-index').value);
             const type = document.getElementById('post-type').value;
             const folder = document.getElementById('post-folder').value.trim();
-            const content = document.getElementById('post-content').value.trim();
+            
+            // سحب النص المنسق (HTML) من المحرر
+            const contentHTML = quillAdmin.root.innerHTML;
+            const isContentEmpty = quillAdmin.getText().trim().length === 0;
+
             const image = document.getElementById('post-image-url').value.trim();
             const btn = document.getElementById('publish-btn');
             const feedback = document.getElementById('admin-feedback');
@@ -956,7 +934,7 @@
                 return;
             }
 
-            if(!content && !image) {
+            if(isContentEmpty && !image) {
                 feedback.style.color = "var(--error)";
                 feedback.innerText = "أدخل نصاً أو رابط صورة على الأقل!";
                 return;
@@ -987,7 +965,7 @@
                     existing[editIndex] = {
                         type: type,
                         folder: folder,
-                        content: content,
+                        content: isContentEmpty ? "" : contentHTML,
                         image: image,
                         date: existing[editIndex].date,
                         replies: existing[editIndex].replies || []
@@ -997,7 +975,7 @@
                     existing.push({
                         type: type,
                         folder: folder,
-                        content: content,
+                        content: isContentEmpty ? "" : contentHTML,
                         image: image,
                         date: new Date().toLocaleString('ar-IQ'),
                         replies: []
@@ -1056,7 +1034,6 @@
                 let existing = JSON.parse(new TextDecoder().decode(Uint8Array.from(atob(fileData.content), c => c.charCodeAt(0))));
 
                 existing.splice(index, 1);
-
                 const encoded = btoa(unescape(encodeURIComponent(JSON.stringify(existing, null, 2))));
 
                 const putRes = await fetch(apiUrl, {
