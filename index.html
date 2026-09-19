@@ -452,7 +452,7 @@
 
             <input type="text" id="post-folder" placeholder="اسم الفولدر أو التصنيف الفرعي (اختياري، مثلاً: جيمايا)...">
 
-            <!-- مححر النصوص (Word Toolbar) -->
+            <!-- محرر النصوص (Word Toolbar) -->
             <div class="editor-toolbar">
                 <button type="button" class="tool-btn" onclick="formatText('bold')"><b>عريض Bold</b></button>
                 <button type="button" class="tool-btn" onclick="formatText('justify')"><b>ضبط Justify</b></button>
@@ -667,11 +667,6 @@
 
                 if(post.image) {
                     html += `<img src="${post.image}" class="post-image" alt="Post Image">`;
-                }
-
-                // زر إرسال مكتوب زائر إذا كان في قسم المكاتبات / مكتوبات الآخرين
-                if(currentFilter === 'correspondence' && currentFolderFilter === 'مكتوبات الآخرين' && realIndex === 0) {
-                    // زر عام لإضافة مكتوب جديد من الزوار
                 }
 
                 // نظام الردود والتعليقات
