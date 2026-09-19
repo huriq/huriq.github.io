@@ -3,12 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>مدونة حمودي الخاصة</title>
+    <title>مدونة حمودي الحبيبة</title>
     
-    <!-- مكتبة Supabase -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    
-    <!-- خط تجول -->
+    <!-- خط تجول الأنيق -->
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap');
         
@@ -40,14 +37,14 @@
             max-width: 600px;
             text-align: center;
             border: 1px solid #333;
-            margin-top: 50px;
+            margin-top: 30px;
             height: fit-content;
         }
 
         h2 { color: var(--primary); font-weight: 700; }
         p { color: #bbb; }
 
-        input[type="password"], input[type="text"], textarea, input[type="file"] {
+        input, textarea {
             width: 100%;
             padding: 12px;
             margin-bottom: 20px;
@@ -81,7 +78,7 @@
         #error-msg { color: var(--error); display: none; margin-top: 10px; }
 
         /* ستايل المنشورات */
-        #feed-box, #admin-box { display: none; width: 100%; max-width: 700px; }
+        #feed-box, #admin-box { display: none; width: 100%; max-width: 700px; margin: auto; }
         
         .post {
             background-color: #1e1e1e;
@@ -117,33 +114,32 @@
 
     <!-- شاشة عرض المنشورات للزوار -->
     <div id="feed-box">
-        <h2 style="text-align: center; margin-bottom: 30px;">📜 كتابات وصور حمودي</h2>
+        <h2 style="text-align: center; margin-bottom: 30px; color: var(--primary);">📜 كتابات وصور حمودي</h2>
         <div id="posts-container"></div>
         <div class="loader" id="feed-loader"></div>
     </div>
 
-    <!-- شاشة الأدمن (للرفع) -->
+    <!-- شاشة الأدمن (للوحة التحكم) -->
     <div class="container" id="admin-box">
-        <h2>🛠️ إضافة منشور جديد</h2>
-        <p>اكتب النص واختار صورة (اختياري) وارفعها گبل لصفحتك</p>
-        <textarea id="post-text" rows="5" placeholder="شنو ببالك هسة؟"></textarea>
-        <input type="file" id="post-image" accept="image/*">
-        <button id="upload-btn" onclick="uploadPost()">🚀 انشر هسة</button>
+        <h2>🛠️ لوحة التحكم والنشر</h2>
+        <p>اكتب النص أو حط رابط الصورة، وخلي الـ Token مالتك حتى ننشر فوري</p>
+        
+        <input type="password" id="gh-token" placeholder="حط الـ GitHub Token هنا (مرة وحدة)...">
+        <textarea id="post-text" rows="5" placeholder="شنو ببالك تحجي هسة؟"></textarea>
+        <input type="text" id="post-image" placeholder="رابط الصورة (اختياري - مثلاً رابط مباشر من الإنترنت)...">
+        
+        <button id="upload-btn" onclick="publishPost()">🚀 انشر بصفحتي هسة</button>
         <p id="admin-msg" style="margin-top: 15px;"></p>
     </div>
 
     <script>
         // ==========================================
-        // معلومات الـ Supabase مالتك مدمجة هنا رسمياً
+        // إعدادات گيتهوب الخاصة بيك (مضبوطة لـ huriq.github.io)
         // ==========================================
-        const SUPABASE_URL = 'https://dafppielzdalbheyiucq.supabase.co';
-        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRhZnBwaWVsemRhbGJoZXlpdWNxIiqicm9sZSI6ImFub24iLCJpYXQiOjE3ODk3NTkwNDQsImV4cCI6MjEwNTMzNTA0NH0.KkhbsF_bW1sS8eDtSautz9YV_fNoFiohXjcIIfq3WqQ';
-        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        const GITHUB_USERNAME = 'huriq'; 
+        const REPO_NAME = 'huriq.github.io';
+        const PAGE_PASSWORD = "123"; // تقدر تبدله بالباسوورد اللي يعجبك
 
-        // الباسوورد الرئيسي للصفحة (تگدر تغيره للرمز اللي يعجبك)
-        const PAGE_PASSWORD = "123"; 
-
-        // فحص الرابط إذا چان أدمن
         const isAdmin = new URLSearchParams(window.location.search).has('admin');
 
         function checkPassword() {
@@ -152,6 +148,11 @@
                 document.getElementById('login-box').style.display = 'none';
                 if(isAdmin) {
                     document.getElementById('admin-box').style.display = 'block';
+                    // استرجاع الـ token المخزون محلياً بالمتصفح إذا موجود
+                    const savedToken = localStorage.getItem('my_gh_token');
+                    if(savedToken) {
+                        document.getElementById('gh-token').value = savedToken;
+                    }
                 } else {
                     document.getElementById('feed-box').style.display = 'block';
                     fetchPosts();
@@ -161,101 +162,130 @@
             }
         }
 
-        // جلب المنشورات من قاعدة البيانات
+        // جلب المنشورات من ملف posts.json
         async function fetchPosts() {
             document.getElementById('feed-loader').style.display = 'block';
-            
-            const { data, error } = await supabase
-                .from('posts')
-                .select('*')
-                .order('created_at', { ascending: false });
-
-            document.getElementById('feed-loader').style.display = 'none';
-            const container = document.getElementById('posts-container');
-            container.innerHTML = '';
-
-            if (error) {
-                container.innerHTML = '<p style="text-align:center; color:red;">صار خطأ بجلب البيانات!</p>';
-                return;
-            }
-
-            if (data.length === 0) {
-                container.innerHTML = '<p style="text-align:center;">بعده حمودي مناشر شي!</p>';
-                return;
-            }
-
-            data.forEach(post => {
-                const date = new Date(post.created_at).toLocaleString('ar-IQ');
-                let postHTML = `<div class="post">
-                    <span class="post-date">🕒 ${date}</span>
-                    <p>${post.content || ''}</p>`;
+            try {
+                const response = await fetch(`https://raw.githubusercontent.com/${GITHUB_USERNAME}/${REPO_NAME}/main/posts.json?t=${Date.now()}`);
+                if (!response.ok) throw new Error();
+                const posts = await response.json();
                 
-                if (post.image_url) {
-                    postHTML += `<img src="${post.image_url}" alt="صورة المنشور">`;
+                document.getElementById('feed-loader').style.display = 'none';
+                const container = document.getElementById('posts-container');
+                container.innerHTML = '';
+
+                if (posts.length === 0) {
+                    container.innerHTML = '<p style="text-align:center;">بعده حمودي مناشر شي!</p>';
+                    return;
                 }
-                
-                postHTML += `</div>`;
-                container.innerHTML += postHTML;
-            });
+
+                // عرض الأحدث بالبداية
+                posts.reverse().forEach(post => {
+                    let postHTML = `<div class="post">
+                        <span class="post-date">🕒 ${post.date}</span>
+                        <p>${post.content || ''}</p>`;
+                    
+                    if (post.image) {
+                        postHTML += `<img src="${post.image}" alt="صورة المنشور">`;
+                    }
+                    
+                    postHTML += `</div>`;
+                    container.innerHTML += postHTML;
+                });
+            } catch (err) {
+                document.getElementById('feed-loader').style.display = 'none';
+                document.getElementById('posts-container').innerHTML = '<p style="text-align:center; color:red;">ما قدرنا نجلب المنشورات، تأكد من وجود ملف posts.json!</p>';
+            }
         }
 
-        // رفع منشور جديد (صورة + نص)
-        async function uploadPost() {
-            const textContent = document.getElementById('post-text').value;
-            const imageFile = document.getElementById('post-image').files[0];
+        // نشر بوست جديد وتحديث ملف posts.json على گيتهوب تلقائياً
+        async function publishPost() {
+            const token = document.getElementById('gh-token').value.trim();
+            const textContent = document.getElementById('post-text').value.trim();
+            const imageUrl = document.getElementById('post-image').value.trim();
             const btn = document.getElementById('upload-btn');
             const msg = document.getElementById('admin-msg');
 
-            if (!textContent && !imageFile) {
+            if (!token) {
                 msg.style.color = "var(--error)";
-                msg.innerText = "اكتب شي أو اختار صورة على الأقل!";
+                msg.innerText = "لازم تحط الـ GitHub Token بالمستطيل فوق!";
                 return;
             }
 
+            if (!textContent && !imageUrl) {
+                msg.style.color = "var(--error)";
+                msg.innerText = "اكتب نص أو حط رابط صورة على الأقل!";
+                return;
+            }
+
+            // خزنه بالمتصفح حتى ما تضطر تكتبه كل مرة
+            localStorage.setItem('my_gh_token', token);
+
             btn.disabled = true;
-            btn.innerText = "⏳ گاعد يرفع...";
+            btn.innerText = "⏳ قاعد نحدث گيتهوب...";
             msg.innerText = "";
 
-            let publicImageUrl = null;
+            const apiUrl = `https://api.github.com/repos/${GITHUB_USERNAME}/${REPO_NAME}/contents/posts.json`;
 
             try {
-                if (imageFile) {
-                    const fileExt = imageFile.name.split('.').pop();
-                    const fileName = `${Date.now()}.${fileExt}`;
-                    
-                    const { data: uploadData, error: uploadError } = await supabase.storage
-                        .from('images')
-                        .upload(fileName, imageFile);
-
-                    if (uploadError) throw uploadError;
-
-                    const { data: publicUrlData } = supabase.storage
-                        .from('images')
-                        .getPublicUrl(fileName);
-                    
-                    publicImageUrl = publicUrlData.publicUrl;
+                // 1. جلب الملف الحالي وشاهد الـ SHA مالته (مطلوب من گيتهوب حتى يسمح بالتعديل)
+                const getRes = await fetch(apiUrl, {
+                    headers: { 'Authorization': `token ${token}` }
+                });
+                
+                if (!getRes.ok) throw new Error("فشل الاتصال بـ GitHub، تأكد من الـ Token!");
+                
+                const fileData = await getRes.json();
+                const currentSha = fileData.sha;
+                
+                // فك تشفير المحتوى القديم
+                let existingPosts = [];
+                if (fileData.content) {
+                    const decodedBytes = Uint8Array.from(atob(fileData.content), c => c.charCodeAt(0));
+                    const decodedString = new TextDecoder().decode(decodedBytes);
+                    existingPosts = JSON.parse(decodedString);
                 }
 
-                const { error: insertError } = await supabase
-                    .from('posts')
-                    .insert([
-                        { content: textContent, image_url: publicImageUrl }
-                    ]);
+                // 2. إضافة البوست الجديد للمصفوفة
+                const newPost = {
+                    content: textContent,
+                    image: imageUrl,
+                    date: new Date().toLocaleString('ar-IQ')
+                };
+                existingPosts.push(newPost);
 
-                if (insertError) throw insertError;
+                // 3. تحويل المصفوفة الجديدة إلى نص وتشفيرها Base64
+                const updatedString = JSON.stringify(existingPosts, null, 2);
+                const encodedContent = btoa(unescape(encodeURIComponent(updatedString)));
+
+                // 4. إرسال التحديث لـ گيتهوب (Commit تلقائي)
+                const putRes = await fetch(apiUrl, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `token ${token}`,
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        message: `Add new post via web admin`,
+                        content: encodedContent,
+                        sha: currentSha
+                    })
+                });
+
+                if (!putRes.ok) throw new Error("فشل حفظ التحديث على المستودع!");
 
                 msg.style.color = "lightgreen";
-                msg.innerText = "✅ عاشت ايدك! المنشور انرفع لصفحتك.";
+                msg.innerText = "✅ عاشت ايدك! انشرت بنجاح وتحدث گيتهوب تلقائياً.";
                 document.getElementById('post-text').value = '';
                 document.getElementById('post-image').value = '';
 
             } catch (err) {
                 console.error(err);
                 msg.style.color = "var(--error)";
-                msg.innerText = "❌ صار خطأ بالرفع، تأكد من الإعدادات!";
+                msg.innerText = "❌ صار خطأ: " + err.message;
             } finally {
                 btn.disabled = false;
-                btn.innerText = "🚀 انشر هسة";
+                btn.innerText = "🚀 انشر بصفحتي هسة";
             }
         }
     </script>
