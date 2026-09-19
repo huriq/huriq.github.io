@@ -42,25 +42,48 @@
 
         .main-wrapper {
             width: 100%;
-            max-width: 800px;
+            max-width: 850px;
         }
 
-        /* الهيدر والعنوان الفخم */
+        /* الهيدر الأسطوري مع الوقت والتاريخ */
         header {
             text-align: center;
-            margin-bottom: 40px;
+            margin-bottom: 30px;
+        }
+
+        .header-top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--surface-glass);
+            border: 1px solid var(--border);
+            padding: 10px 20px;
+            border-radius: 14px;
+            margin-bottom: 20px;
+            font-family: 'Tajawal', sans-serif;
+            font-size: 0.9rem;
+            color: var(--primary);
+            backdrop-filter: blur(10px);
         }
 
         .brand-logo {
             font-family: 'Montserrat', sans-serif;
-            font-size: 3.5rem;
+            font-size: 4rem;
             font-weight: 900;
             background: linear-gradient(135deg, var(--primary), var(--secondary));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            letter-spacing: 4px;
+            letter-spacing: 5px;
             margin-bottom: 5px;
             text-transform: uppercase;
+            cursor: pointer;
+            display: inline-block;
+            transition: transform 0.3s ease, filter 0.3s ease;
+        }
+
+        .brand-logo:hover {
+            transform: scale(1.05);
+            filter: drop-shadow(0 0 20px rgba(0, 210, 255, 0.6));
         }
 
         .brand-subtitle {
@@ -131,11 +154,11 @@
 
         .error-text { color: var(--error); margin-top: 10px; font-size: 0.9rem; display: none; }
 
-        /* التبويبات الفخمة */
+        /* التبويبات الفخمة الجديدة */
         .tabs-container {
             display: flex;
             justify-content: center;
-            gap: 12px;
+            gap: 10px;
             margin-bottom: 30px;
             flex-wrap: wrap;
         }
@@ -144,21 +167,57 @@
             background: var(--surface);
             border: 1px solid var(--border);
             color: var(--text-muted);
-            padding: 10px 24px;
+            padding: 10px 18px;
             border-radius: 30px;
             font-family: 'Tajawal', sans-serif;
             font-weight: 700;
             cursor: pointer;
-            transition: all 0.3s ease;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             width: auto;
             box-shadow: none;
+            font-size: 0.95rem;
         }
 
         .tab-btn.active, .tab-btn:hover {
             background: linear-gradient(135deg, var(--primary), var(--secondary));
             color: #070b19;
             border-color: transparent;
-            box-shadow: 0 0 15px rgba(0, 210, 255, 0.4);
+            transform: translateY(-3px) scale(1.03);
+            box-shadow: 0 0 20px rgba(0, 210, 255, 0.4);
+        }
+
+        /* زر الرجوع 3D الفخم داخل التبويبات */
+        .back-home-bar {
+            margin-bottom: 25px;
+            display: none;
+        }
+
+        .btn-3d-back {
+            background: linear-gradient(145deg, #0f172a, #1e293b);
+            color: var(--primary);
+            border: 1px solid var(--border);
+            padding: 12px 25px;
+            border-radius: 14px;
+            font-family: 'Tajawal', sans-serif;
+            font-weight: 700;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            width: auto;
+            box-shadow: 0 6px 0 #020617, 0 10px 20px rgba(0,0,0,0.5);
+            transition: all 0.1s ease;
+        }
+
+        .btn-3d-back:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 0 #020617, 0 12px 25px rgba(0, 210, 255, 0.3);
+            background: linear-gradient(145deg, #1e293b, #0f172a);
+        }
+
+        .btn-3d-back:active {
+            transform: translateY(4px);
+            box-shadow: 0 2px 0 #020617, 0 5px 10px rgba(0,0,0,0.5);
         }
 
         /* حاوية المنشورات */
@@ -218,7 +277,7 @@
             border: 1px solid rgba(255,255,255,0.05);
         }
 
-        /* لوحة إدارة المنشورات (داخل وضع الأدمن) */
+        /* لوحة إدارة المنشورات */
         .manage-section {
             margin-top: 35px;
             border-top: 1px solid rgba(148, 163, 184, 0.2);
@@ -238,67 +297,53 @@
             gap: 15px;
         }
 
-        .manage-info {
-            flex-grow: 1;
-            overflow: hidden;
-        }
-
-        .manage-text {
-            font-size: 0.95rem;
-            color: var(--text-main);
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            margin-bottom: 4px;
-        }
-
-        .manage-actions {
-            display: flex;
-            gap: 8px;
-            flex-shrink: 0;
-        }
+        .manage-info { flex-grow: 1; overflow: hidden; }
+        .manage-text { font-size: 0.95rem; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 4px; }
+        .manage-actions { display: flex; gap: 8px; flex-shrink: 0; }
 
         .btn-edit {
-            background: rgba(245, 158, 11, 0.15);
-            color: var(--warning);
-            border: 1px solid rgba(245, 158, 11, 0.4);
-            padding: 6px 14px;
-            font-size: 0.85rem;
-            border-radius: 8px;
-            width: auto;
-            box-shadow: none;
+            background: rgba(245, 158, 11, 0.15); color: var(--warning); border: 1px solid rgba(245, 158, 11, 0.4);
+            padding: 6px 14px; font-size: 0.85rem; border-radius: 8px; width: auto; box-shadow: none;
         }
         .btn-edit:hover { background: var(--warning); color: #000; box-shadow: none; }
 
         .btn-delete {
-            background: rgba(244, 63, 94, 0.15);
-            color: var(--error);
-            border: 1px solid rgba(244, 63, 94, 0.4);
-            padding: 6px 14px;
-            font-size: 0.85rem;
-            border-radius: 8px;
-            width: auto;
-            box-shadow: none;
+            background: rgba(244, 63, 94, 0.15); color: var(--error); border: 1px solid rgba(244, 63, 94, 0.4);
+            padding: 6px 14px; font-size: 0.85rem; border-radius: 8px; width: auto; box-shadow: none;
         }
         .btn-delete:hover { background: var(--error); color: #fff; box-shadow: none; }
 
         .loader {
-            border: 4px solid rgba(255,255,255,0.1);
-            border-top: 4px solid var(--primary);
-            border-radius: 50%; width: 40px; height: 40px;
-            animation: spin 1s linear infinite; margin: 40px auto; display: none;
+            border: 4px solid rgba(255,255,255,0.1); border-top: 4px solid var(--primary);
+            border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 40px auto; display: none;
         }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
         .empty-msg { text-align: center; color: var(--text-muted); font-size: 1.1rem; margin-top: 40px; }
+
+        /* تذييل الصفحة الفخم */
+        footer {
+            text-align: center;
+            margin-top: 50px;
+            padding: 20px;
+            border-top: 1px solid rgba(148, 163, 184, 0.1);
+            color: var(--text-muted);
+            font-family: 'Montserrat', 'Tajawal', sans-serif;
+            font-size: 0.95rem;
+            letter-spacing: 1px;
+        }
     </style>
 </head>
 <body>
 
     <div class="main-wrapper">
-        <!-- الهيدر -->
+        <!-- الهيدر الأسطوري -->
         <header>
-            <div class="brand-logo">HUR</div>
+            <div class="header-top-bar">
+                <span id="live-date">📅 جاري تحميل التاريخ...</span>
+                <span id="live-clock" style="font-weight: 700; letter-spacing: 1px;">⏰ 00:00:00 AM</span>
+            </div>
+            <div class="brand-logo" onclick="resetToHome()">HUR</div>
             <div class="brand-subtitle">DIGITAL PLATFORM & ARCHIVE</div>
         </header>
 
@@ -311,30 +356,32 @@
             <p class="error-text" id="login-error">رمز المرور غير صحيح!</p>
         </div>
 
-        <!-- لوحة التحكم المتكاملة (تظهر عند إضافة ?admin=1 بالرابط) -->
+        <!-- لوحة التحكم المتكاملة -->
         <div class="admin-card" id="admin-panel" style="display: none;">
             <h2>🛠️ لوحة التحكم والإدارة الذكية</h2>
-            <p style="color: var(--text-muted); margin-bottom: 20px;">انشر، عدل، أو احذف أي محتوى بضغطة زر واحدة</p>
+            <p style="color: var(--text-muted); margin-bottom: 20px;">انشر محتوى وحدد التبويب المناسب له بدقة</p>
             
             <input type="password" id="gh-token" placeholder="GitHub Personal Access Token...">
-            
-            <!-- حقل مخفي لحفظ معرف التعديل إذا كنا نعدل منشور حالي -->
             <input type="hidden" id="edit-index" value="-1">
 
             <select id="post-type">
-                <option value="text">📄 منشور نصي (كتابات ونصوص)</option>
-                <option value="image">🖼️ منشور صور (معرض الصور)</option>
+                <option value="home">🏠 الصفحة الرئيسية</option>
+                <option value="beliefs">🌟 المعتقدات</option>
+                <option value="writings">📄 المكتوبات</option>
+                <option value="correspondence">📜 المكاتبات</option>
+                <option value="visuals">🖼️ المرئيات</option>
+                <option value="audio">🎧 المسموعات</option>
+                <option value="archives">📁 المحفوظات</option>
             </select>
 
             <textarea id="post-content" rows="4" placeholder="اكتب محتوى المنشور هنا..."></textarea>
-            <input type="text" id="post-image-url" placeholder="رابط الصورة المباشر (اختياري للنصوص، إلزامي للصور)...">
+            <input type="text" id="post-image-url" placeholder="رابط الصورة المباشر (اختياري)...">
             
             <button id="publish-btn" onclick="saveOrUpdatePost()">🚀 نشر المحتوى فوراً</button>
             <button id="cancel-edit-btn" onclick="cancelEdit()" style="display:none; background:#334155; color:#fff; margin-top:10px;">إلغاء التعديل</button>
             
             <p id="admin-feedback" style="margin-top: 15px; font-weight: 700;"></p>
 
-            <!-- قسم إدارة وتعديل وحذف المنشورات الحالية -->
             <div class="manage-section">
                 <h3 style="font-family: 'Tajawal', sans-serif; color: var(--primary); margin-bottom: 15px; font-size: 1.2rem;"> إدارة المنشورات الحالية</h3>
                 <div class="loader" id="admin-loader"></div>
@@ -342,27 +389,65 @@
             </div>
         </div>
 
-        <!-- قسم العرض والتبويبات (للزوار) -->
+        <!-- قسم العرض والتبويبات السبعة -->
         <div id="content-area">
             <div class="tabs-container">
-                <button class="tab-btn active" onclick="switchTab('all', this)">الكل</button>
-                <button class="tab-btn" onclick="switchTab('text', this)">📄 النصوص والكتابات</button>
-                <button class="tab-btn" onclick="switchTab('image', this)">🖼️ معرض الصور</button>
+                <button class="tab-btn active" onclick="switchTab('home', this)">🏠 الصفحة الرئيسية</button>
+                <button class="tab-btn" onclick="switchTab('beliefs', this)">🌟 المعتقدات</button>
+                <button class="tab-btn" onclick="switchTab('writings', this)">📄 المكتوبات</button>
+                <button class="tab-btn" onclick="switchTab('correspondence', this)">📜 المكاتبات</button>
+                <button class="tab-btn" onclick="switchTab('visuals', this)">🖼️ المرئيات</button>
+                <button class="tab-btn" onclick="switchTab('audio', this)">🎧 المسموعات</button>
+                <button class="tab-btn" onclick="switchTab('archives', this)">📁 المحفوظات</button>
+            </div>
+
+            <!-- زر الرجوع 3D يظهر حصراً عند الدخول لأي تبويب غير الرئيسية -->
+            <div class="back-home-bar" id="back-bar">
+                <button class="btn-3d-back" onclick="resetToHome()">
+                    <span>↩ العودة للرئيسية</span>
+                </button>
             </div>
 
             <div class="loader" id="main-loader"></div>
             <div id="posts-feed"></div>
         </div>
+
+        <!-- تذييل الصفحة الفخم -->
+        <footer>
+            © Designed by HUR
+        </footer>
     </div>
 
     <script>
         const GITHUB_USERNAME = 'huriq'; 
         const REPO_NAME = 'huriq.github.io';
-        const PAGE_PASSWORD = "123"; // رمز المرور (تقدر تغيره)
+        const PAGE_PASSWORD = "123"; // رمز المرور
 
         let allPostsData = [];
-        let currentFilter = 'all';
+        let currentFilter = 'home';
         const isAdminMode = new URLSearchParams(window.location.search).has('admin');
+
+        // تشغيل الساعة والتاريخ الحي
+        function updateClockAndDate() {
+            const now = new Date();
+            
+            // الوقت بتنسيق 12 ساعة مع AM/PM وعداد الثواني
+            let hours = now.getHours();
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const seconds = String(now.getSeconds()).padStart(2, '0');
+            const ampm = hours >= 12 ? 'PM' : 'AM';
+            hours = hours % 12;
+            hours = hours ? hours : 12; // الساعة 12
+            const strHours = String(hours).padStart(2, '0');
+            
+            document.getElementById('live-clock').innerText = `⏰ ${strHours}:${minutes}:${seconds} ${ampm}`;
+
+            // التاريخ بالعربي
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            document.getElementById('live-date').innerText = `📅 ${now.toLocaleDateString('ar-IQ', options)}`;
+        }
+        setInterval(updateClockAndDate, 1000);
+        updateClockAndDate();
 
         function verifyPass() {
             const val = document.getElementById('passcode-input').value;
@@ -382,7 +467,6 @@
             }
         }
 
-        // جلب المنشورات للزوار
         async function loadPosts() {
             const loader = document.getElementById('main-loader');
             const feed = document.getElementById('posts-feed');
@@ -396,33 +480,70 @@
                 renderPosts();
             } catch(e) {
                 loader.style.display = 'none';
-                feed.innerHTML = '<p class="empty-msg">لم يتم العثور على بيانات أو أن الملف فارغ.</p>';
+                allPostsData = [];
+                renderPosts();
             }
         }
 
         function switchTab(filter, btnElement) {
             currentFilter = filter;
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-            btnElement.classList.add('active');
+            if(btnElement) {
+                btnElement.classList.add('active');
+            } else {
+                // تفعيل الزر المناسب برمجياً عند الضغط على الشعار أو زر الرجوع
+                document.querySelectorAll('.tab-btn').forEach(b => {
+                    if(b.getAttribute('onclick').includes(filter)) b.classList.add('active');
+                });
+            }
+
+            // إظهار أو إخفاء زر الرجوع 3D
+            const backBar = document.getElementById('back-bar');
+            if(filter !== 'home') {
+                backBar.style.display = 'block';
+            } else {
+                backBar.style.display = 'none';
+            }
+
             renderPosts();
+        }
+
+        function resetToHome() {
+            const homeBtn = document.querySelector('.tab-btn');
+            switchTab('home', homeBtn);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function getTabName(type) {
+            switch(type) {
+                case 'home': return 'الصفحة الرئيسية';
+                case 'beliefs': return 'المعتقدات';
+                case 'writings': return 'المكتوبات';
+                case 'correspondence': return 'المكاتبات';
+                case 'visuals': return 'المرئيات';
+                case 'audio': return 'المسموعات';
+                case 'archives': return 'المحفوظات';
+                default: return 'الصفحة الرئيسية';
+            }
         }
 
         function renderPosts() {
             const feed = document.getElementById('posts-feed');
             feed.innerHTML = '';
 
-            let filtered = allPostsData;
-            if(currentFilter !== 'all') {
-                filtered = allPostsData.filter(p => p.type === currentFilter || (!p.type && currentFilter === 'text'));
-            }
+            // تصفية المنشورات حسب التبويب المختار
+            let filtered = allPostsData.filter(p => {
+                if(!p.type && currentFilter === 'home') return true; // التوافق مع البيانات القديمة
+                return p.type === currentFilter;
+            });
 
             if(filtered.length === 0) {
-                feed.innerHTML = '<p class="empty-msg">لا توجد منشورات في هذا القسم حالياً.</p>';
+                feed.innerHTML = `<p class="empty-msg">لا توجد منشورات في قسم "${getTabName(currentFilter)}" حالياً.</p>`;
                 return;
             }
 
             filtered.slice().reverse().forEach(post => {
-                const typeLabel = post.type === 'image' ? 'معرض الصور' : 'نصوص وكتابات';
+                const typeLabel = getTabName(post.type || 'home');
                 let html = `
                     <div class="post-card">
                         <div class="post-header">
@@ -443,7 +564,6 @@
             });
         }
 
-        // جلب المنشورات للوحة التحكم (مع أزرار التعديل والحذف)
         async function fetchPostsForAdmin() {
             const loader = document.getElementById('admin-loader');
             const listContainer = document.getElementById('manage-posts-list');
@@ -457,7 +577,8 @@
                 renderAdminList();
             } catch(e) {
                 loader.style.display = 'none';
-                listContainer.innerHTML = '<p style="color:var(--text-muted); font-size:0.9rem;">لا توجد منشورات حالية للإدارة.</p>';
+                allPostsData = [];
+                listContainer.innerHTML = '<p style="color:var(--text-muted); font-size:0.9rem;">قائمة المنشورات فارغة.</p>';
             }
         }
 
@@ -470,13 +591,13 @@
                 return;
             }
 
-            // نعرضها بترتيب عكسي (الأحدث أولاً) مع الحفاظ على مؤشر المصفوفة الأصلي (realIndex)
             allPostsData.map((post, index) => ({ ...post, realIndex: index })).slice().reverse().forEach(item => {
                 const snippet = item.content ? item.content : (item.image ? '[منشور صورة]' : 'بدون محتوى');
+                const tLabel = getTabName(item.type || 'home');
                 listContainer.innerHTML += `
                     <div class="manage-item">
                         <div class="manage-info">
-                            <div class="manage-text"><strong>#${item.realIndex + 1}</strong>: ${snippet}</div>
+                            <div class="manage-text"><strong>[${tLabel}]</strong>: ${snippet}</div>
                             <div style="font-size:0.75rem; color:var(--text-muted);">${item.date}</div>
                         </div>
                         <div class="manage-actions">
@@ -487,11 +608,10 @@
             });
         }
 
-        // تحضير المنشور للتعديل
         function prepareEdit(index) {
             const post = allPostsData[index];
             document.getElementById('edit-index').value = index;
-            document.getElementById('post-type').value = post.type || 'text';
+            document.getElementById('post-type').value = post.type || 'home';
             document.getElementById('post-content').value = post.content || '';
             document.getElementById('post-image-url').value = post.image || '';
             
@@ -509,7 +629,6 @@
             document.getElementById('cancel-edit-btn').style.display = 'none';
         }
 
-        // دالة موحدة للنشر أو التعديل أو الحذف وحفظها في GitHub API
         async function saveOrUpdatePost() {
             const token = document.getElementById('gh-token').value.trim();
             const editIndex = parseInt(document.getElementById('edit-index').value);
@@ -539,31 +658,29 @@
             const apiUrl = `https://api.github.com/repos/${GITHUB_USERNAME}/${REPO_NAME}/contents/posts.json`;
 
             try {
-                // جلب النسخة الأحدث مع الـ SHA
                 const getRes = await fetch(apiUrl, { headers: { 'Authorization': `token ${token}` } });
-                if(!getRes.ok) throw new Error("فشل الاتصال بـ GitHub، تأكد من صحة الـ Token.");
-                
-                const fileData = await getRes.json();
-                const sha = fileData.sha;
-
+                let sha = null;
                 let existing = [];
-                if(fileData.content) {
-                    const decoded = new TextDecoder().decode(Uint8Array.from(atob(fileData.content), c => c.charCodeAt(0)));
-                    existing = JSON.parse(decoded);
+
+                if(getRes.ok) {
+                    const fileData = await getRes.json();
+                    sha = fileData.sha;
+                    if(fileData.content) {
+                        const decoded = new TextDecoder().decode(Uint8Array.from(atob(fileData.content), c => c.charCodeAt(0)));
+                        existing = JSON.parse(decoded);
+                    }
                 }
 
                 let commitMsg = "";
                 if(editIndex >= 0) {
-                    // تعديل منشور موجود
                     existing[editIndex] = {
                         type: type,
                         content: content,
                         image: image,
-                        date: existing[editIndex].date // نحافظ على تاريخ النشر الأصلي أو نحدثه
+                        date: existing[editIndex].date
                     };
                     commitMsg = `Update post index ${editIndex}`;
                 } else {
-                    // إضافة منشور جديد
                     existing.push({
                         type: type,
                         content: content,
@@ -575,17 +692,19 @@
 
                 const encoded = btoa(unescape(encodeURIComponent(JSON.stringify(existing, null, 2))));
 
+                const reqBody = {
+                    message: commitMsg,
+                    content: encoded
+                };
+                if(sha) reqBody.sha = sha;
+
                 const putRes = await fetch(apiUrl, {
                     method: 'PUT',
                     headers: {
                         'Authorization': `token ${token}`,
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify({
-                        message: commitMsg,
-                        content: encoded,
-                        sha: sha
-                    })
+                    body: JSON.stringify(reqBody)
                 });
 
                 if(!putRes.ok) throw new Error("فشل حفظ التحديث في المستودع.");
@@ -594,7 +713,7 @@
                 feedback.innerText = editIndex >= 0 ? "✅ تم تحديث المنشور بنجاح!" : "✅ تم نشر المحتوى بنجاح!";
                 
                 cancelEdit();
-                fetchPostsForAdmin(); // تحديث القائمة فوراً
+                fetchPostsForAdmin();
 
             } catch(err) {
                 feedback.style.color = "var(--error)";
@@ -607,7 +726,6 @@
             }
         }
 
-        // دالة حذف منشور
         async function deletePost(index) {
             if(!confirm("هل أنت متأكد من حذف هذا المنشور نهائياً؟")) return;
 
@@ -615,7 +733,7 @@
             const feedback = document.getElementById('admin-feedback');
 
             if(!token) {
-                alert("الرجاء إدخال الـ GitHub Token أولاً في الحقل المخصص!");
+                alert("الرجاء إدخال الـ GitHub Token أولاً!");
                 return;
             }
 
@@ -634,7 +752,6 @@
                     existing = JSON.parse(decoded);
                 }
 
-                // حذف العنصر من المصفوفة
                 existing.splice(index, 1);
 
                 const encoded = btoa(unescape(encodeURIComponent(JSON.stringify(existing, null, 2))));
@@ -656,7 +773,7 @@
 
                 feedback.style.color = "var(--success)";
                 feedback.innerText = "🗑️ تم حذف المنشور بنجاح!";
-                fetchPostsForAdmin(); // تحديث القائمة
+                fetchPostsForAdmin();
 
             } catch(err) {
                 feedback.style.color = "var(--error)";
