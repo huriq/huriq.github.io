@@ -167,13 +167,13 @@
             box-shadow: 0 5px 15px rgba(0,0,0,0.3);
         }
         .ql-toolbar.ql-snow {
-            background-color: #cbd5e1; /* لون فاتح لشريط الأدوات */
+            background-color: #cbd5e1;
             border: none !important;
             direction: rtl;
             text-align: right;
         }
         .ql-container.ql-snow {
-            background-color: #f8fafc; /* خلفية بيضاء تشبه الورق */
+            background-color: #f8fafc;
             color: #0f172a;
             border: none !important;
             font-family: 'Cairo', sans-serif;
@@ -184,7 +184,6 @@
             text-align: right;
             direction: rtl;
         }
-        /* تعديل أدوات الردود لتكون أصغر */
         .reply-editor-container .ql-container.ql-snow {
             min-height: 100px;
             font-size: 0.95rem;
@@ -301,6 +300,8 @@
             margin-bottom: 15px;
             border-bottom: 1px solid rgba(148, 163, 184, 0.1);
             padding-bottom: 10px;
+            flex-wrap: wrap;
+            gap: 10px;
         }
 
         .post-tag {
@@ -324,7 +325,6 @@
             margin-bottom: 15px;
         }
         
-        /* إعادة تنسيق محتوى المنشور ليتناسب مع ما يخرجه المحرر */
         .post-body p { margin-bottom: 10px; }
         .post-body img { max-width: 100%; border-radius: 8px; }
 
@@ -527,13 +527,13 @@
         <!-- قسم العرض والتبويبات -->
         <div id="content-area">
             <div class="tabs-container">
-                <button id="tab-home" class="tab-btn active" onclick="switchTab('home', this)">🏠 الصفحة الرئيسية</button>
-                <button id="tab-beliefs" class="tab-btn" onclick="switchTab('beliefs', this)">🌟 المعتقدات</button>
-                <button id="tab-writings" class="tab-btn" onclick="switchTab('writings', this)">📄 المكتوبات</button>
-                <button id="tab-correspondence" class="tab-btn" onclick="switchTab('correspondence', this)">📜 المكاتبات</button>
-                <button id="tab-visuals" class="tab-btn" onclick="switchTab('visuals', this)">🖼️ المرئيات</button>
-                <button id="tab-audio" class="tab-btn" onclick="switchTab('audio', this)">🎧 المسموعات</button>
-                <button id="tab-archives" class="tab-btn" onclick="switchTab('archives', this)">📁 المحفوظات</button>
+                <button id="tab-home" class="tab-btn active" onclick="switchTab('home')">🏠 الصفحة الرئيسية</button>
+                <button id="tab-beliefs" class="tab-btn" onclick="switchTab('beliefs')">🌟 المعتقدات</button>
+                <button id="tab-writings" class="tab-btn" onclick="switchTab('writings')">📄 المكتوبات</button>
+                <button id="tab-correspondence" class="tab-btn" onclick="switchTab('correspondence')">📜 المكاتبات</button>
+                <button id="tab-visuals" class="tab-btn" onclick="switchTab('visuals')">🖼️ المرئيات</button>
+                <button id="tab-audio" class="tab-btn" onclick="switchTab('audio')">🎧 المسموعات</button>
+                <button id="tab-archives" class="tab-btn" onclick="switchTab('archives')">📁 المحفوظات</button>
             </div>
 
             <div class="back-home-bar" id="back-bar">
@@ -561,6 +561,8 @@
         let allPostsData = [];
         let currentFilter = 'home';
         let currentFolderFilter = 'all';
+        let currentPostId = null; // متغير لحفظ الـ ID مال المنشور إذا چان الرابط مباشر (Deep Link)
+        
         const isAdminMode = new URLSearchParams(window.location.search).has('admin');
         
         // إعداد المحرر الاحترافي للآدمن
@@ -602,23 +604,33 @@
             }
         }
 
-        // قراءة المسار من الرابط (Routing) عند تحميل الصفحة
-        window.onload = () => {
-            const params = new URLSearchParams(window.location.search);
-            const initialTab = params.get('tab');
-            if (initialTab) {
-                const btn = document.getElementById(`tab-${initialTab}`);
-                if (btn) switchTab(initialTab, btn, false);
-            }
-        };
+        // --- نظام الـ HASH ROUTING الانفجاري والمُحكم ---
+        function handleHash() {
+            // سحب المسار من بعد الـ #/
+            const hash = window.location.hash.startsWith('#/') ? window.location.hash.substring(2) : '';
+            const parts = hash.split('/');
+            
+            currentFilter = parts[0] || 'home';
+            currentFolderFilter = parts[1] ? decodeURIComponent(parts[1]) : 'all';
+            currentPostId = parts[2] ? parseInt(parts[2]) : null;
 
-        // التعامل مع زر الرجوع بالمتصفح
-        window.addEventListener('popstate', function() {
-            const params = new URLSearchParams(window.location.search);
-            const tab = params.get('tab') || 'home';
-            const btn = document.getElementById(`tab-${tab}`);
-            switchTab(tab, btn, false);
-        });
+            // تحديث واجهة التبويبات
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            const targetBtn = document.getElementById(`tab-${currentFilter}`);
+            if(targetBtn) targetBtn.classList.add('active');
+
+            // إظهار أو إخفاء زر الرجوع
+            const backBar = document.getElementById('back-bar');
+            backBar.style.display = (currentFilter !== 'home' || currentPostId !== null) ? 'block' : 'none';
+
+            buildSubfolders();
+            
+            // رندر المنشورات إذا چانت محملة أو إذا الزائر مو آدمن
+            if(allPostsData.length > 0 || isAdminMode === false) renderPosts();
+        }
+
+        // الاستماع لتغيير الـ Hash بالموقع
+        window.addEventListener('hashchange', handleHash);
 
         function verifyPass() {
             const val = document.getElementById('passcode-input').value;
@@ -647,43 +659,36 @@
                 if(!res.ok) throw new Error();
                 allPostsData = await res.json();
                 loader.style.display = 'none';
-                renderPosts();
+                
+                // أول ما تكمل الداتا، نفعل الـ Hash Routing حتى يقرا الرابط
+                handleHash();
             } catch(e) {
                 loader.style.display = 'none';
                 allPostsData = [];
-                renderPosts();
+                handleHash();
             }
         }
 
-        // دالة تغيير التبويب مع تحديث الرابط (Routing)
-        function switchTab(filter, btnElement, updateUrl = true) {
-            currentFilter = filter;
-            currentFolderFilter = 'all';
-            
-            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-            if(btnElement) {
-                btnElement.classList.add('active');
-            } else {
-                const targetBtn = document.getElementById(`tab-${filter}`);
-                if (targetBtn) targetBtn.classList.add('active');
-            }
+        // دوال التوجيه الجديدة المبنية على Hash
+        function switchTab(filter) {
+            window.location.hash = '#/' + filter;
+        }
 
-            // تحديث رابط المتصفح لتكوين مسار مباشر للمشاركة
-            if (updateUrl) {
-                const newUrl = window.location.protocol + "//" + window.location.host + window.location.pathname + (filter === 'home' ? '' : '?tab=' + filter);
-                window.history.pushState({ path: newUrl }, '', newUrl);
-            }
-
-            const backBar = document.getElementById('back-bar');
-            backBar.style.display = (filter !== 'home') ? 'block' : 'none';
-
-            buildSubfolders();
-            if(allPostsData.length > 0 || isAdminMode===false) renderPosts();
+        function filterFolder(folderName) {
+            window.location.hash = '#/' + currentFilter + '/' + encodeURIComponent(folderName);
         }
 
         function resetToHome() {
-            switchTab('home', document.getElementById('tab-home'));
+            window.location.hash = '#/home';
             window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function copyDeepLink(tab, folder, id) {
+            // فولدر افتراضي إذا ماكو
+            const safeFolder = folder ? encodeURIComponent(folder) : 'all';
+            const url = window.location.origin + window.location.pathname + `#/${tab}/${safeFolder}/${id}`;
+            navigator.clipboard.writeText(url);
+            alert("تم نسخ الرابط! تگدر تدزه لأي شخص وهسة يفتحله المنشور گبل بدون أي خطأ.");
         }
 
         function getTabName(type) {
@@ -702,6 +707,13 @@
         function buildSubfolders() {
             const bar = document.getElementById('subfolders-container');
             bar.innerHTML = '';
+            
+            // إذا فاتحين منشور مخصص (Deep Link)، نخفي الفولدرات
+            if (currentPostId !== null) {
+                bar.style.display = 'none';
+                return;
+            }
+
             const folders = [...new Set(allPostsData.filter(p => (p.type || 'home') === currentFilter && p.folder).map(p => p.folder))];
             
             if(currentFilter === 'correspondence') {
@@ -711,25 +723,24 @@
                 bar.style.display = 'none';
                 return;
             }
+            
             bar.style.display = 'flex';
-            bar.innerHTML += `<div class="folder-chip active" onclick="filterFolder('all', this)">الكل</div>`;
+            bar.innerHTML += `<div class="folder-chip ${currentFolderFilter === 'all' ? 'active' : ''}" onclick="filterFolder('all')">الكل</div>`;
             folders.forEach(f => {
-                bar.innerHTML += `<div class="folder-chip" onclick="filterFolder('${f}', this)">📂 ${f}</div>`;
+                bar.innerHTML += `<div class="folder-chip ${currentFolderFilter === f ? 'active' : ''}" onclick="filterFolder('${f}')">📂 ${f}</div>`;
             });
-        }
-
-        function filterFolder(folderName, element) {
-            currentFolderFilter = folderName;
-            document.querySelectorAll('.folder-chip').forEach(c => c.classList.remove('active'));
-            element.classList.add('active');
-            renderPosts();
         }
 
         function renderPosts() {
             const feed = document.getElementById('posts-feed');
             feed.innerHTML = '';
 
-            let filtered = allPostsData.filter(p => {
+            // نفلتر الداتا بناءً على المتغيرات
+            let filtered = allPostsData.map((post, i) => ({...post, realIndex: i})).filter(p => {
+                // إذا اكو بوست محدد بالرابط، نعرض بس هو
+                if (currentPostId !== null) {
+                    return p.realIndex === currentPostId;
+                }
                 const t = p.type || 'home';
                 if(t !== currentFilter) return false;
                 if(currentFolderFilter !== 'all') {
@@ -744,14 +755,18 @@
             }
 
             filtered.slice().reverse().forEach((post) => {
-                const realIndex = allPostsData.indexOf(post);
                 const typeLabel = getTabName(post.type || 'home');
                 const folderTag = post.folder ? ` / 📂 ${post.folder}` : '';
+                const tabId = post.type || 'home';
+                const folderId = post.folder || 'all';
                 
                 let html = `
-                    <div class="post-card">
+                    <div class="post-card" id="post-${post.realIndex}">
                         <div class="post-header">
-                            <span class="post-tag">${typeLabel}${folderTag}</span>
+                            <div>
+                                <span class="post-tag">${typeLabel}${folderTag}</span>
+                                <button class="post-tag" onclick="copyDeepLink('${tabId}', '${post.folder || ''}', ${post.realIndex})" style="cursor:pointer; background:rgba(16, 185, 129, 0.1); color:var(--success); border-color:var(--success); margin-right: 8px;">🔗 نسخ رابط المنشور</button>
+                            </div>
                             <span class="post-date">🕒 ${post.date}</span>
                         </div>`;
                 
@@ -776,18 +791,18 @@
                     });
                 }
 
-                // صندوق الردود للزوار بمحرر احترافي
+                // صندوق الردود للزوار بمحرر احترافي و Web3Forms
                 html += `
-                    <button class="btn-reply-toggle" onclick="toggleReplyForm(${realIndex})">✍️ كتابة مكتوب أو رد</button>
-                    <div class="reply-form-box" id="reply-form-${realIndex}">
-                        <input type="text" id="reply-author-${realIndex}" placeholder="اسمك الكريم..." style="margin-bottom:10px; padding:10px; font-size:0.9rem;">
+                    <button class="btn-reply-toggle" onclick="toggleReplyForm(${post.realIndex})">✍️ كتابة مكتوب أو رد</button>
+                    <div class="reply-form-box" id="reply-form-${post.realIndex}">
+                        <input type="text" id="reply-author-${post.realIndex}" placeholder="اسمك الكريم..." style="margin-bottom:10px; padding:10px; font-size:0.9rem;">
                         
                         <!-- حاوية محرر الزوار -->
                         <div class="editor-container reply-editor-container">
-                            <div id="reply-editor-${realIndex}"></div>
+                            <div id="reply-editor-${post.realIndex}"></div>
                         </div>
 
-                        <button onclick="submitPublicReply(${realIndex})" style="padding:10px; font-size:0.95rem;">إرسال المكتوب بدون توكن</button>
+                        <button id="reply-btn-${post.realIndex}" onclick="submitPublicReply(${post.realIndex})" style="padding:10px; font-size:0.95rem;">إرسال المكتوب</button>
                     </div>
                 </div></div>`;
 
@@ -820,18 +835,55 @@
             }
         }
 
-        // دالة الرد للمستخدم العام (الحل الصدگي الّي شرحته إلك فوق)
-        function submitPublicReply(index) {
+        // --- نظام Web3Forms المُحكم للردود ---
+        async function submitPublicReply(index) {
             const author = document.getElementById(`reply-author-${index}`).value.trim();
-            const textHTML = replyEditors[index].root.innerHTML; // أخذ النص المنسق (HTML)
+            const textHTML = replyEditors[index].root.innerHTML;
+            const textPlain = replyEditors[index].getText().trim();
 
-            if(!author || replyEditors[index].getText().trim().length === 0) {
-                alert("الرجاء إدخال اسمك ومحتوى المكتوب!");
+            if(!author || textPlain.length === 0) {
+                alert("حبيبي الزائر، لا تخلي الحقول فارغة.. اكتب اسمك ومكتوبك!");
                 return;
             }
 
-            // التنبيه الصارم للمستخدم
-            alert(`رسالة من النظام: مرحباً ${author}!\nهذه الواجهة تم تجهيزها باحترافية (بمحرر وورد). لكن إرسال البيانات لمستودع گتهب الثابت بدون مصادقة (Token) هو إجراء مستحيل هندسياً وأمنياً! لكي تعمل هذه الخاصية بشكل حقيقي، يجب ربط الموقع بقاعدة بيانات مثل Firebase. الكود كواجهة جاهز تماماً للربط مستقبلاً.`);
+            const btn = document.getElementById(`reply-btn-${index}`);
+            btn.innerText = "جاري الإرسال...";
+            btn.disabled = true;
+
+            try {
+                // استدعاء مباشر لـ Web3Forms عبر AJAX حتى ما نطلع من الصفحة
+                const res = await fetch("https://api.web3forms.com/submit", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        Accept: "application/json",
+                    },
+                    body: JSON.stringify({
+                        // حمودي: هنا تخلي المفتاح الحقيقي مالتك مال Web3Forms
+                        access_key: "YOUR_ACCESS_KEY_HERE",
+                        subject: `مكتوب جديد من ${author} (على منشور رقم ${index})`,
+                        from_name: author,
+                        message: textHTML
+                    })
+                });
+                
+                const json = await res.json();
+                
+                if(json.success) {
+                    alert("تم إرسال مكتوبك بنجاح! راح يوصل للمسؤول مباشرة.");
+                    // تصفير الحقول بعد الإرسال
+                    replyEditors[index].root.innerHTML = '';
+                    document.getElementById(`reply-author-${index}`).value = '';
+                    toggleReplyForm(index);
+                } else {
+                    alert("صارت مشكلة بالإرسال: " + json.message);
+                }
+            } catch(e) {
+                alert("خطأ بالاتصال، تأكد من خدمة الإنترنت مالتك.");
+            } finally {
+                btn.innerText = "إرسال المكتوب";
+                btn.disabled = false;
+            }
         }
 
         function openImageModal(url) {
