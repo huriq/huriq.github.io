@@ -340,7 +340,7 @@
         }
         .post-image:hover { transform: scale(1.01); }
 
-        /* نظام الردود */
+        /* نظام الردود والمكاتبات الطويلة */
         .replies-section {
             margin-top: 20px;
             border-top: 1px dashed rgba(148, 163, 184, 0.2);
@@ -558,17 +558,17 @@
         const REPO_NAME = 'huriq.github.io';
         const PAGE_PASSWORD = "123";
 
+        // رابط الـ Web App المحدث والخاص بك
+        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxWqUyDQ3uIdD2hmMy25c9rwCgxSGYsBMGM0FUr9sOeO3msyBB198ndlDLBPbW67FJ0Wg/exec";
+
         let allPostsData = [];
         let currentFilter = 'home';
         let currentFolderFilter = 'all';
-        let currentPostId = null; // متغير لحفظ الـ ID مال المنشور إذا چان الرابط مباشر (Deep Link)
+        let currentPostId = null; 
         
         const isAdminMode = new URLSearchParams(window.location.search).has('admin');
         
-        // إعداد المحرر الاحترافي للآدمن
         var quillAdmin;
-        
-        // أداة الاحتفاظ بكائنات محررات الردود لتفادي التكرار
         let replyEditors = {};
 
         // الساعة والتاريخ
@@ -585,7 +585,6 @@
         setInterval(updateClockAndDate, 1000);
         updateClockAndDate();
 
-        // تهيئة المحرر للآدمن عند نجاح الدخول
         function initAdminEditor() {
             if(!quillAdmin) {
                 quillAdmin = new Quill('#admin-editor', {
@@ -604,9 +603,7 @@
             }
         }
 
-        // --- نظام الـ HASH ROUTING الانفجاري والمُحكم ---
         function handleHash() {
-            // سحب المسار من بعد الـ #/
             const hash = window.location.hash.startsWith('#/') ? window.location.hash.substring(2) : '';
             const parts = hash.split('/');
             
@@ -614,22 +611,18 @@
             currentFolderFilter = parts[1] ? decodeURIComponent(parts[1]) : 'all';
             currentPostId = parts[2] ? parseInt(parts[2]) : null;
 
-            // تحديث واجهة التبويبات
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
             const targetBtn = document.getElementById(`tab-${currentFilter}`);
             if(targetBtn) targetBtn.classList.add('active');
 
-            // إظهار أو إخفاء زر الرجوع
             const backBar = document.getElementById('back-bar');
             backBar.style.display = (currentFilter !== 'home' || currentPostId !== null) ? 'block' : 'none';
 
             buildSubfolders();
             
-            // رندر المنشورات إذا چانت محملة أو إذا الزائر مو آدمن
             if(allPostsData.length > 0 || isAdminMode === false) renderPosts();
         }
 
-        // الاستماع لتغيير الـ Hash بالموقع
         window.addEventListener('hashchange', handleHash);
 
         function verifyPass() {
@@ -659,8 +652,6 @@
                 if(!res.ok) throw new Error();
                 allPostsData = await res.json();
                 loader.style.display = 'none';
-                
-                // أول ما تكمل الداتا، نفعل الـ Hash Routing حتى يقرا الرابط
                 handleHash();
             } catch(e) {
                 loader.style.display = 'none';
@@ -669,7 +660,6 @@
             }
         }
 
-        // دوال التوجيه الجديدة المبنية على Hash
         function switchTab(filter) {
             window.location.hash = '#/' + filter;
         }
@@ -684,7 +674,6 @@
         }
 
         function copyDeepLink(tab, folder, id) {
-            // فولدر افتراضي إذا ماكو
             const safeFolder = folder ? encodeURIComponent(folder) : 'all';
             const url = window.location.origin + window.location.pathname + `#/${tab}/${safeFolder}/${id}`;
             navigator.clipboard.writeText(url);
@@ -708,7 +697,6 @@
             const bar = document.getElementById('subfolders-container');
             bar.innerHTML = '';
             
-            // إذا فاتحين منشور مخصص (Deep Link)، نخفي الفولدرات
             if (currentPostId !== null) {
                 bar.style.display = 'none';
                 return;
@@ -735,9 +723,7 @@
             const feed = document.getElementById('posts-feed');
             feed.innerHTML = '';
 
-            // نفلتر الداتا بناءً على المتغيرات
             let filtered = allPostsData.map((post, i) => ({...post, realIndex: i})).filter(p => {
-                // إذا اكو بوست محدد بالرابط، نعرض بس هو
                 if (currentPostId !== null) {
                     return p.realIndex === currentPostId;
                 }
@@ -778,7 +764,8 @@
                     html += `<img src="${post.image}" class="post-image" alt="Post Image" onclick="openImageModal('${post.image}')">`;
                 }
 
-                html += `<div class="replies-section">
+                // حاوية الردود والمكاتبات المحدثة مع الـ ID الديناميكي
+                html += `<div class="replies-section" id="replies-container-${post.realIndex}">
                             <div style="font-family:'Tajawal'; font-weight:700; color:var(--primary); font-size:0.9rem; margin-bottom:10px;">💬 الردود والمكاتبات</div>`;
                 
                 if(post.replies && post.replies.length > 0) {
@@ -791,33 +778,67 @@
                     });
                 }
 
+                html += `</div>`; // نهاية حاوية الردود الثابتة
+
                 // صندوق الردود للزوار بمحرر احترافي
                 html += `
                     <button class="btn-reply-toggle" onclick="toggleReplyForm(${post.realIndex})">✍️ كتابة مكتوب أو رد</button>
                     <div class="reply-form-box" id="reply-form-${post.realIndex}">
                         <input type="text" id="reply-author-${post.realIndex}" placeholder="اسمك الكريم..." style="margin-bottom:10px; padding:10px; font-size:0.9rem;">
                         
-                        <!-- حاوية محرر الزوار -->
                         <div class="editor-container reply-editor-container">
                             <div id="reply-editor-${post.realIndex}"></div>
                         </div>
 
                         <button id="reply-btn-${post.realIndex}" onclick="submitPublicReply(${post.realIndex})" style="padding:10px; font-size:0.95rem;">إرسال المكتوب</button>
                     </div>
-                </div></div>`;
+                </div>`;
 
                 feed.innerHTML += html;
+
+                // جلب المكاتبات الحيّة من جدول گوجل وعرضها متسلسلة فوراً تحت كل منشور
+                fetchAndRenderReplies(post.realIndex);
             });
         }
 
-        // إظهار صندوق الرد وتهيئة المحرر الخاص به
+        // دالة جلب الردود الطويلة من Google Sheets وعرضها متسلسلة تحت المنشور
+        async function fetchAndRenderReplies(postIndex) {
+            try {
+                const res = await fetch(WEB_APP_URL + "?t=" + Date.now());
+                if (!res.ok) throw new Error();
+                const allReplies = await res.json();
+                
+                const postReplies = allReplies.filter(r => parseInt(r.postIndex) === parseInt(postIndex));
+                
+                const container = document.getElementById(`replies-container-${postIndex}`);
+                if (!container) return;
+                
+                let html = '';
+                if (postReplies.length > 0) {
+                    postReplies.forEach(rep => {
+                        html += `
+                            <div class="reply-item">
+                                <div class="reply-author">👤 ${rep.author} <span style="font-size:0.75rem; color:var(--text-muted); font-weight:400;">(${rep.date})</span></div>
+                                <div class="reply-text">${rep.text}</div>
+                            </div>`;
+                    });
+                }
+                
+                // دمج المكاتبات المخزنة بالسيرفر مع المكاتبات الجديدة المعروضة
+                const titleHtml = `<div style="font-family:'Tajawal'; font-weight:700; color:var(--primary); font-size:0.9rem; margin-bottom:10px;">💬 الردود والمكاتبات</div>`;
+                container.innerHTML = titleHtml + html;
+                
+            } catch(e) {
+                console.error("فشل جلب المكاتبات الحيّة:", e);
+            }
+        }
+
         function toggleReplyForm(index) {
             const box = document.getElementById(`reply-form-${index}`);
             if (box.style.display === 'block') {
                 box.style.display = 'none';
             } else {
                 box.style.display = 'block';
-                // تهيئة المحرر فقط إذا لم يتم تهيئته مسبقاً لهذا الرد
                 if (!replyEditors[index]) {
                     replyEditors[index] = new Quill(`#reply-editor-${index}`, {
                         theme: 'snow',
@@ -835,7 +856,7 @@
             }
         }
 
-        // --- نظام الإرسال المُحكم للردود عبر Google Apps Script ---
+        // دالة الإرسال المُحكمة للمكاتبات عبر Google Apps Script
         async function submitPublicReply(index) {
             const author = document.getElementById(`reply-author-${index}`).value.trim();
             const textHTML = replyEditors[index].root.innerHTML;
@@ -847,14 +868,10 @@
             }
 
             const btn = document.getElementById(`reply-btn-${index}`);
-            btn.innerText = "جاري الإرسال...";
+            btn.innerText = "جاري إرسال المكتوب...";
             btn.disabled = true;
 
             try {
-                // : هذا رابط الـ Web App مالتك
-                const webAppUrl = "https://script.google.com/macros/s/AKfycbwhG0lJbzbIyZezvea4n6VBmvkfihjRHvVclrn6Y9GsUI63rJAOxnLr3hhbyJ4LSbtV/exec";
-
-                // تجهيز البيانات
                 const payload = {
                     author: author,
                     postIndex: index,
@@ -862,26 +879,25 @@
                     date: new Date().toLocaleString('ar-IQ')
                 };
 
-                // استدعاء مباشر لـ Google Apps Script
-                const res = await fetch(webAppUrl, {
+                const res = await fetch(WEB_APP_URL, {
                     method: "POST",
-                    // جيمايا تگول: نستخدم text/plain حتى نعبر مشكلة الـ CORS الخبيثة بدون ما نوگف
                     headers: {
                         "Content-Type": "text/plain;charset=utf-8"
                     },
                     body: JSON.stringify(payload)
                 });
                 
-                // نفترض الإرسال نجح إذا ماكو خطأ بالاتصال
-                alert("تم إرسال مكتوبك بنجاح! راح يوصل للمسؤول مباشرة.");
+                alert("تم إرسال مكتوبك بنجاح وظهر بالصفحة!");
                 
-                // تصفير الحقول بعد الإرسال
                 replyEditors[index].root.innerHTML = '';
                 document.getElementById(`reply-author-${index}`).value = '';
                 toggleReplyForm(index);
                 
+                // إعادة جلب المكاتبات فوراً لتظهر متسلسلة ونظيفة
+                fetchAndRenderReplies(index);
+                
             } catch(e) {
-                alert("صارت مشكلة بالاتصال.. تأكد من الإنترنت مالتك أو من إعدادات الـ Web App.");
+                alert("صارت مشكلة بالاتصال.. تأكد من الإنترنت مالتك.");
                 console.error("Error submitting reply:", e);
             } finally {
                 btn.innerText = "إرسال المكتوب";
@@ -949,9 +965,7 @@
             document.getElementById('post-type').value = post.type || 'home';
             document.getElementById('post-folder').value = post.folder || '';
             
-            // وضع النص المحفوظ داخل محرر Quill
             if (quillAdmin) quillAdmin.root.innerHTML = post.content || '';
-            
             document.getElementById('post-image-url').value = post.image || '';
             
             const pubBtn = document.getElementById('publish-btn');
@@ -975,7 +989,6 @@
             const type = document.getElementById('post-type').value;
             const folder = document.getElementById('post-folder').value.trim();
             
-            // سحب النص المنسق (HTML) من المحرر
             const contentHTML = quillAdmin.root.innerHTML;
             const isContentEmpty = quillAdmin.getText().trim().length === 0;
 
