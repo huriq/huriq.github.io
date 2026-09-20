@@ -323,10 +323,50 @@
             color: var(--text-main);
             word-break: break-word;
             margin-bottom: 15px;
+            position: relative;
+            overflow: hidden;
+            transition: max-height 0.4s ease;
         }
         
         .post-body p { margin-bottom: 10px; }
         .post-body img { max-width: 100%; border-radius: 8px; }
+
+        /* تنسيق خاصية التصغير والقص (Truncation) */
+        .post-body.truncated {
+            max-height: 140px; /* تقريباً 3 إلى 4 أسطر */
+        }
+        
+        .post-body.truncated::after {
+            content: "";
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 60px;
+            background: linear-gradient(to top, var(--surface), transparent);
+            pointer-events: none;
+        }
+
+        .btn-read-more {
+            background: rgba(0, 210, 255, 0.08);
+            color: var(--primary);
+            border: 1px dashed rgba(0, 210, 255, 0.4);
+            padding: 6px 14px;
+            font-size: 0.85rem;
+            border-radius: 8px;
+            width: auto;
+            margin-bottom: 15px;
+            display: inline-block;
+            cursor: pointer;
+            box-shadow: none;
+            font-family: 'Tajawal', sans-serif;
+            transition: all 0.2s;
+        }
+        .btn-read-more:hover {
+            background: rgba(0, 210, 255, 0.2);
+            box-shadow: none;
+            transform: none;
+        }
 
         .post-image {
             width: 100%;
@@ -757,7 +797,11 @@
                         </div>`;
                 
                 if(post.content) {
-                    html += `<div class="post-body">${post.content}</div>`;
+                    // النص مجهز مع خاصية القص التلقائي (Truncation) وزر العرض والطي
+                    html += `
+                        <div class="post-body truncated" id="post-body-${post.realIndex}">${post.content}</div>
+                        <button class="btn-read-more" id="read-more-btn-${post.realIndex}" onclick="toggleReadMore(${post.realIndex})" style="display:none;">عرض المزيد...</button>
+                    `;
                 }
 
                 if(post.image) {
@@ -796,9 +840,43 @@
 
                 feed.innerHTML += html;
 
+                // التحقق تلقائياً إذا كان النص طويلاً بما يكفي لإظهار زر "عرض المزيد"
+                setTimeout(() => {
+                    const bodyEl = document.getElementById(`post-body-${post.realIndex}`);
+                    const btnEl = document.getElementById(`read-more-btn-${post.realIndex}`);
+                    if (bodyEl && btnEl) {
+                        // إذا كان ارتفاع المحتوى الداخلي أكبر من ارتفاع الصندوق المسموح (140 بكسل)
+                        if (bodyEl.scrollHeight > 150 || currentPostId !== null) {
+                            if (currentPostId === null) {
+                                btnEl.style.display = 'inline-block';
+                            } else {
+                                // إذا تم الدخول عبر رابط مباشر للمنشور، افتح النص كاملاً رأساً
+                                bodyEl.classList.remove('truncated');
+                            }
+                        }
+                    }
+                }, 50);
+
                 // جلب المكاتبات الحيّة من جدول گوجل وعرضها متسلسلة فوراً تحت كل منشور
                 fetchAndRenderReplies(post.realIndex);
             });
+        }
+
+        // دالة التحكم بفتح وتصغير النص الطويل (Read More / Show Less)
+        function toggleReadMore(index) {
+            const bodyEl = document.getElementById(`post-body-${index}`);
+            const btnEl = document.getElementById(`read-more-btn-${index}`);
+            if(!bodyEl || !btnEl) return;
+
+            if(bodyEl.classList.contains('truncated')) {
+                bodyEl.classList.remove('truncated');
+                btnEl.innerText = "إخفاء التفاصيل ▲";
+            } else {
+                bodyEl.classList.add('truncated');
+                btnEl.innerText = "عرض المزيد ▼";
+                // التمرير قليلاً لأعلى المنشور إذا تم طيه وهو طويل
+                document.getElementById(`post-${index}`).scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
         }
 
         // دالة جلب الردود الطويلة من Google Sheets وعرضها متسلسلة تحت المنشور
