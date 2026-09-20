@@ -326,6 +326,11 @@
             position: relative;
             overflow: hidden;
             transition: max-height 0.4s ease;
+            
+            /* التعديل الجديد لضبط وتساوي نهايات النص (Justification) مثل الوورد */
+            text-align: justify;
+            text-align-last: right;
+            word-spacing: -0.05em;
         }
         
         .post-body p { margin-bottom: 10px; }
@@ -407,6 +412,8 @@
         .reply-text {
             color: var(--text-main);
             line-height: 1.6;
+            text-align: justify;
+            text-align-last: right;
         }
         .reply-text p { margin-bottom: 5px; }
 
@@ -797,10 +804,9 @@
                         </div>`;
                 
                 if(post.content) {
-                    // النص مجهز مع خاصية القص التلقائي (Truncation) وزر العرض والطي
                     html += `
                         <div class="post-body truncated" id="post-body-${post.realIndex}">${post.content}</div>
-                        <button class="btn-read-more" id="read-more-btn-${post.realIndex}" onclick="toggleReadMore(${post.realIndex})" style="display:none;">عرض المزيد...</button>
+                        <button class="btn-read-more" id="read-more-btn-${post.realIndex}" onclick="toggleReadMore(${post.realIndex})" style="display:none;">عرض المزيد ▼</button>
                     `;
                 }
 
@@ -808,7 +814,6 @@
                     html += `<img src="${post.image}" class="post-image" alt="Post Image" onclick="openImageModal('${post.image}')">`;
                 }
 
-                // حاوية الردود والمكاتبات المحدثة مع الـ ID الديناميكي
                 html += `<div class="replies-section" id="replies-container-${post.realIndex}">
                             <div style="font-family:'Tajawal'; font-weight:700; color:var(--primary); font-size:0.9rem; margin-bottom:10px;">💬 الردود والمكاتبات</div>`;
                 
@@ -822,9 +827,8 @@
                     });
                 }
 
-                html += `</div>`; // نهاية حاوية الردود الثابتة
+                html += `</div>`;
 
-                // صندوق الردود للزوار بمحرر احترافي
                 html += `
                     <button class="btn-reply-toggle" onclick="toggleReplyForm(${post.realIndex})">✍️ كتابة مكتوب أو رد</button>
                     <div class="reply-form-box" id="reply-form-${post.realIndex}">
@@ -840,24 +844,27 @@
 
                 feed.innerHTML += html;
 
-                // التحقق تلقائياً إذا كان النص طويلاً بما يكفي لإظهار زر "عرض المزيد"
+                // التعديل الجديد: فحص طول النص بدقة، وإذا كان قصيراً (أقل من حدود القولبة أو 3 أسطر) لا يظهر زر العرض ولا يظهر بشكل مهمش أو رمادي
                 setTimeout(() => {
                     const bodyEl = document.getElementById(`post-body-${post.realIndex}`);
                     const btnEl = document.getElementById(`read-more-btn-${post.realIndex}`);
                     if (bodyEl && btnEl) {
-                        // إذا كان ارتفاع المحتوى الداخلي أكبر من ارتفاع الصندوق المسموح (140 بكسل)
-                        if (bodyEl.scrollHeight > 150 || currentPostId !== null) {
-                            if (currentPostId === null) {
+                        if (currentPostId !== null) {
+                            bodyEl.classList.remove('truncated');
+                            btnEl.style.display = 'none';
+                        } else {
+                            // التحقق إذا كان محتوى النص الفعلي يتجاوز الارتفاع المسموح للطي (حوالي 140 بكسل أو ما يعادل 3 أسطر)
+                            if (bodyEl.scrollHeight > 145) {
                                 btnEl.style.display = 'inline-block';
                             } else {
-                                // إذا تم الدخول عبر رابط مباشر للمنشور، افتح النص كاملاً رأساً
+                                // إذا كان النص قصيراً (سطر واحد أو سطرين)، نزيل كلاس التهميش والتصغير ليعرض كاملاً وواضحاً
                                 bodyEl.classList.remove('truncated');
+                                btnEl.style.display = 'none';
                             }
                         }
                     }
                 }, 50);
 
-                // جلب المكاتبات الحيّة من جدول گوجل وعرضها متسلسلة فوراً تحت كل منشور
                 fetchAndRenderReplies(post.realIndex);
             });
         }
@@ -874,12 +881,10 @@
             } else {
                 bodyEl.classList.add('truncated');
                 btnEl.innerText = "عرض المزيد ▼";
-                // التمرير قليلاً لأعلى المنشور إذا تم طيه وهو طويل
                 document.getElementById(`post-${index}`).scrollIntoView({ behavior: 'smooth', block: 'nearest' });
             }
         }
 
-        // دالة جلب الردود الطويلة من Google Sheets وعرضها متسلسلة تحت المنشور
         async function fetchAndRenderReplies(postIndex) {
             try {
                 const res = await fetch(WEB_APP_URL + "?t=" + Date.now());
@@ -902,7 +907,6 @@
                     });
                 }
                 
-                // دمج المكاتبات المخزنة بالسيرفر مع المكاتبات الجديدة المعروضة
                 const titleHtml = `<div style="font-family:'Tajawal'; font-weight:700; color:var(--primary); font-size:0.9rem; margin-bottom:10px;">💬 الردود والمكاتبات</div>`;
                 container.innerHTML = titleHtml + html;
                 
@@ -934,7 +938,6 @@
             }
         }
 
-        // دالة الإرسال المُحكمة للمكاتبات عبر Google Apps Script
         async function submitPublicReply(index) {
             const author = document.getElementById(`reply-author-${index}`).value.trim();
             const textHTML = replyEditors[index].root.innerHTML;
@@ -971,7 +974,6 @@
                 document.getElementById(`reply-author-${index}`).value = '';
                 toggleReplyForm(index);
                 
-                // إعادة جلب المكاتبات فوراً لتظهر متسلسلة ونظيفة
                 fetchAndRenderReplies(index);
                 
             } catch(e) {
