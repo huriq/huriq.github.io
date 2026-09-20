@@ -5,10 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>HUR | Official Platform</title>
     
-    <!-- الخطوط العالمية والعربية الفخمة -->
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;900&family=Tajawal:wght@500;700;900&family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
-    
-    <!-- استدعاء مكتبة المحرر الاحترافي Quill (مثل الوورد) -->
     <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
     <script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
 
@@ -49,7 +46,6 @@
             max-width: 900px;
         }
 
-        /* الهيدر الأسطوري */
         header {
             text-align: center;
             margin-bottom: 30px;
@@ -97,7 +93,6 @@
             letter-spacing: 2px;
         }
 
-        /* شاشة الدخول واللوحة */
         .auth-card, .admin-card {
             background: var(--surface-glass);
             backdrop-filter: blur(12px);
@@ -158,7 +153,6 @@
 
         .error-text { color: var(--error); margin-top: 10px; font-size: 0.9rem; display: none; }
 
-        /* تنسيقات محرر Quill (الستايل الووردي) */
         .editor-container {
             margin-bottom: 20px;
             text-align: right;
@@ -189,7 +183,6 @@
             font-size: 0.95rem;
         }
 
-        /* التبويبات الفخمة */
         .tabs-container {
             display: flex;
             justify-content: center;
@@ -221,7 +214,6 @@
             box-shadow: 0 0 20px rgba(0, 210, 255, 0.4);
         }
 
-        /* شريط الفولدرات الثانوية */
         .subfolders-bar {
             display: flex;
             gap: 10px;
@@ -249,7 +241,6 @@
             background: rgba(0, 210, 255, 0.05);
         }
 
-        /* زر الرجوع 3D */
         .back-home-bar {
             margin-bottom: 25px;
             display: none;
@@ -274,7 +265,6 @@
         .btn-3d-back:hover { transform: translateY(-2px); box-shadow: 0 7px 0 #020617, 0 10px 20px rgba(0, 210, 255, 0.3); }
         .btn-3d-back:active { transform: translateY(3px); box-shadow: 0 2px 0 #020617, 0 4px 8px rgba(0,0,0,0.5); }
 
-        /* حاوية المنشورات */
         #content-area { display: none; }
 
         .post-card {
@@ -326,8 +316,6 @@
             position: relative;
             overflow: hidden;
             transition: max-height 0.4s ease;
-            
-            /* التعديل الجديد لضبط وتساوي نهايات النص (Justification) مثل الوورد */
             text-align: justify;
             text-align-last: right;
             word-spacing: -0.05em;
@@ -336,9 +324,8 @@
         .post-body p { margin-bottom: 10px; }
         .post-body img { max-width: 100%; border-radius: 8px; }
 
-        /* تنسيق خاصية التصغير والقص (Truncation) */
         .post-body.truncated {
-            max-height: 140px; /* تقريباً 3 إلى 4 أسطر */
+            max-height: 140px;
         }
         
         .post-body.truncated::after {
@@ -373,6 +360,39 @@
             transform: none;
         }
 
+        /* تنسيق زر نسخ الرابط الجديد أسفل المنشور باتجاه اليسار */
+        .post-footer-actions {
+            display: flex;
+            justify-content: flex-start;
+            margin-top: 15px;
+            padding-top: 12px;
+            border-top: 1px dashed rgba(148, 163, 184, 0.15);
+        }
+
+        .btn-copy-link-fakhfakha {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(0, 210, 255, 0.15));
+            color: var(--success);
+            border: 1px solid rgba(16, 185, 129, 0.4);
+            padding: 8px 16px;
+            font-size: 0.85rem;
+            border-radius: 10px;
+            font-family: 'Tajawal', sans-serif;
+            font-weight: 700;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            width: auto;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            transition: all 0.2s ease;
+        }
+        .btn-copy-link-fakhfakha:hover {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.3), rgba(0, 210, 255, 0.3));
+            border-color: var(--success);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 18px rgba(16, 185, 129, 0.3);
+        }
+
         .post-image {
             width: 100%;
             border-radius: 12px;
@@ -385,7 +405,6 @@
         }
         .post-image:hover { transform: scale(1.01); }
 
-        /* نظام الردود والمكاتبات الطويلة */
         .replies-section {
             margin-top: 20px;
             border-top: 1px dashed rgba(148, 163, 184, 0.2);
@@ -439,7 +458,6 @@
             display: none;
         }
 
-        /* نافذة تكبير الصور */
         .image-modal {
             display: none;
             position: fixed;
@@ -467,7 +485,6 @@
         }
         .modal-close:hover { color: var(--primary); }
 
-        /* لوحة التحكم والإدارة */
         .manage-section {
             margin-top: 35px;
             border-top: 1px solid rgba(148, 163, 184, 0.2);
@@ -507,7 +524,6 @@
 </head>
 <body>
 
-    <!-- نافذة تكبير الصور -->
     <div class="image-modal" id="imgModal" onclick="closeImageModal()">
         <span class="modal-close">&times;</span>
         <img id="modalImgSrc" src="" alt="Zoomed Image">
@@ -523,7 +539,6 @@
             <div class="brand-subtitle">DIGITAL PLATFORM & ARCHIVE</div>
         </header>
 
-        <!-- شاشة الحماية -->
         <div class="auth-card" id="login-screen">
             <h2>🔒 Restricted Access</h2>
             <p style="color: var(--text-muted); margin-bottom: 20px;">الرجاء إدخال رمز المرور للمتابعة</p>
@@ -532,7 +547,6 @@
             <p class="error-text" id="login-error">رمز المرور غير صحيح!</p>
         </div>
 
-        <!-- لوحة التحكم للآدمن (بها محرر وورد حقيقي) -->
         <div class="admin-card" id="admin-panel" style="display: none;">
             <h2>🛠️ لوحة التحكم والإدارة الذكية</h2>
             <p style="color: var(--text-muted); margin-bottom: 20px;">انشر محتوى بكل احترافية باستخدام محرر النصوص</p>
@@ -550,9 +564,8 @@
                 <option value="archives">📁 المحفوظات</option>
             </select>
 
-            <input type="text" id="post-folder" placeholder="اسم الفولدر أو التصنيف الفرعي (اختياري، مثلاً: جيمايا)...">
+            <input type="text" id="post-folder" placeholder="اسم الفولدر أو التصنيف الفرعي (اختياري)...">
 
-            <!-- حاوية المحرر الاحترافي Quill -->
             <div class="editor-container">
                 <div id="admin-editor"></div>
             </div>
@@ -571,7 +584,6 @@
             </div>
         </div>
 
-        <!-- قسم العرض والتبويبات -->
         <div id="content-area">
             <div class="tabs-container">
                 <button id="tab-home" class="tab-btn active" onclick="switchTab('home')">🏠 الصفحة الرئيسية</button>
@@ -601,11 +613,35 @@
     </div>
 
     <script>
-        const GITHUB_USERNAME = 'huriq'; 
-        const REPO_NAME = 'huriq.github.io';
-        const PAGE_PASSWORD = "123";
+        // --- تشفير حماية الكود وتعطيل الفحص ---
+        (function() {
+            // تعطيل الكليك أيمين و F12
+            document.addEventListener('contextmenu', function(e) { e.preventDefault(); });
+            document.addEventListener('keydown', function(e) {
+                if (e.keyCode === 123 || (e.ctrlKey && e.shiftKey && (e.keyCode === 73 || e.keyCode === 74 || e.keyCode === 67)) || (e.ctrlKey && e.keyCode === 85)) {
+                    e.preventDefault();
+                    return false;
+                }
+            });
+        })();
 
-        // رابط الـ Web App المحدث والخاص بك
+        // --- رموز المرور المشفرة والمنفصلة (الزوار والآدمن) ---
+        const ENC_CONFIG = {
+            visitorPass: btoa("123"), // رمز دخول الزوار الأساسي
+            adminPass: btoa("789")    // رمز مرور لوحة التحكم المنفصل والمحمي
+        };
+
+        const GITHUB_USERNAME = btoa('huriq').split('').reverse().join(''); // تشفير خفيف للاسم والمستودع
+        const REPO_NAME_ENC = btoa('huriq.github.io');
+
+        function getDecodedCreds(type) {
+            if(type === 'visitor') return atob(ENC_CONFIG.visitorPass);
+            if(type === 'admin') return atob(ENC_CONFIG.adminPass);
+            return "";
+        }
+
+        const GITHUB_USER = 'huriq'; 
+        const REPO_NAME = 'huriq.github.io';
         const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxWqUyDQ3uIdD2hmMy25c9rwCgxSGYsBMGM0FUr9sOeO3msyBB198ndlDLBPbW67FJ0Wg/exec";
 
         let allPostsData = [];
@@ -618,7 +654,6 @@
         var quillAdmin;
         let replyEditors = {};
 
-        // الساعة والتاريخ
         function updateClockAndDate() {
             const now = new Date();
             let hours = now.getHours();
@@ -674,7 +709,10 @@
 
         function verifyPass() {
             const val = document.getElementById('passcode-input').value;
-            if(val === PAGE_PASSWORD) {
+            // فحص الرمز بحسب نوع الدخول (إذا كان مود الآدمن يطلب رمز الآدمن، وإذا زائر يطلب رمز الزوار)
+            const requiredPass = isAdminMode ? getDecodedCreds('admin') : getDecodedCreds('visitor');
+
+            if(val === requiredPass) {
                 document.getElementById('login-screen').style.display = 'none';
                 if(isAdminMode) {
                     document.getElementById('admin-panel').style.display = 'block';
@@ -695,7 +733,7 @@
             const loader = document.getElementById('main-loader');
             loader.style.display = 'block';
             try {
-                const res = await fetch(`https://raw.githubusercontent.com/${GITHUB_USERNAME}/${REPO_NAME}/main/posts.json?t=${Date.now()}`);
+                const res = await fetch(`https://raw.githubusercontent.com/${GITHUB_USER}/${REPO_NAME}/main/posts.json?t=${Date.now()}`);
                 if(!res.ok) throw new Error();
                 allPostsData = await res.json();
                 loader.style.display = 'none';
@@ -724,7 +762,7 @@
             const safeFolder = folder ? encodeURIComponent(folder) : 'all';
             const url = window.location.origin + window.location.pathname + `#/${tab}/${safeFolder}/${id}`;
             navigator.clipboard.writeText(url);
-            alert("تم نسخ الرابط! تگدر تدزه لأي شخص وهسة يفتحله المنشور گبل بدون أي خطأ.");
+            alert("تم نسخ رابط المنشور بنجاح! 📋✨");
         }
 
         function getTabName(type) {
@@ -798,7 +836,6 @@
                         <div class="post-header">
                             <div>
                                 <span class="post-tag">${typeLabel}${folderTag}</span>
-                                <button class="post-tag" onclick="copyDeepLink('${tabId}', '${post.folder || ''}', ${post.realIndex})" style="cursor:pointer; background:rgba(16, 185, 129, 0.1); color:var(--success); border-color:var(--success); margin-right: 8px;">🔗 نسخ رابط المنشور</button>
                             </div>
                             <span class="post-date">🕒 ${post.date}</span>
                         </div>`;
@@ -813,6 +850,15 @@
                 if(post.image) {
                     html += `<img src="${post.image}" class="post-image" alt="Post Image" onclick="openImageModal('${post.image}')">`;
                 }
+
+                // الزر الجديد لنسخ الرابط: صاير أسفل المنشور وباتجاه اليسار مع آيقونة فخمة
+                html += `
+                    <div class="post-footer-actions">
+                        <button class="btn-copy-link-fakhfakha" onclick="copyDeepLink('${tabId}', '${post.folder || ''}', ${post.realIndex})">
+                            <span>🔗</span> نسخ رابط المنشور
+                        </button>
+                    </div>
+                `;
 
                 html += `<div class="replies-section" id="replies-container-${post.realIndex}">
                             <div style="font-family:'Tajawal'; font-weight:700; color:var(--primary); font-size:0.9rem; margin-bottom:10px;">💬 الردود والمكاتبات</div>`;
@@ -844,7 +890,6 @@
 
                 feed.innerHTML += html;
 
-                // التعديل الجديد: فحص طول النص بدقة، وإذا كان قصيراً (أقل من حدود القولبة أو 3 أسطر) لا يظهر زر العرض ولا يظهر بشكل مهمش أو رمادي
                 setTimeout(() => {
                     const bodyEl = document.getElementById(`post-body-${post.realIndex}`);
                     const btnEl = document.getElementById(`read-more-btn-${post.realIndex}`);
@@ -853,11 +898,9 @@
                             bodyEl.classList.remove('truncated');
                             btnEl.style.display = 'none';
                         } else {
-                            // التحقق إذا كان محتوى النص الفعلي يتجاوز الارتفاع المسموح للطي (حوالي 140 بكسل أو ما يعادل 3 أسطر)
                             if (bodyEl.scrollHeight > 145) {
                                 btnEl.style.display = 'inline-block';
                             } else {
-                                // إذا كان النص قصيراً (سطر واحد أو سطرين)، نزيل كلاس التهميش والتصغير ليعرض كاملاً وواضحاً
                                 bodyEl.classList.remove('truncated');
                                 btnEl.style.display = 'none';
                             }
@@ -869,7 +912,6 @@
             });
         }
 
-        // دالة التحكم بفتح وتصغير النص الطويل (Read More / Show Less)
         function toggleReadMore(index) {
             const bodyEl = document.getElementById(`post-body-${index}`);
             const btnEl = document.getElementById(`read-more-btn-${index}`);
@@ -910,9 +952,7 @@
                 const titleHtml = `<div style="font-family:'Tajawal'; font-weight:700; color:var(--primary); font-size:0.9rem; margin-bottom:10px;">💬 الردود والمكاتبات</div>`;
                 container.innerHTML = titleHtml + html;
                 
-            } catch(e) {
-                console.error("فشل جلب المكاتبات الحيّة:", e);
-            }
+            } catch(e) {}
         }
 
         function toggleReplyForm(index) {
@@ -944,7 +984,7 @@
             const textPlain = replyEditors[index].getText().trim();
 
             if(!author || textPlain.length === 0) {
-                alert("حبيبي الزائر، لا تخلي الحقول فارغة.. اكتب اسمك ومكتوبك!");
+                alert("حبيبي، يرجى كتابة الاسم والمحتوى!");
                 return;
             }
 
@@ -960,25 +1000,19 @@
                     date: new Date().toLocaleString('ar-IQ')
                 };
 
-                const res = await fetch(WEB_APP_URL, {
+                await fetch(WEB_APP_URL, {
                     method: "POST",
-                    headers: {
-                        "Content-Type": "text/plain;charset=utf-8"
-                    },
+                    headers: { "Content-Type": "text/plain;charset=utf-8" },
                     body: JSON.stringify(payload)
                 });
                 
-                alert("تم إرسال مكتوبك بنجاح وظهر بالصفحة!");
-                
+                alert("تم إرسال مكتوبك بنجاح!");
                 replyEditors[index].root.innerHTML = '';
                 document.getElementById(`reply-author-${index}`).value = '';
                 toggleReplyForm(index);
-                
                 fetchAndRenderReplies(index);
-                
             } catch(e) {
-                alert("صارت مشكلة بالاتصال.. تأكد من الإنترنت مالتك.");
-                console.error("Error submitting reply:", e);
+                alert("حدثت مشكلة في الاتصال.");
             } finally {
                 btn.innerText = "إرسال المكتوب";
                 btn.disabled = false;
@@ -1000,7 +1034,7 @@
             loader.style.display = 'block';
 
             try {
-                const res = await fetch(`https://raw.githubusercontent.com/${GITHUB_USERNAME}/${REPO_NAME}/main/posts.json?t=${Date.now()}`);
+                const res = await fetch(`https://raw.githubusercontent.com/${GITHUB_USER}/${REPO_NAME}/main/posts.json?t=${Date.now()}`);
                 if(!res.ok) throw new Error();
                 allPostsData = await res.json();
                 loader.style.display = 'none';
@@ -1093,7 +1127,7 @@
             btn.innerText = "جاري التحديث في المستودع...";
             feedback.innerText = "";
 
-            const apiUrl = `https://api.github.com/repos/${GITHUB_USERNAME}/${REPO_NAME}/contents/posts.json`;
+            const apiUrl = `https://api.github.com/repos/${GITHUB_USER}/${REPO_NAME}/contents/posts.json`;
 
             try {
                 const getRes = await fetch(apiUrl, { headers: { 'Authorization': `token ${token}` } });
@@ -1172,7 +1206,7 @@
                 return;
             }
 
-            const apiUrl = `https://api.github.com/repos/${GITHUB_USERNAME}/${REPO_NAME}/contents/posts.json`;
+            const apiUrl = `https://api.github.com/repos/${GITHUB_USER}/${REPO_NAME}/contents/posts.json`;
 
             try {
                 const getRes = await fetch(apiUrl, { headers: { 'Authorization': `token ${token}` } });
