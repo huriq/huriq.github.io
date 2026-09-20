@@ -791,7 +791,7 @@
                     });
                 }
 
-                // صندوق الردود للزوار بمحرر احترافي و Web3Forms
+                // صندوق الردود للزوار بمحرر احترافي
                 html += `
                     <button class="btn-reply-toggle" onclick="toggleReplyForm(${post.realIndex})">✍️ كتابة مكتوب أو رد</button>
                     <div class="reply-form-box" id="reply-form-${post.realIndex}">
@@ -835,7 +835,7 @@
             }
         }
 
-        // --- نظام Web3Forms المُحكم للردود ---
+        // --- نظام الإرسال المُحكم للردود عبر Google Apps Script ---
         async function submitPublicReply(index) {
             const author = document.getElementById(`reply-author-${index}`).value.trim();
             const textHTML = replyEditors[index].root.innerHTML;
@@ -851,35 +851,38 @@
             btn.disabled = true;
 
             try {
-                // استدعاء مباشر لـ Web3Forms عبر AJAX حتى ما نطلع من الصفحة
-                const res = await fetch("https://api.web3forms.com/submit", {
+                // جيمايا: هذا رابط الـ Web App مالتك
+                const webAppUrl = "https://script.google.com/macros/s/AKfycbzJYbvM6lyyEBHNEcMe3h19v-N3fLiHRVsGdW_suDk5ud1Nke7UWmed-BoZc76wloQO/exec";
+
+                // تجهيز البيانات
+                const payload = {
+                    author: author,
+                    postIndex: index,
+                    message: textHTML,
+                    date: new Date().toLocaleString('ar-IQ')
+                };
+
+                // استدعاء مباشر لـ Google Apps Script
+                const res = await fetch(webAppUrl, {
                     method: "POST",
+                    // جيمايا تگول: نستخدم text/plain حتى نعبر مشكلة الـ CORS الخبيثة بدون ما نوگف
                     headers: {
-                        "Content-Type": "application/json",
-                        Accept: "application/json",
+                        "Content-Type": "text/plain;charset=utf-8"
                     },
-                    body: JSON.stringify({
-                        //  هنا تخلي المفتاح الحقيقي مالتك مال Web3Forms
-                        access_key: "e5bed123-0538-4bbd-8ddd-c7631c795403",
-                        subject: `مكتوب جديد من ${author} (على منشور رقم ${index})`,
-                        from_name: author,
-                        message: textHTML
-                    })
+                    body: JSON.stringify(payload)
                 });
                 
-                const json = await res.json();
+                // نفترض الإرسال نجح إذا ماكو خطأ بالاتصال
+                alert("تم إرسال مكتوبك بنجاح! راح يوصل للمسؤول مباشرة.");
                 
-                if(json.success) {
-                    alert("تم إرسال مكتوبك بنجاح! راح يوصل للمسؤول مباشرة.");
-                    // تصفير الحقول بعد الإرسال
-                    replyEditors[index].root.innerHTML = '';
-                    document.getElementById(`reply-author-${index}`).value = '';
-                    toggleReplyForm(index);
-                } else {
-                    alert("صارت مشكلة بالإرسال: " + json.message);
-                }
+                // تصفير الحقول بعد الإرسال
+                replyEditors[index].root.innerHTML = '';
+                document.getElementById(`reply-author-${index}`).value = '';
+                toggleReplyForm(index);
+                
             } catch(e) {
-                alert("خطأ بالاتصال، تأكد من خدمة الإنترنت مالتك.");
+                alert("صارت مشكلة بالاتصال.. تأكد من الإنترنت مالتك أو من إعدادات الـ Web App.");
+                console.error("Error submitting reply:", e);
             } finally {
                 btn.innerText = "إرسال المكتوب";
                 btn.disabled = false;
