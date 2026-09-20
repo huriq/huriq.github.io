@@ -360,7 +360,6 @@
             transform: none;
         }
 
-        /* تنسيق زر نسخ الرابط الجديد أسفل المنشور باتجاه اليسار */
         .post-footer-actions {
             display: flex;
             justify-content: flex-start;
@@ -613,9 +612,7 @@
     </div>
 
     <script>
-        // --- تشفير حماية الكود وتعطيل الفحص ---
         (function() {
-            // تعطيل الكليك أيمين و F12
             document.addEventListener('contextmenu', function(e) { e.preventDefault(); });
             document.addEventListener('keydown', function(e) {
                 if (e.keyCode === 123 || (e.ctrlKey && e.shiftKey && (e.keyCode === 73 || e.keyCode === 74 || e.keyCode === 67)) || (e.ctrlKey && e.keyCode === 85)) {
@@ -625,20 +622,11 @@
             });
         })();
 
-        // --- رموز المرور المشفرة والمنفصلة (الزوار والآدمن) ---
-        const ENC_CONFIG = {
-            visitorPass: btoa("123"), // رمز دخول الزوار الأساسي
-            adminPass: btoa("789")    // رمز مرور لوحة التحكم المنفصل والمحمي
+        // 
+        const _0xCoreConfig = {
+            _0xAlpha: btoa("F26H9W11"),
+            _0xBeta: btoa("T96M")
         };
-
-        const GITHUB_USERNAME = btoa('huriq').split('').reverse().join(''); // تشفير خفيف للاسم والمستودع
-        const REPO_NAME_ENC = btoa('huriq.github.io');
-
-        function getDecodedCreds(type) {
-            if(type === 'visitor') return atob(ENC_CONFIG.visitorPass);
-            if(type === 'admin') return atob(ENC_CONFIG.adminPass);
-            return "";
-        }
 
         const GITHUB_USER = 'huriq'; 
         const REPO_NAME = 'huriq.github.io';
@@ -709,10 +697,9 @@
 
         function verifyPass() {
             const val = document.getElementById('passcode-input').value;
-            // فحص الرمز بحسب نوع الدخول (إذا كان مود الآدمن يطلب رمز الآدمن، وإذا زائر يطلب رمز الزوار)
-            const requiredPass = isAdminMode ? getDecodedCreds('admin') : getDecodedCreds('visitor');
+            const targetPass = isAdminMode ? atob(_0xCoreConfig._0xBeta) : atob(_0xCoreConfig._0xAlpha);
 
-            if(val === requiredPass) {
+            if(val === targetPass) {
                 document.getElementById('login-screen').style.display = 'none';
                 if(isAdminMode) {
                     document.getElementById('admin-panel').style.display = 'block';
@@ -829,7 +816,6 @@
                 const typeLabel = getTabName(post.type || 'home');
                 const folderTag = post.folder ? ` / 📂 ${post.folder}` : '';
                 const tabId = post.type || 'home';
-                const folderId = post.folder || 'all';
                 
                 let html = `
                     <div class="post-card" id="post-${post.realIndex}">
@@ -851,7 +837,6 @@
                     html += `<img src="${post.image}" class="post-image" alt="Post Image" onclick="openImageModal('${post.image}')">`;
                 }
 
-                // الزر الجديد لنسخ الرابط: صاير أسفل المنشور وباتجاه اليسار مع آيقونة فخمة
                 html += `
                     <div class="post-footer-actions">
                         <button class="btn-copy-link-fakhfakha" onclick="copyDeepLink('${tabId}', '${post.folder || ''}', ${post.realIndex})">
