@@ -449,11 +449,41 @@
 
         .reply-text {
             color: var(--text-main);
-            line-height: 1.6;
+            line-height: 1.8;
             text-align: justify;
             text-align-last: right;
+            position: relative;
+            overflow: hidden;
+            transition: max-height 0.4s ease;
+        }
+        .reply-text.truncated {
+            max-height: 80px;
+        }
+        .reply-text.truncated::after {
+            content: "";
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 40px;
+            background: linear-gradient(to top, rgba(2, 6, 23, 0.8), transparent);
+            pointer-events: none;
         }
         .reply-text p { margin-bottom: 5px; }
+
+        .btn-reply-read-more {
+            background: transparent;
+            color: var(--primary);
+            border: none;
+            font-size: 0.78rem;
+            cursor: pointer;
+            padding: 2px 0;
+            margin-top: 4px;
+            font-family: 'Tajawal', sans-serif;
+            display: inline-block;
+            box-shadow: none;
+        }
+        .btn-reply-read-more:hover { background: transparent; box-shadow: none; transform: none; text-decoration: underline; }
 
         .btn-reply-toggle {
             background: transparent;
@@ -864,7 +894,6 @@
                 }
 
                 if(post.image) {
-                    // التحقق إذا كان الرابط يعود لملف PDF حتى يتم عرضه بداخل iframe احترافي
                     if(post.image.toLowerCase().endsWith('.pdf') || post.image.toLowerCase().includes('.pdf?')) {
                         html += `
                             <div style="width: 100%; height: 500px; border-radius: 12px; overflow: hidden; border: 1px solid var(--border); margin-bottom: 15px;">
@@ -891,11 +920,12 @@
                             <div style="font-family:'Tajawal'; font-weight:700; color:var(--primary); font-size:0.9rem; margin-bottom:10px;">💬 الردود والمكاتبات</div>`;
                 
                 if(post.replies && post.replies.length > 0) {
-                    post.replies.forEach(rep => {
+                    post.replies.forEach((rep, repIdx) => {
                         html += `
                             <div class="reply-item">
                                 <div class="reply-author">👤 ${rep.author}<span style="font-size:0.75rem;color:var(--text-muted);font-weight:400;">(${rep.date})</span></div>
-                                <div class="reply-text">${rep.text}</div>
+                                <div class="reply-text truncated" id="reply-text-${post.realIndex}-${repIdx}">${rep.text}</div>
+                                <button class="btn-reply-read-more" id="reply-read-btn-${post.realIndex}-${repIdx}" onclick="toggleReplyReadMore(${post.realIndex}, ${repIdx})" style="display:none;">عرض المزيد ▼</button>
                             </div>`;
                     });
                 }
@@ -954,6 +984,20 @@
             }
         }
 
+        function toggleReplyReadMore(postIndex, repIdx) {
+            const textEl = document.getElementById(`reply-text-${postIndex}-${repIdx}`);
+            const btnEl = document.getElementById(`reply-read-btn-${postIndex}-${repIdx}`);
+            if(!textEl || !btnEl) return;
+
+            if(textEl.classList.contains('truncated')) {
+                textEl.classList.remove('truncated');
+                btnEl.innerText = "إخفاء التفاصيل ▲";
+            } else {
+                textEl.classList.add('truncated');
+                btnEl.innerText = "عرض المزيد ▼";
+            }
+        }
+
         async function fetchAndRenderReplies(postIndex) {
             try {
                 const res = await fetch(WEB_APP_URL + "?t=" + Date.now());
@@ -967,17 +1011,34 @@
                 
                 let html = '';
                 if (postReplies.length > 0) {
-                    postReplies.forEach(rep => {
+                    postReplies.forEach((rep, repIdx) => {
                         html += `
                             <div class="reply-item">
                                 <div class="reply-author">👤 ${rep.author}<span style="font-size:0.75rem;color:var(--text-muted);font-weight:400;">(${rep.date})</span></div>
-                                <div class="reply-text">${rep.text}</div>
+                                <div class="reply-text truncated" id="reply-text-${postIndex}-${repIdx}">${rep.text}</div>
+                                <button class="btn-reply-read-more" id="reply-read-btn-${postIndex}-${repIdx}" onclick="toggleReplyReadMore(${postIndex}, ${repIdx})" style="display:none;">عرض المزيد ▼</button>
                             </div>`;
                     });
                 }
                 
                 const titleHtml = `<div style="font-family:'Tajawal'; font-weight:700; color:var(--primary); font-size:0.9rem; margin-bottom:10px;">💬 الردود والمكاتبات</div>`;
                 container.innerHTML = titleHtml + html;
+
+                // فحص طول نصوص الردود لتفعيل زر عرض المزيد تلقائياً
+                setTimeout(() => {
+                    postReplies.forEach((rep, repIdx) => {
+                        const textEl = document.getElementById(`reply-text-${postIndex}-${repIdx}`);
+                        const btnEl = document.getElementById(`reply-read-btn-${postIndex}-${repIdx}`);
+                        if (textEl && btnEl) {
+                            if (textEl.scrollHeight > 80) {
+                                btnEl.style.display = 'inline-block';
+                            } else {
+                                textEl.classList.remove('truncated');
+                                btnEl.style.display = 'none';
+                            }
+                        }
+                    });
+                }, 50);
                 
             } catch(e) {}
         }
@@ -1055,7 +1116,6 @@
             document.getElementById('imgModal').style.display = 'none';
         }
 
-        // دالة الرفع المباشر إلى مستودع GitHub (للفولدرات uploads/images و uploads/files)
         async function uploadDirectAsset(folderName) {
             const fileInput = document.getElementById('direct-file-input');
             const token = document.getElementById('gh-token').value.trim();
