@@ -175,7 +175,7 @@
             border: none !important;
             font-family: 'Noto Kufi Arabic', sans-serif;
             font-weight: 400;
-            font-size: 1.1rem;
+            font-size: 1.05rem;
             min-height: 200px;
         }
         .ql-editor {
@@ -185,6 +185,15 @@
         .reply-editor-container .ql-container.ql-snow {
             min-height: 100px;
             font-size: 0.95rem;
+        }
+
+        .upload-box-admin {
+            background: rgba(2, 6, 23, 0.5);
+            border: 1px dashed rgba(0, 210, 255, 0.3);
+            padding: 15px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            text-align: right;
         }
 
         .tabs-container {
@@ -314,8 +323,8 @@
         .post-body {
             font-family: 'Noto Kufi Arabic', sans-serif;
             font-weight: 400;
-            font-size: 1.1rem;
-            line-height: 1.9;
+            font-size: 1.05rem;
+            line-height: 2;
             color: var(--text-main);
             word-break: break-word;
             margin-bottom: 15px;
@@ -327,6 +336,11 @@
             word-spacing: -0.05em;
         }
         
+        .post-body p, .post-body span, .post-body div {
+            font-family: 'Noto Kufi Arabic', sans-serif !important;
+            font-weight: 400 !important;
+        }
+
         .post-body p { margin-bottom: 10px; }
         .post-body img { max-width: 100%; border-radius: 8px; }
 
@@ -575,7 +589,18 @@
                 <div id="admin-editor"></div>
             </div>
 
-            <input type="text" id="post-image-url" placeholder="رابط الصورة المباشر (اختياري)...">
+            <input type="text" id="post-image-url" placeholder="رابط الصورة أو الملف المباشر (أو ارفع بالأسفل)...">
+            
+            <!-- قسم الرفع المباشر لفولدرات GitHub (images و files) -->
+            <div class="upload-box-admin">
+                <p style="font-size:0.9rem; color:var(--primary); margin-bottom:8px; font-weight:700;">📂 رفع ملف أو صورة مباشرة لمستودع GitHub:</p>
+                <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+                    <input type="file" id="direct-file-input" style="margin-bottom:0; flex-grow:1; font-size:0.85rem; padding:8px;">
+                    <button type="button" onclick="uploadDirectAsset('images')" style="width:auto; padding:8px 16px; font-size:0.9rem;">رفع صورة 🖼️</button>
+                    <button type="button" onclick="uploadDirectAsset('files')" style="width:auto; padding:8px 16px; font-size:0.9rem; background:linear-gradient(135deg, var(--success), #059669); color:#fff;">رفع PDF 📄</button>
+                </div>
+                <p id="upload-status-msg" style="font-size:0.8rem; margin-top:6px; color:var(--warning);"></p>
+            </div>
             
             <button id="publish-btn" onclick="saveOrUpdatePost()">🚀 نشر المحتوى فوراً</button>
             <button id="cancel-edit-btn" onclick="cancelEdit()" style="display:none; background:#334155; color:#fff; margin-top:10px;">إلغاء التعديل</button>
@@ -628,7 +653,6 @@
             });
         })();
 
-        // 
         const _0xCoreConfig = {
             _0xAlpha: btoa("F26H9W11"),
             _0xBeta: btoa("T96M")
@@ -655,7 +679,7 @@
             const seconds = String(now.getSeconds()).padStart(2, '0');
             const ampm = hours >= 12 ? 'PM' : 'AM';
             hours = hours % 12 || 12;
-            document.getElementById('live-clock').innerText = `⏰ ${String(hours).padStart(2, '0')}:${minutes}:${seconds} ${ampm}`;
+            document.getElementById('live-clock').innerText = `⏰ ${String(hours).padStart(2,'0')}:${minutes}:${seconds} ${ampm}`;
             document.getElementById('live-date').innerText = `📅 ${now.toLocaleDateString('ar-IQ', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}`;
         }
         setInterval(updateClockAndDate, 1000);
@@ -753,7 +777,7 @@
 
         function copyDeepLink(tab, folder, id) {
             const safeFolder = folder ? encodeURIComponent(folder) : 'all';
-            const url = window.location.origin + window.location.pathname + `#/${tab}/${safeFolder}/${id}`;
+            const url = window.location.origin + window.location.pathname + `#/tab/${safeFolder}/${id}`;
             navigator.clipboard.writeText(url);
             alert("تم نسخ رابط المنشور بنجاح! 📋✨");
         }
@@ -840,12 +864,24 @@
                 }
 
                 if(post.image) {
-                    html += `<img src="${post.image}" class="post-image" alt="Post Image" onclick="openImageModal('${post.image}')">`;
+                    // التحقق إذا كان الرابط يعود لملف PDF حتى يتم عرضه بداخل iframe احترافي
+                    if(post.image.toLowerCase().endsWith('.pdf') || post.image.toLowerCase().includes('.pdf?')) {
+                        html += `
+                            <div style="width: 100%; height: 500px; border-radius: 12px; overflow: hidden; border: 1px solid var(--border); margin-bottom: 15px;">
+                                <iframe src="${post.image}#view=FitH" width="100%" height="100%" style="border: none;"></iframe>
+                            </div>
+                            <div style="margin-bottom: 15px; text-align: left;">
+                                <a href="${post.image}" target="_blank" style="color: var(--primary); font-size: 0.9rem; text-decoration: underline;">📄 فتح ملف الـ PDF في نافذة مستقلة أو تحميله</a>
+                            </div>
+                        `;
+                    } else {
+                        html += `<img src="${post.image}" class="post-image" alt="PostImage" onclick="openImageModal('${post.image}')">`;
+                    }
                 }
 
                 html += `
                     <div class="post-footer-actions">
-                        <button class="btn-copy-link-fakhfakha" onclick="copyDeepLink('${tabId}', '${post.folder || ''}', ${post.realIndex})">
+                        <button class="btn-copy-link-fakhfakha" onclick="copyDeepLink('${tabId}','${post.folder || ''}', ${post.realIndex})">
                             <span>🔗</span> نسخ رابط المنشور
                         </button>
                     </div>
@@ -858,7 +894,7 @@
                     post.replies.forEach(rep => {
                         html += `
                             <div class="reply-item">
-                                <div class="reply-author">👤 ${rep.author} <span style="font-size:0.75rem; color:var(--text-muted); font-weight:400;">(${rep.date})</span></div>
+                                <div class="reply-author">👤 ${rep.author}<span style="font-size:0.75rem;color:var(--text-muted);font-weight:400;">(${rep.date})</span></div>
                                 <div class="reply-text">${rep.text}</div>
                             </div>`;
                     });
@@ -934,7 +970,7 @@
                     postReplies.forEach(rep => {
                         html += `
                             <div class="reply-item">
-                                <div class="reply-author">👤 ${rep.author} <span style="font-size:0.75rem; color:var(--text-muted); font-weight:400;">(${rep.date})</span></div>
+                                <div class="reply-author">👤 ${rep.author}<span style="font-size:0.75rem;color:var(--text-muted);font-weight:400;">(${rep.date})</span></div>
                                 <div class="reply-text">${rep.text}</div>
                             </div>`;
                     });
@@ -1019,6 +1055,70 @@
             document.getElementById('imgModal').style.display = 'none';
         }
 
+        // دالة الرفع المباشر إلى مستودع GitHub (للفولدرات uploads/images و uploads/files)
+        async function uploadDirectAsset(folderName) {
+            const fileInput = document.getElementById('direct-file-input');
+            const token = document.getElementById('gh-token').value.trim();
+            const statusMsg = document.getElementById('upload-status-msg');
+
+            if (!token) {
+                alert('يرجى إدخال GitHub Token في الحقل المخصص أولاً!');
+                return;
+            }
+
+            if (!fileInput || fileInput.files.length === 0) {
+                alert('الرجاء اختيار ملف أو صورة من جهازك أولاً!');
+                return;
+            }
+
+            const file = fileInput.files[0];
+            const reader = new FileReader();
+            
+            statusMsg.style.color = "var(--warning)";
+            statusMsg.innerText = "جاري رفع الملف إلى GitHub...";
+
+            reader.onload = async function() {
+                try {
+                    const base64Content = reader.result.split(',')[1];
+                    const fileName = Date.now() + '_' + file.name.replace(/\s+/g, '_');
+                    const path = `uploads/${folderName}/${fileName}`;
+                    const url = `https://api.github.com/repos/${GITHUB_USER}/${REPO_NAME}/contents/${path}`;
+                    
+                    const payload = {
+                        message: `Upload ${fileName} via HUR Platform`,
+                        content: base64Content,
+                        branch: 'main'
+                    };
+
+                    const response = await fetch(url, {
+                        method: 'PUT',
+                        headers: {
+                            'Authorization': `token ${token}`,
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(payload)
+                    });
+
+                    const data = await response.json();
+
+                    if (response.ok) {
+                        const rawUrl = `https://raw.githubusercontent.com/${GITHUB_USER}/${REPO_NAME}/main/${path}`;
+                        document.getElementById('post-image-url').value = rawUrl;
+                        statusMsg.style.color = "var(--success)";
+                        statusMsg.innerText = "✅ تم رفع الملف بنجاح ولصق رابطه تلقائياً!";
+                        fileInput.value = '';
+                    } else {
+                        statusMsg.style.color = "var(--error)";
+                        statusMsg.innerText = 'فشل الرفع: ' + (data.message || 'خطأ غير معروف');
+                    }
+                } catch (error) {
+                    statusMsg.style.color = "var(--error)";
+                    statusMsg.innerText = 'حدث خطأ في الاتصال أثناء الرفع.';
+                }
+            };
+            reader.readAsDataURL(file);
+        }
+
         async function fetchPostsForAdmin() {
             const loader = document.getElementById('admin-loader');
             const listContainer = document.getElementById('manage-posts-list');
@@ -1047,7 +1147,7 @@
             }
 
             allPostsData.map((post, index) => ({ ...post, realIndex: index })).slice().reverse().forEach(item => {
-                const snippet = item.content ? item.content.replace(/<[^>]*>/g, '').substring(0, 50) + '...' : '[صورة]';
+                const snippet = item.content ? item.content.replace(/<[^>]*>/g, '').substring(0, 50) + '...' : '[ملف / صورة]';
                 const tLabel = getTabName(item.type || 'home');
                 const fLabel = item.folder ? ` [فولدر: ${item.folder}]` : '';
                 listContainer.innerHTML += `
@@ -1109,7 +1209,7 @@
 
             if(isContentEmpty && !image) {
                 feedback.style.color = "var(--error)";
-                feedback.innerText = "أدخل نصاً أو رابط صورة على الأقل!";
+                feedback.innerText = "أدخل نصاً أو رابط صورة/ملف على الأقل!";
                 return;
             }
 
