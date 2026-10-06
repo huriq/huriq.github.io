@@ -889,13 +889,9 @@
                             <span class="post-date">🕒 ${post.date}</span>
                         </div>`;
                 
-                if(post.content) {
-                    html += `
-                        <div class="post-body truncated" id="post-body-${post.realIndex}">${post.content}</div>
-                        <button class="btn-read-more" id="read-more-btn-${post.realIndex}" onclick="toggleReadMore(${post.realIndex})" style="display:none;">عرض المزيد ▼</button>
-                    `;
-                }
-
+                // -------------------------------------------------------------
+                // تم وضع الصورة أو ملف الـ PDF أولاً (في الأعلى) قبل النص
+                // -------------------------------------------------------------
                 if(post.image) {
                     if(post.image.toLowerCase().endsWith('.pdf') || post.image.toLowerCase().includes('.pdf?')) {
                         html += `
@@ -907,13 +903,20 @@
                             </div>
                         `;
                     } else {
-                        html += `<img src="${post.image}" class="post-image" alt="PostImage" onclick="openImageModal('${post.image}')">`;
+                        html += `<img src="${post.image}" class="post-image" alt="Post Image" onclick="openImageModal('${post.image}')">`;
                     }
+                }
+
+                if(post.content) {
+                    html += `
+                        <div class="post-body truncated" id="post-body-${post.realIndex}">${post.content}</div>
+                        <button class="btn-read-more" id="read-more-btn-${post.realIndex}" onclick="toggleReadMore(${post.realIndex})" style="display:none;">عرض المزيد ▼</button>
+                    `;
                 }
 
                 html += `
                     <div class="post-footer-actions">
-                        <button class="btn-copy-link-fakhfakha" onclick="copyDeepLink('${tabId}','${post.folder || ''}', ${post.realIndex})">
+                        <button class="btn-copy-link-fakhfakha" onclick="copyDeepLink('${tabId}', '${post.folder || ''}', ${post.realIndex})">
                             <span>🔗</span> نسخ رابط المنشور
                         </button>
                     </div>
@@ -926,7 +929,7 @@
                     post.replies.forEach((rep, repIdx) => {
                         html += `
                             <div class="reply-item">
-                                <div class="reply-author">👤 ${rep.author}<span style="font-size:0.75rem;color:var(--text-muted);font-weight:400;">(${rep.date})</span></div>
+                                <div class="reply-author">👤 ${rep.author} <span style="font-size:0.75rem;color:var(--text-muted);font-weight:400;">(${rep.date})</span></div>
                                 <div class="reply-text truncated" id="reply-text-${post.realIndex}-${repIdx}">${rep.text}</div>
                                 <button class="btn-reply-read-more" id="reply-read-btn-${post.realIndex}-${repIdx}" onclick="toggleReplyReadMore(${post.realIndex}, ${repIdx})" style="display:none;">عرض المزيد ▼</button>
                             </div>`;
@@ -1017,7 +1020,7 @@
                     postReplies.forEach((rep, repIdx) => {
                         html += `
                             <div class="reply-item">
-                                <div class="reply-author">👤 ${rep.author}<span style="font-size:0.75rem;color:var(--text-muted);font-weight:400;">(${rep.date})</span></div>
+                                <div class="reply-author">👤 ${rep.author} <span style="font-size:0.75rem;color:var(--text-muted);font-weight:400;">(${rep.date})</span></div>
                                 <div class="reply-text truncated" id="reply-text-${postIndex}-${repIdx}">${rep.text}</div>
                                 <button class="btn-reply-read-more" id="reply-read-btn-${postIndex}-${repIdx}" onclick="toggleReplyReadMore(${postIndex}, ${repIdx})" style="display:none;">عرض المزيد ▼</button>
                             </div>`;
@@ -1027,7 +1030,6 @@
                 const titleHtml = `<div style="font-family:'Tajawal'; font-weight:700; color:var(--primary); font-size:0.9rem; margin-bottom:10px;">💬 الردود والمكاتبات</div>`;
                 container.innerHTML = titleHtml + html;
 
-                // فحص طول نصوص الردود لتفعيل زر عرض المزيد تلقائياً
                 setTimeout(() => {
                     postReplies.forEach((rep, repIdx) => {
                         const textEl = document.getElementById(`reply-text-${postIndex}-${repIdx}`);
