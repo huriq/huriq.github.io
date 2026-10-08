@@ -653,7 +653,7 @@
                 <button id="tab-beliefs" class="tab-btn" onclick="switchTab('beliefs')">🌟 المعتقدات</button>
                 <button id="tab-writings" class="tab-btn" onclick="switchTab('writings')">📄 المكتوبات</button>
                 <button id="tab-correspondence" class="tab-btn" onclick="switchTab('correspondence')">📜 المكاتبات</button>
-                <button id="tab-visuals" class="tab-btn" onclick="switchTab('visuals')">🖼️️ المرئيات</button>
+                <button id="tab-visuals" class="tab-btn" onclick="switchTab('visuals')">🖼 المرئيات</button>
                 <button id="tab-audio" class="tab-btn" onclick="switchTab('audio')">🎧 المسموعات</button>
                 <button id="tab-archives" class="tab-btn" onclick="switchTab('archives')">📁 المحفوظات</button>
             </div>
@@ -900,11 +900,11 @@
                                 <a href="${post.image}" target="_blank" style="color: var(--primary); font-size: 0.9rem; text-decoration: underline;">📄 فتح ملف الـ PDF في نافذة مستقلة أو تحميله</a>
                             </div>
                         `;
-                    } else if(lowerUrl.endsWith('.mp3') || lowerUrl.endsWith('.wav') || lowerUrl.endsWith('.ogg') || lowerUrl.includes('.mp3?')) {
+                    } else if(lowerUrl.endsWith('.mp3') || lowerUrl.endsWith('.wav') || lowerUrl.endsWith('.ogg') || lowerUrl.endsWith('.m4a') || lowerUrl.endsWith('.aac') || lowerUrl.endsWith('.flac') || lowerUrl.includes('.mp3?') || lowerUrl.includes('.m4a?') || lowerUrl.includes('.wav?') || lowerUrl.includes('.ogg?')) {
                         html += `
                             <div style="margin-bottom: 15px; background: rgba(2, 6, 23, 0.6); padding: 15px; border-radius: 12px; border: 1px solid var(--border);">
                                 <audio controls style="width: 100%;">
-                                    <source src="${post.image}" type="audio/mpeg">
+                                    <source src="${post.image}">
                                     متصفحك لا يدعم مشغل الصوت.
                                 </audio>
                                 <div style="margin-top: 8px; text-align: left;">
