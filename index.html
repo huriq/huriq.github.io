@@ -622,15 +622,15 @@
                 <div id="admin-editor"></div>
             </div>
 
-            <input type="text" id="post-image-url" placeholder="رابط الصورة أو الملف المباشر (أو ارفع بالأسفل)...">
+            <input type="text" id="post-image-url" placeholder="رابط الصورة أو الملف أو التسجيل الصوتي المباشر (أو ارفع بالأسفل)...">
             
             <!-- قسم الرفع المباشر لفولدرات GitHub (images و files) -->
             <div class="upload-box-admin">
-                <p style="font-size:0.9rem; color:var(--primary); margin-bottom:8px; font-weight:700;">📂 رفع ملف أو صورة مباشرة لمستودع GitHub:</p>
+                <p style="font-size:0.9rem; color:var(--primary); margin-bottom:8px; font-weight:700;">📂 رفع ملف أو صورة أو صوت مباشرة لمستودع GitHub:</p>
                 <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
                     <input type="file" id="direct-file-input" style="margin-bottom:0; flex-grow:1; font-size:0.85rem; padding:8px;">
                     <button type="button" onclick="uploadDirectAsset('images')" style="width:auto; padding:8px 16px; font-size:0.9rem;">رفع صورة 🖼️</button>
-                    <button type="button" onclick="uploadDirectAsset('files')" style="width:auto; padding:8px 16px; font-size:0.9rem; background:linear-gradient(135deg, var(--success), #059669); color:#fff;">رفع PDF 📄</button>
+                    <button type="button" onclick="uploadDirectAsset('files')" style="width:auto; padding:8px 16px; font-size:0.9rem; background:linear-gradient(135deg, var(--success), #059669); color:#fff;">رفع ملف/صوت 📄🎧</button>
                 </div>
                 <p id="upload-status-msg" style="font-size:0.8rem; margin-top:6px; color:var(--warning);"></p>
             </div>
@@ -653,7 +653,7 @@
                 <button id="tab-beliefs" class="tab-btn" onclick="switchTab('beliefs')">🌟 المعتقدات</button>
                 <button id="tab-writings" class="tab-btn" onclick="switchTab('writings')">📄 المكتوبات</button>
                 <button id="tab-correspondence" class="tab-btn" onclick="switchTab('correspondence')">📜 المكاتبات</button>
-                <button id="tab-visuals" class="tab-btn" onclick="switchTab('visuals')">🖼️ المرئيات</button>
+                <button id="tab-visuals" class="tab-btn" onclick="switchTab('visuals')">🖼️️ المرئيات</button>
                 <button id="tab-audio" class="tab-btn" onclick="switchTab('audio')">🎧 المسموعات</button>
                 <button id="tab-archives" class="tab-btn" onclick="switchTab('archives')">📁 المحفوظات</button>
             </div>
@@ -889,17 +889,27 @@
                             <span class="post-date">🕒 ${post.date}</span>
                         </div>`;
                 
-                // -------------------------------------------------------------
-                // تم وضع الصورة أو ملف الـ PDF أولاً (في الأعلى) قبل النص
-                // -------------------------------------------------------------
                 if(post.image) {
-                    if(post.image.toLowerCase().endsWith('.pdf') || post.image.toLowerCase().includes('.pdf?')) {
+                    const lowerUrl = post.image.toLowerCase();
+                    if(lowerUrl.endsWith('.pdf') || lowerUrl.includes('.pdf?')) {
                         html += `
                             <div style="width: 100%; height: 500px; border-radius: 12px; overflow: hidden; border: 1px solid var(--border); margin-bottom: 15px;">
                                 <iframe src="${post.image}#view=FitH" width="100%" height="100%" style="border: none;"></iframe>
                             </div>
                             <div style="margin-bottom: 15px; text-align: left;">
                                 <a href="${post.image}" target="_blank" style="color: var(--primary); font-size: 0.9rem; text-decoration: underline;">📄 فتح ملف الـ PDF في نافذة مستقلة أو تحميله</a>
+                            </div>
+                        `;
+                    } else if(lowerUrl.endsWith('.mp3') || lowerUrl.endsWith('.wav') || lowerUrl.endsWith('.ogg') || lowerUrl.includes('.mp3?')) {
+                        html += `
+                            <div style="margin-bottom: 15px; background: rgba(2, 6, 23, 0.6); padding: 15px; border-radius: 12px; border: 1px solid var(--border);">
+                                <audio controls style="width: 100%;">
+                                    <source src="${post.image}" type="audio/mpeg">
+                                    متصفحك لا يدعم مشغل الصوت.
+                                </audio>
+                                <div style="margin-top: 8px; text-align: left;">
+                                    <a href="${post.image}" target="_blank" style="color: var(--primary); font-size: 0.85rem; text-decoration: underline;">🎧 تحميل أو فتح الملف الصوتي</a>
+                                </div>
                             </div>
                         `;
                     } else {
@@ -1212,7 +1222,7 @@
             }
 
             allPostsData.map((post, index) => ({ ...post, realIndex: index })).slice().reverse().forEach(item => {
-                const snippet = item.content ? item.content.replace(/<[^>]*>/g, '').substring(0, 50) + '...' : '[ملف / صورة]';
+                const snippet = item.content ? item.content.replace(/<[^>]*>/g, '').substring(0, 50) + '...' : '[ملف / صورة / صوت]';
                 const tLabel = getTabName(item.type || 'home');
                 const fLabel = item.folder ? ` [فولدر: ${item.folder}]` : '';
                 listContainer.innerHTML += `
