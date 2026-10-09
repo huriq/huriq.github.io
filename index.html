@@ -776,15 +776,15 @@
             });
         })();
 
-        // [تطوير أمني متقدم - SHA-256 دقيق وحساس لحالة الحروف Case-Sensitive]
+        // [تطوير أمني متقدم - SHA-256 مضبوط بدقة للرموز الحقيقية F26H9W11 و T96M]
         const _securePassHashes = {
-            alpha: "3e536551b8a5146c2ae07b5a59654157bc89d2c6dfdbf1db0811eef26760655a", // رمز الزوار (F26H9W11)
-            beta:  "8c6d1d782eb9a6a84d436a9080cbce629524e4f71a067a9cfd0c1598e94a8f9b"  // رمز لوحة التحكم (T96M)
+            alpha: "4d485a3c617b4395b058a5e7ec9cd4ef12df2d152c93dc91d6e19036dc7f71a0", // رمز الزوار (F26H9W11)
+            beta:  "2b2a6411f32a25b309f7a75253818e7751c1ff76e65b75ecb0ea597f3b890885"  // رمز لوحة التحكم (T96M)
         };
 
         async function hashString(str) {
             const encoder = new TextEncoder();
-            const data = encoder.encode(str); // يحافظ على الحروف كما هي (كابيتل وسمول بدون أي تغيير)
+            const data = encoder.encode(str); 
             const hashBuffer = await crypto.subtle.digest('SHA-256', data);
             const hashArray = Array.from(new Uint8Array(hashBuffer));
             return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
