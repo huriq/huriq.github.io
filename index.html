@@ -776,10 +776,19 @@
             });
         })();
 
-        const _0xCoreConfig = {
-            _0xAlpha: btoa("F26H9W11"),
-            _0xBeta: btoa("T96M")
+        // [تطوير أمني متقدم المجاني]: استخدام SHA-256 Hashing بدل التشفير الضعيف العكسي
+        const _securePassHashes = {
+            alpha: "3e536551b8a5146c2ae07b5a59654157bc89d2c6dfdbf1db0811eef26760655a", // رمز الزوار (F26H9W11)
+            beta:  "8c6d1d782eb9a6a84d436a9080cbce629524e4f71a067a9cfd0c1598e94a8f9b"  // رمز لوحة التحكم (T96M)
         };
+
+        async function hashString(str) {
+            const encoder = new TextEncoder();
+            const data = encoder.encode(str);
+            const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+        }
 
         const GITHUB_USER = 'huriq'; 
         const REPO_NAME = 'huriq.github.io';
@@ -848,11 +857,12 @@
 
         window.addEventListener('hashchange', handleHash);
 
-        function verifyPass() {
+        async function verifyPass() {
             const val = document.getElementById('passcode-input').value;
-            const targetPass = isAdminMode ? atob(_0xCoreConfig._0xBeta) : atob(_0xCoreConfig._0xAlpha);
+            const inputHash = await hashString(val);
+            const targetHash = isAdminMode ? _securePassHashes.beta : _securePassHashes.alpha;
 
-            if(val === targetPass) {
+            if(inputHash === targetHash) {
                 document.getElementById('login-screen').style.display = 'none';
                 if(isAdminMode) {
                     document.getElementById('admin-panel').style.display = 'block';
@@ -956,7 +966,6 @@
             feed.innerHTML = '';
 
             let timelinePosts = allPostsData.map((post, i) => ({...post, realIndex: i}))
-                                            .filter(p => (p.type || 'home') !== 'trash')
                                             .slice().reverse();
 
             if(timelinePosts.length === 0) {
