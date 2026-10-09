@@ -775,14 +775,12 @@
             });
         })();
 
-        // الهاشات مالتك خليتها مثل ما هي، بس إذا طلعت غلط راح تگدر تنسخ الصحيحة من الكونسول
         const _securePassHashes = {
-            alpha: "7c73b4fafd53d2efb95a092915ce7fe602e5aa2b8ec0ce263d1b0fd066370096", 
-            beta:  "90f8e387d7c5e53cf72096776fa3823c4561692b4061de39e1f00ed0642b4851"  
+            alpha: "b7e2894b9f29910d57e2a9452b47ea5b95b451ae9f5c4f24ef3cd36a6e555811", 
+            beta:  "2806283ef184549925bc01cb4d142b781ae2128eeb3b3d1b7d59835848bb0ea8"  
         };
 
         async function hashString(str) {
-            // إضافة حماية حتى الدالة ما تضرب عندك لو فتحتها على فايل محلي (file://)
             if (!window.crypto || !window.crypto.subtle) {
                 throw new Error("عيني حمودي، تشفير SHA-256 ما يشتغل على ملف محلي (file://). لازم ترفعه لـ GitHub أو تستخدم Localhost حتى يشتغل نظام الحماية!");
             }
@@ -794,17 +792,15 @@
         }
 
         // ==========================================
-        // إضافة دوال التشفير وفك التشفير اللي طلبتها
+        // دوال التشفير وفك التشفير (AES-GCM)
         // ==========================================
         
-        // إعدادات التشفير الثابتة
         const ENCRYPTION_CONFIG = {
             iterations: 100000,
             hash: "SHA-256",
             length: 256
         };
 
-        // 1. دالة توليد المفتاح من الباسوورد (باستخدام PBKDF2)
         async function deriveKey(password, salt) {
             const encoder = new TextEncoder();
             const keyMaterial = await window.crypto.subtle.importKey(
@@ -829,16 +825,10 @@
             );
         }
 
-        // 2. دالة التشفير (هاي تستخدمها يمك حتى تشفر المكاتبات وتطلع النص المشفر)
         async function encryptText(text, password) {
             const encoder = new TextEncoder();
-            
-            // توليد ملح (Salt) عشوائي لزيادة قوة الباسوورد
             const salt = window.crypto.getRandomValues(new Uint8Array(16));
-            
-            // توليد شعاع تهيئة (IV) عشوائي للـ AES-GCM
             const iv = window.crypto.getRandomValues(new Uint8Array(12));
-
             const key = await deriveKey(password, salt);
 
             const encryptedContent = await window.crypto.subtle.encrypt(
@@ -850,7 +840,6 @@
                 encoder.encode(text)
             );
 
-            // تجميع الـ Salt والـ IV والنص المشفر بمصفوفة وحدة حتى نحفظها بسهولة
             const encryptedContentArray = new Uint8Array(encryptedContent);
             const buffer = new Uint8Array(salt.length + iv.length + encryptedContentArray.length);
 
@@ -858,28 +847,23 @@
             buffer.set(iv, salt.length);
             buffer.set(encryptedContentArray, salt.length + iv.length);
 
-            // تحويل النتيجة إلى Base64 حتى تگدر تحفظها كـ نص عادي بملفاتك
             return btoa(String.fromCharCode.apply(null, buffer));
         }
 
-        // 3. دالة فك التشفير (هاي اللي راح تخليها بموقعك وتستقبل باسوورد المستخدم)
         async function decryptText(encryptedBase64, password) {
             try {
-                // تحويل الـ Base64 لـ مصفوفة بايتات
                 const binaryString = atob(encryptedBase64);
                 const buffer = new Uint8Array(binaryString.length);
                 for (let i = 0; i < binaryString.length; i++) {
                     buffer[i] = binaryString.charCodeAt(i);
                 }
 
-                // فصل الـ Salt والـ IV والنص المشفر من المصفوفة
                 const salt = buffer.slice(0, 16);
                 const iv = buffer.slice(16, 28);
                 const encryptedContent = buffer.slice(28);
 
                 const key = await deriveKey(password, salt);
 
-                // فك التشفير باستخدام AES-GCM
                 const decryptedContent = await window.crypto.subtle.decrypt(
                     {
                         name: "AES-GCM",
@@ -893,14 +877,12 @@
                 return decoder.decode(decryptedContent);
                 
             } catch (error) {
-                // إذا الباسوورد غلط، أو إذا أي شخص تلاعب بالنص المشفر، الدالة راح توكع هنا فوراً
-                console.error("فشل فك التشفير!");
                 return null;
             }
         }
         
         // ==========================================
-        // نهاية دوال التشفير المضافة
+        // نهاية دوال التشفير
         // ==========================================
 
         const GITHUB_USER = 'huriq'; 
@@ -975,24 +957,11 @@
                 const val = document.getElementById('passcode-input').value;
                 const inputHash = await hashString(val);
                 
-                // حمودي، هاي الرسالة بالكونسول حتى تنسخ الهاش المضبوط مليون بالمية
-                console.log("حمودي، هذا الهاش الصحيح للباسوورد مالتك، انسخه وبدله بالكود إذا چان يطلعلك غلط: ", inputHash);
-
                 const targetHash = isAdminMode ? _securePassHashes.beta : _securePassHashes.alpha;
-
-                // إضافة بنيتك جمجومة: نافذة ذكية تطلعلك الهاش الجديد حتى تنسخه فوراً إذا چان الهاش القديم ما يطابق!
-                if (inputHash !== targetHash) {
-                    const modeText = isAdminMode ? "beta (الإدمن)" : "alpha (الزوار)";
-                    prompt(`عيني حمودي! الهاش اللي بالكود قديم وما يطابق الباسوورد اللي كتبته. \nانسخ هذا الهاش الجديد (Copy) وروح خليه بمتغير ${modeText} بالكود:`, inputHash);
-                    
-                    document.getElementById('login-error').innerText = "تم نسخ الهاش؟ روح حدّث الكود بالگتهب وارجع جرب!";
-                    document.getElementById('login-error').style.display = 'block';
-                    return; // نوقف الكود هنا حتى تروح تحدثه وميظل يعطيك أخطاء!
-                }
 
                 if(inputHash === targetHash) {
                     document.getElementById('login-screen').style.display = 'none';
-                    document.getElementById('login-error').style.display = 'none'; // نصفر رسالة الخطأ
+                    document.getElementById('login-error').style.display = 'none';
                     if(isAdminMode) {
                         document.getElementById('admin-panel').style.display = 'block';
                         initAdminEditor();
@@ -1008,7 +977,6 @@
                     document.getElementById('login-error').style.display = 'block';
                 }
             } catch (e) {
-                // إذا فتحت الملف محلي (file://) راح تطلعلك هاي الرسالة بدل ما يسكت الكود
                 document.getElementById('login-error').innerText = e.message;
                 document.getElementById('login-error').style.display = 'block';
             }
