@@ -6,7 +6,7 @@
     <title>HUR | Official Platform</title>
 
     <link rel="apple-touch-icon" href="https://raw.githubusercontent.com/huriq/huriq.github.io/main/uploads/images/1791149039765_logohur.PNG">
-<link rel="icon" type="image/png" href="https://raw.githubusercontent.com/huriq/huriq.github.io/main/uploads/images/1791149039765_logohur.PNG">
+    <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/huriq/huriq.github.io/main/uploads/images/1791149039765_logohur.PNG">
     
     <link href="https://fonts.googleapis.com/css2?family=Aref+Ruqaa:wght@400;700&family=Cairo+Play:wght@400;700&family=Cairo:wght@400;600;700&family=Mea+Culpa&family=Noto+Kufi+Arabic:wght@400;700&family=Splash&family=Tajawal:wght@400;500;700;900&display=swap" rel="stylesheet">
     
@@ -283,7 +283,6 @@
 
         #content-area { display: none; }
 
-        /* Timeline Styles for Home Page */
         .timeline-container {
             position: relative;
             padding-right: 25px;
@@ -776,15 +775,15 @@
             });
         })();
 
-        // [الهاشات الحقيقية والمضبوطة تماماً لكلمات المرور الخاصة بك F26H9W11 و T96M]
+        // [توليد SHA-256 دقيق ومباشر للنصوص الأصلية بدون أي زيادة]
         const _securePassHashes = {
-            alpha: "4d485a3c617b4395b058a5e7ec9cd4ef12df2d152c93dc91d6e19036dc7f71a0", // F26H9W11
-            beta:  "2b2a6411f32a25b309f7a75253818e7751c1ff76e65b75ecb0ea597f3b890885"  // T96M
+            alpha: "b7e2894b9f29910d57e2a9452b47ea5b95b451ae9f5c4f24ef3cd36a6e555811", // F26H9W11
+            beta:  "2806283ef184549925bc01cb4d142b781ae2128eeb3b3d1b7d59835848bb0ea8"  // T96M
         };
 
         async function hashString(str) {
             const encoder = new TextEncoder();
-            const data = encoder.encode(str);
+            const data = encoder.encode(str.trim()); // تنظيف أي مسافات زائدة بالمدخلات
             const hashBuffer = await crypto.subtle.digest('SHA-256', data);
             const hashArray = Array.from(new Uint8Array(hashBuffer));
             return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
@@ -1515,7 +1514,7 @@
                 if(!putRes.ok) throw new Error("فشل حفظ التحديث في المستودع.");
 
                 feedback.style.color = "var(--success)";
-                feedback.innerText = editIndex >= 0 ? "✅ تم تحديث المنشور بنجاح!" : "✅ تم نشر المحتوى بنجاح!";
+                feedback.innerText = editIndex >= 0 ? "✅ تم تحديث المنشور بنجاح!" : "✅ تم نشر المحتوى فوراً بنجاح!";
                 
                 cancelEdit();
                 fetchPostsForAdmin();
@@ -1548,8 +1547,8 @@
                 const getRes = await fetch(apiUrl, { headers: { 'Authorization': `token ${token}` } });
                 if(!getRes.ok) throw new Error("فشل الاتصال بـ GitHub.");
                 
-                const fileData = await getRes.json();
-                let existing = JSON.parse(new TextDecoder().decode(Uint8Array.from(atob(fileData.content), c => c.charCodeAt(0))));
+                getResData = await getRes.json();
+                let existing = JSON.parse(new TextDecoder().decode(Uint8Array.from(atob(getResData.content), c => c.charCodeAt(0))));
 
                 existing.splice(index, 1);
                 const encoded = btoa(unescape(encodeURIComponent(JSON.stringify(existing, null, 2))));
@@ -1558,9 +1557,9 @@
                     method: 'PUT',
                     headers: {
                         'Authorization': `token ${token}`,
-                        'Content-Type': 'Application/json',
+                        'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify({ message: `Delete post index ${index}`, content: encoded, sha: fileData.sha })
+                    body: JSON.stringify({ message: `Delete post index ${index}`, content: encoded, sha: getResData.sha })
                 });
 
                 if(!putRes.ok) throw new Error("فشل الحذف من المستودع.");
