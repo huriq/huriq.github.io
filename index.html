@@ -283,6 +283,93 @@
 
         #content-area { display: none; }
 
+        /* Timeline Styles for Home Page */
+        .timeline-container {
+            position: relative;
+            padding-right: 25px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            margin-top: 10px;
+        }
+        .timeline-container::before {
+            content: '';
+            position: absolute;
+            right: 8px;
+            top: 10px;
+            bottom: 10px;
+            width: 2px;
+            background: linear-gradient(to bottom, var(--primary), rgba(0, 210, 255, 0.1));
+            opacity: 0.5;
+        }
+        .timeline-card {
+            background: var(--surface-glass);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 15px 20px;
+            position: relative;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+            animation: fadeIn 0.4s ease-in-out;
+        }
+        .timeline-card::before {
+            content: '';
+            position: absolute;
+            right: -21px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: var(--bg-deep);
+            border: 2px solid var(--primary);
+            transition: all 0.3s ease;
+        }
+        .timeline-card:hover {
+            transform: translateX(-5px);
+            border-color: var(--primary);
+            box-shadow: 0 10px 25px rgba(0, 210, 255, 0.15);
+        }
+        .timeline-card:hover::before {
+            background: var(--primary);
+            box-shadow: 0 0 10px var(--primary);
+        }
+        .timeline-breadcrumb {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+            font-family: 'Tajawal', sans-serif;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            align-items: center;
+        }
+        .timeline-breadcrumb span {
+            color: var(--primary);
+            opacity: 0.85;
+            font-weight: 500;
+        }
+        .timeline-preview {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-family: 'Noto Kufi Arabic', sans-serif;
+            color: var(--text-main);
+            font-size: 0.95rem;
+        }
+        .type-icon {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+        .preview-text {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            opacity: 0.85;
+        }
+
         .post-card {
             background: var(--surface-glass);
             backdrop-filter: blur(10px);
@@ -613,8 +700,8 @@
                 <option value="correspondence">📜 المكاتبات</option>
                 <option value="visuals">🖼️ المرئيات</option>
                 <option value="audio">🎧 المسموعات</option>
-                <option value="separations">✂️ الفصلات</option>
-                <option value="trash">🗑️ مُهمل</option>
+                <option value="separations">🗣️ الفصلات</option>
+                <option value="trash">مُهمل</option>
                 <option value="archives">📁 المحفوظات</option>
             </select>
 
@@ -626,7 +713,6 @@
 
             <input type="text" id="post-image-url" placeholder="رابط الصورة أو الملف أو التسجيل الصوتي المباشر (أو ارفع بالأسفل)...">
             
-            <!-- قسم الرفع المباشر لفولدرات GitHub (images و files) -->
             <div class="upload-box-admin">
                 <p style="font-size:0.9rem; color:var(--primary); margin-bottom:8px; font-weight:700;">📂 رفع ملف أو صورة أو صوت مباشرة لمستودع GitHub:</p>
                 <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
@@ -657,8 +743,8 @@
                 <button id="tab-correspondence" class="tab-btn" onclick="switchTab('correspondence')">📜 المكاتبات</button>
                 <button id="tab-visuals" class="tab-btn" onclick="switchTab('visuals')">🖼 والمرئيات</button>
                 <button id="tab-audio" class="tab-btn" onclick="switchTab('audio')">🎧 المسموعات</button>
-                <button id="tab-separations" class="tab-btn" onclick="switchTab('separations')">✂️ الفصلات</button>
-                <button id="tab-trash" class="tab-btn" onclick="switchTab('trash')">🗑️ مُهمل</button>
+                <button id="tab-separations" class="tab-btn" onclick="switchTab('separations')">🗣️ الفصلات</button>
+                <button id="tab-trash" class="tab-btn" onclick="switchTab('trash')">مُهمل</button>
                 <button id="tab-archives" class="tab-btn" onclick="switchTab('archives')">📁 المحفوظات</button>
             </div>
 
@@ -812,9 +898,14 @@
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
+        function goToPost(tab, folder, id) {
+            window.location.hash = '#/' + tab + '/' + encodeURIComponent(folder) + '/' + id;
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
         function copyDeepLink(tab, folder, id) {
             const safeFolder = folder ? encodeURIComponent(folder) : 'all';
-            const url = window.location.origin + window.location.pathname + `#/tab/${safeFolder}/${id}`;
+            const url = window.location.origin + window.location.pathname + `#/${tab}/${safeFolder}/${id}`;
             navigator.clipboard.writeText(url);
             alert("تم نسخ رابط المنشور بنجاح! 📋✨");
         }
@@ -860,7 +951,71 @@
             });
         }
 
+        function renderHomeTimeline() {
+            const feed = document.getElementById('posts-feed');
+            feed.innerHTML = '';
+
+            let timelinePosts = allPostsData.map((post, i) => ({...post, realIndex: i}))
+                                            .filter(p => (p.type || 'home') !== 'trash')
+                                            .slice().reverse();
+
+            if(timelinePosts.length === 0) {
+                feed.innerHTML = `<p class="empty-msg">لا توجد أي منشورات أو أحداث حتى الآن.</p>`;
+                return;
+            }
+
+            let html = '<div class="timeline-container">';
+            
+            timelinePosts.forEach(post => {
+                const tabName = getTabName(post.type || 'home');
+                const folderStr = post.folder ? ` ◂ <span>${post.folder}</span>` : '';
+                const tabSafe = post.type || 'home';
+                const folderSafe = post.folder || 'all';
+
+                let typeIcon = '🖋️';
+                let previewText = 'محتوى نصي...';
+
+                if (post.image) {
+                    const lowerUrl = post.image.toLowerCase();
+                    if (lowerUrl.includes('.pdf') || lowerUrl.endsWith('.pdf')) { typeIcon = '📄'; previewText = 'ملف PDF'; }
+                    else if (lowerUrl.match(/\.(mp3|wav|ogg|m4a|aac|flac)/)) { typeIcon = '🎧'; previewText = 'مقطع صوتي'; }
+                    else { typeIcon = '🖼️'; previewText = 'مرفق مرئي (صورة)'; }
+                }
+
+                if (post.content && post.content.trim() !== '') {
+                    const tempDiv = document.createElement('div');
+                    tempDiv.innerHTML = post.content;
+                    const plainText = tempDiv.textContent || tempDiv.innerText || '';
+                    if (plainText.trim() !== '') {
+                        previewText = plainText.substring(0, 80) + '...';
+                        typeIcon = '🖋️'; 
+                        if (post.image) typeIcon += ' / 🖼️';
+                    }
+                }
+
+                html += `
+                <div class="timeline-card" onclick="goToPost('${tabSafe}', '${folderSafe}', ${post.realIndex})">
+                    <div class="timeline-breadcrumb">
+                        <span>${tabName}</span>${folderStr} ◂ <span>🕒 ${post.date}</span>
+                    </div>
+                    <div class="timeline-preview">
+                        <span class="type-icon">${typeIcon}</span>
+                        <span class="preview-text">${previewText}</span>
+                    </div>
+                </div>
+                `;
+            });
+            
+            html += '</div>';
+            feed.innerHTML = html;
+        }
+
         function renderPosts() {
+            if (currentFilter === 'home' && currentPostId === null && currentFolderFilter === 'all') {
+                renderHomeTimeline();
+                return;
+            }
+
             const feed = document.getElementById('posts-feed');
             feed.innerHTML = '';
 
@@ -877,7 +1032,7 @@
             });
 
             if(filtered.length === 0) {
-                feed.innerHTML = `<p class="empty-msg">لا توجد منشورات في قسم "${getTabName(currentFilter)}" حالياً.</p>`;
+                feed.innerHTML = `<p class="empty-msg">لا توجد منشورات في هذا القسم حالياً.</p>`;
                 return;
             }
 
