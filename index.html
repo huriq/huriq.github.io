@@ -613,6 +613,8 @@
                 <option value="correspondence">📜 المكاتبات</option>
                 <option value="visuals">🖼️ المرئيات</option>
                 <option value="audio">🎧 المسموعات</option>
+                <option value="separations">✂️ الفصلات</option>
+                <option value="trash">🗑️ مُهمل</option>
                 <option value="archives">📁 المحفوظات</option>
             </select>
 
@@ -653,8 +655,10 @@
                 <button id="tab-beliefs" class="tab-btn" onclick="switchTab('beliefs')">🌟 المعتقدات</button>
                 <button id="tab-writings" class="tab-btn" onclick="switchTab('writings')">📄 المكتوبات</button>
                 <button id="tab-correspondence" class="tab-btn" onclick="switchTab('correspondence')">📜 المكاتبات</button>
-                <button id="tab-visuals" class="tab-btn" onclick="switchTab('visuals')">🖼 المرئيات</button>
+                <button id="tab-visuals" class="tab-btn" onclick="switchTab('visuals')">🖼 والمرئيات</button>
                 <button id="tab-audio" class="tab-btn" onclick="switchTab('audio')">🎧 المسموعات</button>
+                <button id="tab-separations" class="tab-btn" onclick="switchTab('separations')">✂️ الفصلات</button>
+                <button id="tab-trash" class="tab-btn" onclick="switchTab('trash')">🗑️ مُهمل</button>
                 <button id="tab-archives" class="tab-btn" onclick="switchTab('archives')">📁 المحفوظات</button>
             </div>
 
@@ -823,6 +827,8 @@
                 case 'correspondence': return 'المكاتبات';
                 case 'visuals': return 'المرئيات';
                 case 'audio': return 'المسموعات';
+                case 'separations': return 'الفصلات';
+                case 'trash': return 'مُهمل';
                 case 'archives': return 'المحفوظات';
                 default: return 'الصفحة الرئيسية';
             }
