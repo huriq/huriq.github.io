@@ -775,15 +775,17 @@
             });
         })();
 
-        // [كلمات المرور الخاصة بك والهاشات الحقيقية والمضبوطة تماماً]
-        // الزوار: F26H9W11
-        // لوحة التحكم: T96M
+        // الهاشات مالتك خليتها مثل ما هي، بس إذا طلعت غلط راح تگدر تنسخ الصحيحة من الكونسول
         const _securePassHashes = {
             alpha: "b7e2894b9f29910d57e2a9452b47ea5b95b451ae9f5c4f24ef3cd36a6e555811", 
             beta:  "2806283ef184549925bc01cb4d142b781ae2128eeb3b3d1b7d59835848bb0ea8"  
         };
 
         async function hashString(str) {
+            // إضافة حماية حتى الدالة ما تضرب عندك لو فتحتها على فايل محلي (file://)
+            if (!window.crypto || !window.crypto.subtle) {
+                throw new Error("عيني حمودي، تشفير SHA-256 ما يشتغل على ملف محلي (file://). لازم ترفعه لـ GitHub أو تستخدم Localhost حتى يشتغل نظام الحماية!");
+            }
             const encoder = new TextEncoder();
             const data = encoder.encode(str.trim());
             const hashBuffer = await crypto.subtle.digest('SHA-256', data);
@@ -858,25 +860,36 @@
 
         window.addEventListener('hashchange', handleHash);
 
-        // [الخلل تم إصلاحه هنا: جعلنا الدالة async حتى تنتظر نتيجة الـ hash وتطابقها بشكل صحيح]
         async function verifyPass() {
-            const val = document.getElementById('passcode-input').value;
-            const inputHash = await hashString(val);
-            const targetHash = isAdminMode ? _securePassHashes.beta : _securePassHashes.alpha;
+            try {
+                const val = document.getElementById('passcode-input').value;
+                const inputHash = await hashString(val);
+                
+                // حمودي، هاي الرسالة بالكونسول حتى تنسخ الهاش المضبوط مليون بالمية
+                console.log("حمودي، هذا الهاش الصحيح للباسوورد مالتك، انسخه وبدله بالكود إذا چان يطلعلك غلط: ", inputHash);
 
-            if(inputHash === targetHash) {
-                document.getElementById('login-screen').style.display = 'none';
-                if(isAdminMode) {
-                    document.getElementById('admin-panel').style.display = 'block';
-                    initAdminEditor();
-                    const savedT = localStorage.getItem('hur_gh_token');
-                    if(savedT) document.getElementById('gh-token').value = savedT;
-                    fetchPostsForAdmin();
+                const targetHash = isAdminMode ? _securePassHashes.beta : _securePassHashes.alpha;
+
+                if(inputHash === targetHash) {
+                    document.getElementById('login-screen').style.display = 'none';
+                    document.getElementById('login-error').style.display = 'none'; // نصفر رسالة الخطأ
+                    if(isAdminMode) {
+                        document.getElementById('admin-panel').style.display = 'block';
+                        initAdminEditor();
+                        const savedT = localStorage.getItem('hur_gh_token');
+                        if(savedT) document.getElementById('gh-token').value = savedT;
+                        fetchPostsForAdmin();
+                    } else {
+                        document.getElementById('content-area').style.display = 'block';
+                        loadPosts();
+                    }
                 } else {
-                    document.getElementById('content-area').style.display = 'block';
-                    loadPosts();
+                    document.getElementById('login-error').innerText = "رمز المرور غير صحيح!";
+                    document.getElementById('login-error').style.display = 'block';
                 }
-            } else {
+            } catch (e) {
+                // إذا فتحت الملف محلي (file://) راح تطلعلك هاي الرسالة بدل ما يسكت الكود
+                document.getElementById('login-error').innerText = e.message;
                 document.getElementById('login-error').style.display = 'block';
             }
         }
