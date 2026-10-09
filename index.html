@@ -776,7 +776,7 @@
             });
         })();
 
-        // [تطوير أمني متقدم المجاني]: استخدام SHA-256 Hashing بدل التشفير الضعيف العكسي
+        // [تطوير أمني متقدم - SHA-256 دقيق وحساس لحالة الحروف Case-Sensitive]
         const _securePassHashes = {
             alpha: "3e536551b8a5146c2ae07b5a59654157bc89d2c6dfdbf1db0811eef26760655a", // رمز الزوار (F26H9W11)
             beta:  "8c6d1d782eb9a6a84d436a9080cbce629524e4f71a067a9cfd0c1598e94a8f9b"  // رمز لوحة التحكم (T96M)
@@ -784,7 +784,7 @@
 
         async function hashString(str) {
             const encoder = new TextEncoder();
-            const data = encoder.encode(str);
+            const data = encoder.encode(str); // يحافظ على الحروف كما هي (كابيتل وسمول بدون أي تغيير)
             const hashBuffer = await crypto.subtle.digest('SHA-256', data);
             const hashArray = Array.from(new Uint8Array(hashBuffer));
             return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
@@ -1129,7 +1129,7 @@
 
                         <button id="reply-btn-${post.realIndex}" onclick="submitPublicReply(${post.realIndex})" style="padding:10px; font-size:0.95rem;">إرسال المكتوب</button>
                     </div>
-                </div>`;
+                `;
 
                 feed.innerHTML += html;
 
