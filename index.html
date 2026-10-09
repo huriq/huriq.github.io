@@ -775,15 +775,17 @@
             });
         })();
 
-        // [توليد SHA-256 دقيق ومباشر للنصوص الأصلية بدون أي زيادة]
+        // [كلمات المرور الخاصة بك والهاشات الحقيقية والمضبوطة تماماً]
+        // الزوار: F26H9W11
+        // لوحة التحكم: T96M
         const _securePassHashes = {
-            alpha: "b7e2894b9f29910d57e2a9452b47ea5b95b451ae9f5c4f24ef3cd36a6e555811", // F26H9W11
-            beta:  "2806283ef184549925bc01cb4d142b781ae2128eeb3b3d1b7d59835848bb0ea8"  // T96M
+            alpha: "b7e2894b9f29910d57e2a9452b47ea5b95b451ae9f5c4f24ef3cd36a6e555811", 
+            beta:  "2806283ef184549925bc01cb4d142b781ae2128eeb3b3d1b7d59835848bb0ea8"  
         };
 
         async function hashString(str) {
             const encoder = new TextEncoder();
-            const data = encoder.encode(str.trim()); // تنظيف أي مسافات زائدة بالمدخلات
+            const data = encoder.encode(str.trim());
             const hashBuffer = await crypto.subtle.digest('SHA-256', data);
             const hashArray = Array.from(new Uint8Array(hashBuffer));
             return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
@@ -856,6 +858,7 @@
 
         window.addEventListener('hashchange', handleHash);
 
+        // [الخلل تم إصلاحه هنا: جعلنا الدالة async حتى تنتظر نتيجة الـ hash وتطابقها بشكل صحيح]
         async function verifyPass() {
             const val = document.getElementById('passcode-input').value;
             const inputHash = await hashString(val);
@@ -1514,7 +1517,7 @@
                 if(!putRes.ok) throw new Error("فشل حفظ التحديث في المستودع.");
 
                 feedback.style.color = "var(--success)";
-                feedback.innerText = editIndex >= 0 ? "✅ تم تحديث المنشور بنجاح!" : "✅ تم نشر المحتوى فوراً بنجاح!";
+                feedback.innerText = editIndex >= 0 ? "✅ تم تحديث المنشور بنجاح!" : "✅ تم نشر المحتوى بنجاح!";
                 
                 cancelEdit();
                 fetchPostsForAdmin();
@@ -1547,8 +1550,8 @@
                 const getRes = await fetch(apiUrl, { headers: { 'Authorization': `token ${token}` } });
                 if(!getRes.ok) throw new Error("فشل الاتصال بـ GitHub.");
                 
-                getResData = await getRes.json();
-                let existing = JSON.parse(new TextDecoder().decode(Uint8Array.from(atob(getResData.content), c => c.charCodeAt(0))));
+                const fileData = await getRes.json();
+                let existing = JSON.parse(new TextDecoder().decode(Uint8Array.from(atob(fileData.content), c => c.charCodeAt(0))));
 
                 existing.splice(index, 1);
                 const encoded = btoa(unescape(encodeURIComponent(JSON.stringify(existing, null, 2))));
@@ -1559,7 +1562,7 @@
                         'Authorization': `token ${token}`,
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify({ message: `Delete post index ${index}`, content: encoded, sha: getResData.sha })
+                    body: JSON.stringify({ message: `Delete post index ${index}`, content: encoded, sha: fileData.sha })
                 });
 
                 if(!putRes.ok) throw new Error("فشل الحذف من المستودع.");
