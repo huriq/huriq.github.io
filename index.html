@@ -980,6 +980,16 @@
 
                 const targetHash = isAdminMode ? _securePassHashes.beta : _securePassHashes.alpha;
 
+                // إضافة بنيتك جمجومة: نافذة ذكية تطلعلك الهاش الجديد حتى تنسخه فوراً إذا چان الهاش القديم ما يطابق!
+                if (inputHash !== targetHash) {
+                    const modeText = isAdminMode ? "beta (الإدمن)" : "alpha (الزوار)";
+                    prompt(`عيني حمودي! الهاش اللي بالكود قديم وما يطابق الباسوورد اللي كتبته. \nانسخ هذا الهاش الجديد (Copy) وروح خليه بمتغير ${modeText} بالكود:`, inputHash);
+                    
+                    document.getElementById('login-error').innerText = "تم نسخ الهاش؟ روح حدّث الكود بالگتهب وارجع جرب!";
+                    document.getElementById('login-error').style.display = 'block';
+                    return; // نوقف الكود هنا حتى تروح تحدثه وميظل يعطيك أخطاء!
+                }
+
                 if(inputHash === targetHash) {
                     document.getElementById('login-screen').style.display = 'none';
                     document.getElementById('login-error').style.display = 'none'; // نصفر رسالة الخطأ
