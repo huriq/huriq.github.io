@@ -690,6 +690,7 @@
             border-radius: 12px;
             border: 1px solid var(--border);
             box-shadow: 0 0 40px rgba(0, 210, 255, 0.3);
+            object-fit: contain;
         }
         .modal-close {
             position: absolute;
@@ -697,8 +698,36 @@
             color: #fff; font-size: 2.5rem; font-weight: bold;
             cursor: pointer;
             transition: color 0.2s;
+            z-index: 10000;
         }
         .modal-close:hover { color: var(--primary); }
+
+        .modal-nav-btn {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid var(--border);
+            color: var(--primary);
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            font-size: 1.5rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+            z-index: 10000;
+        }
+        .modal-nav-btn:hover {
+            background: var(--primary);
+            color: #070b19;
+            box-shadow: 0 0 20px rgba(0, 210, 255, 0.6);
+        }
+        .modal-prev { right: 30px; }
+        .modal-next { left: 30px; }
 
         .manage-section {
             margin-top: 35px;
@@ -739,9 +768,11 @@
 </head>
 <body>
 
-    <div class="image-modal" id="imgModal" onclick="closeImageModal()">
-        <span class="modal-close">&times;</span>
+    <div class="image-modal" id="imgModal">
+        <span class="modal-close" onclick="closeImageModal()">&times;</span>
+        <div class="modal-nav-btn modal-prev" onclick="slideModalImages(-1)">&#10095;</div>
         <img id="modalImgSrc" src="" alt="Zoomed Image">
+        <div class="modal-nav-btn modal-next" onclick="slideModalImages(1)">&#10094;</div>
     </div>
 
     <div class="main-wrapper">
@@ -754,16 +785,14 @@
             <div class="brand-subtitle">DIGITAL PLATFORM & ARCHIVE</div>
         </header>
 
-        <!-- واجهة تسجيل الدخول الخاصة بصفحة الهاش (HasH Login) -->
         <div class="hash-card" id="hash-login-screen" style="display: none;">
             <h2>🔐 HasH Portal Authentication</h2>
             <p style="color: var(--text-muted); margin-bottom: 20px;">الرجاء إدخال رمز المرور للوصول إلى بوابة الهاش</p>
-            <input type="password" id="hash-passcode-input" placeholder="رمز المرور ..." onkeypress="if(event.key === 'Enter') verifyHashPass()">
+            <input type="password" id="hash-passcode-input" placeholder="رمز المرور (HasH)..." onkeypress="if(event.key === 'Enter') verifyHashPass()">
             <button onclick="verifyHashPass()">دخول</button>
             <p class="error-text" id="hash-login-error">رمز المرور غير صحيح!</p>
         </div>
 
-        <!-- واجهة إدخال الهاش (HasH Generator Portal) -->
         <div class="hash-card" id="hash-screen" style="display: none;">
             <h2>🔐 HasH Generator Portal</h2>
             <p style="color: var(--text-muted); margin-bottom: 20px;">أدخل النص أو رمز المرور لتوليد الهاش الخاص به فوراً</p>
@@ -808,14 +837,14 @@
                 <div id="admin-editor"></div>
             </div>
 
-            <input type="text" id="post-image-url" placeholder="رابط الصورة أو الملف أو التسجيل الصوتي المباشر (لإضافة صور متعددة افصل بينها بفارزة ,)...">
+            <input type="text" id="post-image-url" placeholder="رابط الصورة، الفيديو أو الملف (لإضافة متعدد افصل بينها بفارزة ,)...">
             
             <div class="upload-box-admin">
-                <p style="font-size:0.9rem; color:var(--primary); margin-bottom:8px; font-weight:700;">📂 رفع ملف أو صورة أو صوت مباشرة لمستودع GitHub:</p>
+                <p style="font-size:0.9rem; color:var(--primary); margin-bottom:8px; font-weight:700;">📂 رفع ملف، صورة أو فيديو مباشرة لمستودع GitHub:</p>
                 <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
                     <input type="file" id="direct-file-input" style="margin-bottom:0; flex-grow:1; font-size:0.85rem; padding:8px;">
                     <button type="button" onclick="uploadDirectAsset('images')" style="width:auto; padding:8px 16px; font-size:0.9rem;">رفع صورة 🖼️</button>
-                    <button type="button" onclick="uploadDirectAsset('files')" style="width:auto; padding:8px 16px; font-size:0.9rem; background:linear-gradient(135deg, var(--success), #059669); color:#fff;">رفع ملف/صوت 📄🎧</button>
+                    <button type="button" onclick="uploadDirectAsset('files')" style="width:auto; padding:8px 16px; font-size:0.9rem; background:linear-gradient(135deg, var(--success), #059669); color:#fff;">رفع ملف/فيديو/صوت 📄🎬🎧</button>
                 </div>
                 <p id="upload-status-msg" style="font-size:0.8rem; margin-top:6px; color:var(--warning);"></p>
             </div>
@@ -874,13 +903,13 @@
         })();
 
         const _securePassHashes = {
-            alpha: "7c73b4fafd53d2efb95a092915ce7fe602e5aa2b8ec0ce263d1b0fd066370096", 
-            beta:  "90f8e387d7c5e53cf72096776fa3823c4561692b4061de39e1f00ed0642b4851"  
+            alpha: "b7e2894b9f29910d57e2a9452b47ea5b95b451ae9f5c4f24ef3cd36a6e555811", 
+            beta:  "2806283ef184549925bc01cb4d142b781ae2128eeb3b3d1b7d59835848bb0ea8"  
         };
 
         async function hashString(str) {
             if (!window.crypto || !window.crypto.subtle) {
-                throw new Error("عيني، تشفير SHA-256 ما يشتغل على ملف محلي (file://). لازم ترفعه لـ GitHub أو تستخدم Localhost حتى يشتغل نظام الحماية!");
+                throw new Error("عيني حمودي، تشفير SHA-256 ما يشتغل على ملف محلي (file://). لازم ترفعه لـ GitHub أو تستخدم Localhost حتى يشتغل نظام الحماية!");
             }
             const encoder = new TextEncoder();
             const data = encoder.encode(str.trim());
@@ -889,10 +918,6 @@
             return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
         }
 
-        // ==========================================
-        // دوال التشفير وفك التشفير (AES-GCM)
-        // ==========================================
-        
         const ENCRYPTION_CONFIG = {
             iterations: 100000,
             hash: "SHA-256",
@@ -930,10 +955,7 @@
             const key = await deriveKey(password, salt);
 
             const encryptedContent = await window.crypto.subtle.encrypt(
-                {
-                    name: "AES-GCM",
-                    iv: iv
-                },
+                { name: "AES-GCM", iv: iv },
                 key,
                 encoder.encode(text)
             );
@@ -963,25 +985,17 @@
                 const key = await deriveKey(password, salt);
 
                 const decryptedContent = await window.crypto.subtle.decrypt(
-                    {
-                        name: "AES-GCM",
-                        iv: iv
-                    },
+                    { name: "AES-GCM", iv: iv },
                     key,
                     encryptedContent
                 );
 
                 const decoder = new TextDecoder();
                 return decoder.decode(decryptedContent);
-                
             } catch (error) {
                 return null;
             }
         }
-        
-        // ==========================================
-        // نهاية دوال التشفير
-        // ==========================================
 
         const GITHUB_USER = 'huriq'; 
         const REPO_NAME = 'huriq.github.io';
@@ -992,11 +1006,13 @@
         let currentFolderFilter = 'all';
         let currentPostId = null; 
         
+        let currentModalImages = [];
+        let currentModalIndex = 0;
+        
         const urlParams = new URLSearchParams(window.location.search);
         const isAdminMode = urlParams.has('admin');
         const isHashMode = urlParams.has('hash');
 
-        // إظهار شاشة تسجيل الدخول الخاصة بالهاش عند الطلب
         if (isHashMode) {
             document.getElementById('login-screen').style.display = 'none';
             document.getElementById('hash-login-screen').style.display = 'block';
@@ -1098,7 +1114,6 @@
             try {
                 const val = document.getElementById('passcode-input').value;
                 const inputHash = await hashString(val);
-                
                 const targetHash = isAdminMode ? _securePassHashes.beta : _securePassHashes.alpha;
 
                 if(inputHash === targetHash) {
@@ -1233,6 +1248,7 @@
                     const lowerUrl = post.image.toLowerCase();
                     if (lowerUrl.includes('.pdf') || lowerUrl.endsWith('.pdf')) { typeIcon = '📄'; previewText = 'ملف PDF'; }
                     else if (lowerUrl.match(/\.(mp3|wav|ogg|m4a|aac|flac)/)) { typeIcon = '🎧'; previewText = 'مقطع صوتي'; }
+                    else if (lowerUrl.match(/\.(mp4|mov|webm|ogg|m4v|avi|mkv)/)) { typeIcon = '🎬'; previewText = 'ملف فيديو'; }
                     else { typeIcon = '🖼️'; previewText = 'مرفق مرئي (صورة)'; }
                 }
 
@@ -1296,15 +1312,18 @@
                     if (post.image) {
                         const imgArray = post.image.split(',').map(url => url.trim()).filter(url => url.length > 0);
                         imgArray.forEach(imgUrl => {
-                            visualsHtml += `
-                                <div class="visual-card" onclick="goToPost('visuals', 'all', ${post.realIndex})">
-                                    <img src="${imgUrl}" alt="Visual Image" loading="lazy">
-                                    <div class="visual-card-footer">
-                                        <span>🕒 ${post.date}</span>
-                                        <span>🔍 عرض</span>
+                            const lower = imgUrl.toLowerCase();
+                            if(!lower.match(/\.(mp4|mov|webm|ogg|m4v|avi|mkv)/)) {
+                                visualsHtml += `
+                                    <div class="visual-card" onclick="goToPost('visuals', 'all', ${post.realIndex})">
+                                        <img src="${imgUrl}" alt="Visual Image" loading="lazy">
+                                        <div class="visual-card-footer">
+                                            <span>🕒 ${post.date}</span>
+                                            <span>🔍 عرض</span>
+                                        </div>
                                     </div>
-                                </div>
-                            `;
+                                `;
+                            }
                         });
                     }
                 });
@@ -1328,51 +1347,73 @@
                         </div>`;
                 
                 if(post.image) {
-                    const lowerUrl = post.image.toLowerCase();
-                    if(lowerUrl.endsWith('.pdf') || lowerUrl.includes('.pdf?')) {
-                        html += `
-                            <div style="width: 100%; height: 500px; border-radius: 12px; overflow: hidden; border: 1px solid var(--border); margin-bottom: 15px;">
-                                <iframe src="${post.image}#view=FitH" width="100%" height="100%" style="border: none;"></iframe>
-                            </div>
-                            <div style="margin-bottom: 15px; text-align: left;">
-                                <a href="${post.image}" target="_blank" style="color: var(--primary); font-size: 0.9rem; text-decoration: underline;">📄 فتح ملف الـ PDF في نافذة مستقلة أو تحميله</a>
-                            </div>
-                        `;
-                    } else if(lowerUrl.endsWith('.mp3') || lowerUrl.endsWith('.wav') || lowerUrl.endsWith('.ogg') || lowerUrl.endsWith('.m4a') || lowerUrl.endsWith('.aac') || lowerUrl.endsWith('.flac') || lowerUrl.includes('.mp3?') || lowerUrl.includes('.m4a?') || lowerUrl.includes('.wav?') || lowerUrl.includes('.ogg?')) {
-                        html += `
-                            <div style="margin-bottom: 15px; background: rgba(2, 6, 23, 0.6); padding: 15px; border-radius: 12px; border: 1px solid var(--border);">
-                                <audio controls style="width: 100%;">
-                                    <source src="${post.image}">
-                                    متصفحك لا يدعم مشغل الصوت.
-                                </audio>
-                                <div style="margin-top: 8px; text-align: left;">
-                                    <a href="${post.image}" target="_blank" style="color: var(--primary); font-size: 0.85rem; text-decoration: underline;">🎧 تحميل أو فتح الملف الصوتي</a>
+                    const mediaItems = post.image.split(',').map(url => url.trim()).filter(url => url.length > 0);
+                    
+                    mediaItems.forEach(mediaUrl => {
+                        const lowerUrl = mediaUrl.toLowerCase();
+                        
+                        if(lowerUrl.endsWith('.pdf') || lowerUrl.includes('.pdf?')) {
+                            html += `
+                                <div style="width: 100%; height: 500px; border-radius: 12px; overflow: hidden; border: 1px solid var(--border); margin-bottom: 15px;">
+                                    <iframe src="${mediaUrl}#view=FitH" width="100%" height="100%" style="border: none;"></iframe>
                                 </div>
-                            </div>
-                        `;
-                    } else {
-                        const imgArray = post.image.split(',').map(url => url.trim()).filter(url => url.length > 0);
-                        if (imgArray.length === 1) {
-                            html += `<img src="${imgArray[0]}" class="post-image" alt="Post Image" onclick="openImageModal('${imgArray[0]}')">`;
-                        } else if (imgArray.length > 1) {
-                            const countClass = imgArray.length > 4 ? 'count-more' : `count-${imgArray.length}`;
-                            html += `<div class="post-images-grid ${countClass}">`;
-                            
-                            imgArray.slice(0, 4).forEach((imgUrl, imgIdx) => {
-                                if (imgIdx === 3 && imgArray.length > 4) {
-                                    html += `
-                                        <div class="grid-more-wrapper" onclick="openImageModal('${imgUrl}')">
-                                            <img src="${imgUrl}" alt="Post Image">
-                                            <div class="grid-more-overlay">+${imgArray.length - 4} صور</div>
-                                        </div>
-                                    `;
-                                } else {
-                                    html += `<img src="${imgUrl}" alt="Post Image" onclick="openImageModal('${imgUrl}')">`;
-                                }
-                            });
-                            
-                            html += `</div>`;
+                                <div style="margin-bottom: 15px; text-align: left;">
+                                    <a href="${mediaUrl}" target="_blank" style="color: var(--primary); font-size: 0.9rem; text-decoration: underline;">📄 فتح ملف الـ PDF في نافذة مستقلة أو تحميله</a>
+                                </div>
+                            `;
+                        } else if(lowerUrl.match(/\.(mp3|wav|ogg|m4a|aac|flac)/) || lowerUrl.includes('.mp3?') || lowerUrl.includes('.m4a?')) {
+                            html += `
+                                <div style="margin-bottom: 15px; background: rgba(2, 6, 23, 0.6); padding: 15px; border-radius: 12px; border: 1px solid var(--border);">
+                                    <audio controls style="width: 100%;">
+                                        <source src="${mediaUrl}">
+                                        متصفحك لا يدعم مشغل الصوت.
+                                    </audio>
+                                    <div style="margin-top: 8px; text-align: left;">
+                                        <a href="${mediaUrl}" target="_blank" style="color: var(--primary); font-size: 0.85rem; text-decoration: underline;">🎧 تحميل أو فتح الملف الصوتي</a>
+                                    </div>
+                                </div>
+                            `;
+                        } else if(lowerUrl.match(/\.(mp4|mov|webm|ogg|m4v|avi|mkv)/)) {
+                            html += `
+                                <div style="margin-bottom: 15px; background: rgba(2, 6, 23, 0.6); padding: 15px; border-radius: 12px; border: 1px solid var(--border);">
+                                    <video controls playsinline style="width: 100%; border-radius: 8px; max-height: 450px;">
+                                        <source src="${mediaUrl}">
+                                        متصفحك لا يدعم مشغل الفيديو.
+                                    </video>
+                                    <div style="margin-top: 8px; text-align: left;">
+                                        <a href="${mediaUrl}" target="_blank" style="color: var(--primary); font-size: 0.85rem; text-decoration: underline;">🎬 تحميل أو فتح ملف الفيديو</a>
+                                    </div>
+                                </div>
+                            `;
                         }
+                    });
+
+                    const imageItems = mediaItems.filter(url => {
+                        const l = url.toLowerCase();
+                        return !l.match(/\.(pdf|mp3|wav|ogg|m4a|aac|flac|mp4|mov|webm|m4v|avi|mkv)/) && !l.includes('.pdf?') && !l.includes('.mp3?');
+                    });
+
+                    if (imageItems.length === 1) {
+                        html += `<img src="${imageItems[0]}" class="post-image" alt="Post Image" onclick="openImageModal('${imageItems[0]}', ${JSON.stringify(imageItems).replace(/"/g, '&quot;')})">`;
+                    } else if (imageItems.length > 1) {
+                        const countClass = imageItems.length > 4 ? 'count-more' : `count-${imageItems.length}`;
+                        html += `<div class="post-images-grid ${countClass}">`;
+                        
+                        imageItems.slice(0, 4).forEach((imgUrl, imgIdx) => {
+                            const arrJson = JSON.stringify(imageItems).replace(/"/g, '&quot;');
+                            if (imgIdx === 3 && imageItems.length > 4) {
+                                html += `
+                                    <div class="grid-more-wrapper" onclick="openImageModal('${imgUrl}', ${arrJson})">
+                                        <img src="${imgUrl}" alt="Post Image">
+                                        <div class="grid-more-overlay">+${imageItems.length - 4} صور</div>
+                                    </div>
+                                `;
+                            } else {
+                                html += `<img src="${imgUrl}" alt="Post Image" onclick="openImageModal('${imgUrl}', ${arrJson})">`;
+                            }
+                        });
+                        
+                        html += `</div>`;
                     }
                 }
 
@@ -1513,7 +1554,6 @@
                         }
                     });
                 }, 50);
-                
             } catch(e) {}
         }
 
@@ -1581,11 +1621,32 @@
             }
         }
 
-        function openImageModal(url) {
-            const modal = document.getElementById('imgModal');
-            document.getElementById('modalImgSrc').src = url;
-            modal.style.display = 'flex';
+        function openImageModal(url, imagesList) {
+            currentModalImages = imagesList || [url];
+            currentModalIndex = currentModalImages.indexOf(url);
+            if (currentModalIndex === -1) currentModalIndex = 0;
+            
+            updateModalImageDisplay();
+            document.getElementById('imgModal').style.display = 'flex';
         }
+
+        function updateModalImageDisplay() {
+            if (currentModalImages.length > 0) {
+                document.getElementById('modalImgSrc').src = currentModalImages[currentModalIndex];
+            }
+        }
+
+        function slideModalImages(direction) {
+            if (currentModalImages.length <= 1) return;
+            currentModalIndex += direction;
+            if (currentModalIndex >= currentModalImages.length) {
+                currentModalIndex = 0;
+            } else if (currentModalIndex < 0) {
+                currentModalIndex = currentModalImages.length - 1;
+            }
+            updateModalImageDisplay();
+        }
+
         function closeImageModal() {
             document.getElementById('imgModal').style.display = 'none';
         }
@@ -1601,7 +1662,7 @@
             }
 
             if (!fileInput || fileInput.files.length === 0) {
-                alert('الرجاء اختيار ملف أو صورة من جهازك أولاً!');
+                alert('الرجاء اختيار ملف، صورة أو فيديو من جهازك أولاً!');
                 return;
             }
 
@@ -1682,7 +1743,7 @@
             }
 
             allPostsData.map((post, index) => ({ ...post, realIndex: index })).slice().reverse().forEach(item => {
-                const snippet = item.content ? item.content.replace(/<[^>]*>/g, '').substring(0, 50) + '...' : '[ملف / صورة / صوت]';
+                const snippet = item.content ? item.content.replace(/<[^>]*>/g, '').substring(0, 50) + '...' : '[ملف / صورة / فيديو / صوت]';
                 const tLabel = getTabName(item.type || 'home');
                 const fLabel = item.folder ? ` [فولدر: ${item.folder}]` : '';
                 listContainer.innerHTML += `
