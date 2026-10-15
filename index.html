@@ -855,13 +855,13 @@
         })();
 
         const _securePassHashes = {
-            alpha: "b7e2894b9f29910d57e2a9452b47ea5b95b451ae9f5c4f24ef3cd36a6e555811", 
-            beta:  "2806283ef184549925bc01cb4d142b781ae2128eeb3b3d1b7d59835848bb0ea8"  
+            alpha: "e501570bbdcf221cfb77dbd763a0a382c2a048a605f63d043f295bca9efbe0eb", 
+            beta:  "6cf04a8b79b69b932be4383a1523c6f11f99ff2eaefcb4c45a16d6fc3e5db7d2"  
         };
 
         async function hashString(str) {
             if (!window.crypto || !window.crypto.subtle) {
-                throw new Error("عيني حمودي، تشفير SHA-256 ما يشتغل على ملف محلي (file://). لازم ترفعه لـ GitHub أو تستخدم Localhost حتى يشتغل نظام الحماية!");
+                throw new Error("عيني، تشفير SHA-256 ما يشتغل على ملف محلي (file://). لازم ترفعه لـ GitHub أو تستخدم Localhost حتى يشتغل نظام الحماية!");
             }
             const encoder = new TextEncoder();
             const data = encoder.encode(str.trim());
