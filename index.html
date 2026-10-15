@@ -99,7 +99,7 @@
             letter-spacing: 2px;
         }
 
-        .auth-card, .admin-card {
+        .auth-card, .admin-card, .hash-card {
             background: var(--surface-glass);
             backdrop-filter: blur(12px);
             border: 1px solid var(--border);
@@ -513,7 +513,6 @@
         }
         .post-image:hover { transform: scale(1.01); }
 
-        /* تنسيق شبكة الصور المتعددة الجديدة (Grid) */
         .post-images-grid {
             display: grid;
             gap: 8px;
@@ -556,7 +555,6 @@
             backdrop-filter: blur(2px);
         }
 
-        /* تنسيق خاص لتبويب المرئيات (Visuals Gallery) */
         .visuals-masonry {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
@@ -756,6 +754,18 @@
             <div class="brand-subtitle">DIGITAL PLATFORM & ARCHIVE</div>
         </header>
 
+        <!-- واجهة إدخال الهاش (HasH Interface) -->
+        <div class="hash-card" id="hash-screen" style="display: none;">
+            <h2>🔐 HasH Generator Portal</h2>
+            <p style="color: var(--text-muted); margin-bottom: 20px;">أدخل النص أو رمز المرور لتوليد الهاش الخاص به فوراً</p>
+            <input type="text" id="hash-input-text" placeholder="اكتب الباسوورد أو النص هنا..." oninput="generateLiveHash()">
+            <div style="background: rgba(2, 6, 23, 0.8); border: 1px solid var(--border); padding: 15px; border-radius: 12px; margin-bottom: 20px; word-break: break-all; text-align: left; direction: ltr;">
+                <span style="font-size: 0.8rem; color: var(--primary); display: block; margin-bottom: 5px; font-family: 'Tajawal'; text-align: right;">الهاش الناتج (SHA-256):</span>
+                <code id="hash-output-result" style="color: var(--success); font-size: 0.95rem; font-family: monospace;">جاري الانتظار...</code>
+            </div>
+            <button onclick="copyGeneratedHash()">📋 نسخ الهاش</button>
+        </div>
+
         <div class="auth-card" id="login-screen">
             <h2>🔒 Restricted Access</h2>
             <p style="color: var(--text-muted); margin-bottom: 20px;">الرجاء إدخال رمز المرور للمتابعة</p>
@@ -855,13 +865,13 @@
         })();
 
         const _securePassHashes = {
-            alpha: "e501570bbdcf221cfb77dbd763a0a382c2a048a605f63d043f295bca9efbe0eb", 
-            beta:  "6cf04a8b79b69b932be4383a1523c6f11f99ff2eaefcb4c45a16d6fc3e5db7d2"  
+            alpha: "b7e2894b9f29910d57e2a9452b47ea5b95b451ae9f5c4f24ef3cd36a6e555811", 
+            beta:  "2806283ef184549925bc01cb4d142b781ae2128eeb3b3d1b7d59835848bb0ea8"  
         };
 
         async function hashString(str) {
             if (!window.crypto || !window.crypto.subtle) {
-                throw new Error("عيني، تشفير SHA-256 ما يشتغل على ملف محلي (file://). لازم ترفعه لـ GitHub أو تستخدم Localhost حتى يشتغل نظام الحماية!");
+                throw new Error("عيني حمودي، تشفير SHA-256 ما يشتغل على ملف محلي (file://). لازم ترفعه لـ GitHub أو تستخدم Localhost حتى يشتغل نظام الحماية!");
             }
             const encoder = new TextEncoder();
             const data = encoder.encode(str.trim());
@@ -973,10 +983,43 @@
         let currentFolderFilter = 'all';
         let currentPostId = null; 
         
-        const isAdminMode = new URLSearchParams(window.location.search).has('admin');
+        const urlParams = new URLSearchParams(window.location.search);
+        const isAdminMode = urlParams.has('admin');
+        const isHashMode = urlParams.has('hash');
+
+        // تفعيل عرض نافذة الهاش إذا تم طلبها عبر الرابط
+        if (isHashMode) {
+            document.getElementById('login-screen').style.display = 'none';
+            document.getElementById('hash-screen').style.display = 'block';
+        }
         
         var quillAdmin;
         let replyEditors = {};
+
+        async function generateLiveHash() {
+            const val = document.getElementById('hash-input-text').value;
+            const outputEl = document.getElementById('hash-output-result');
+            if(!val.trim()) {
+                outputEl.innerText = "جاري الانتظار...";
+                return;
+            }
+            try {
+                const hashed = await hashString(val);
+                outputEl.innerText = hashed;
+            } catch(e) {
+                outputEl.innerText = "خطأ في توليد الهاش";
+            }
+        }
+
+        function copyGeneratedHash() {
+            const outputEl = document.getElementById('hash-output-result').innerText;
+            if(outputEl && outputEl !== "جاري الانتظار..." && outputEl !== "خطأ في توليد الهاش") {
+                navigator.clipboard.writeText(outputEl);
+                alert("تم نسخ الهاش بنجاح! 📋✨");
+            } else {
+                alert("لا يوجد هاش صالح للنسخ!");
+            }
+        }
 
         function updateClockAndDate() {
             const now = new Date();
@@ -1227,7 +1270,6 @@
                 return;
             }
 
-            // تعديل عرض تبويب "المرئيات" (Visuals) ليظهر كمعرض صور فخم وبدون فراغات
             if (currentFilter === 'visuals' && currentPostId === null && currentFolderFilter === 'all') {
                 let visualsHtml = '<div class="visuals-masonry">';
                 filtered.slice().reverse().forEach((post) => {
@@ -1289,7 +1331,6 @@
                             </div>
                         `;
                     } else {
-                        // نظام دعم الصور المتعددة داخل المنشور الواحد (Grid)
                         const imgArray = post.image.split(',').map(url => url.trim()).filter(url => url.length > 0);
                         if (imgArray.length === 1) {
                             html += `<img src="${imgArray[0]}" class="post-image" alt="Post Image" onclick="openImageModal('${imgArray[0]}')">`;
