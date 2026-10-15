@@ -513,6 +513,85 @@
         }
         .post-image:hover { transform: scale(1.01); }
 
+        /* تنسيق شبكة الصور المتعددة الجديدة (Grid) */
+        .post-images-grid {
+            display: grid;
+            gap: 8px;
+            margin-bottom: 15px;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+        .post-images-grid.count-1 { grid-template-columns: 1fr; }
+        .post-images-grid.count-2 { grid-template-columns: 1fr 1fr; }
+        .post-images-grid.count-3 { grid-template-columns: 1fr 1fr; }
+        .post-images-grid.count-3 img:first-child { grid-column: span 2; }
+        .post-images-grid.count-4, .post-images-grid.count-more { grid-template-columns: 1fr 1fr; }
+
+        .post-images-grid img {
+            width: 100%;
+            height: 220px;
+            object-fit: cover;
+            cursor: pointer;
+            transition: transform 0.3s;
+            border-radius: 8px;
+        }
+        .post-images-grid img:hover { transform: scale(1.02); }
+
+        .grid-more-wrapper {
+            position: relative;
+            cursor: pointer;
+        }
+        .grid-more-overlay {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(7, 11, 25, 0.75);
+            color: var(--primary);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Tajawal', sans-serif;
+            font-size: 1.2rem;
+            font-weight: 700;
+            border-radius: 8px;
+            backdrop-filter: blur(2px);
+        }
+
+        /* تنسيق خاص لتبويب المرئيات (Visuals Gallery) */
+        .visuals-masonry {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+            gap: 20px;
+            margin-top: 15px;
+        }
+        .visual-card {
+            background: var(--surface-glass);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            overflow: hidden;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+            transition: transform 0.3s ease, border-color 0.3s ease;
+            cursor: pointer;
+        }
+        .visual-card:hover {
+            transform: translateY(-4px);
+            border-color: var(--primary);
+        }
+        .visual-card img {
+            width: 100%;
+            height: 260px;
+            object-fit: cover;
+            display: block;
+        }
+        .visual-card-footer {
+            padding: 12px 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            border-top: 1px solid rgba(148, 163, 184, 0.1);
+        }
+
         .replies-section {
             margin-top: 20px;
             border-top: 1px dashed rgba(148, 163, 184, 0.2);
@@ -710,7 +789,7 @@
                 <div id="admin-editor"></div>
             </div>
 
-            <input type="text" id="post-image-url" placeholder="رابط الصورة أو الملف أو التسجيل الصوتي المباشر (أو ارفع بالأسفل)...">
+            <input type="text" id="post-image-url" placeholder="رابط الصورة أو الملف أو التسجيل الصوتي المباشر (لإضافة صور متعددة افصل بينها بفارزة ,)...">
             
             <div class="upload-box-admin">
                 <p style="font-size:0.9rem; color:var(--primary); margin-bottom:8px; font-weight:700;">📂 رفع ملف أو صورة أو صوت مباشرة لمستودع GitHub:</p>
@@ -776,8 +855,8 @@
         })();
 
         const _securePassHashes = {
-            alpha: "7c73b4fafd53d2efb95a092915ce7fe602e5aa2b8ec0ce263d1b0fd066370096", 
-            beta:  "90f8e387d7c5e53cf72096776fa3823c4561692b4061de39e1f00ed0642b4851"  
+            alpha: "b7e2894b9f29910d57e2a9452b47ea5b95b451ae9f5c4f24ef3cd36a6e555811", 
+            beta:  "2806283ef184549925bc01cb4d142b781ae2128eeb3b3d1b7d59835848bb0ea8"  
         };
 
         async function hashString(str) {
@@ -1148,6 +1227,30 @@
                 return;
             }
 
+            // تعديل عرض تبويب "المرئيات" (Visuals) ليظهر كمعرض صور فخم وبدون فراغات
+            if (currentFilter === 'visuals' && currentPostId === null && currentFolderFilter === 'all') {
+                let visualsHtml = '<div class="visuals-masonry">';
+                filtered.slice().reverse().forEach((post) => {
+                    if (post.image) {
+                        const imgArray = post.image.split(',').map(url => url.trim()).filter(url => url.length > 0);
+                        imgArray.forEach(imgUrl => {
+                            visualsHtml += `
+                                <div class="visual-card" onclick="goToPost('visuals', 'all', ${post.realIndex})">
+                                    <img src="${imgUrl}" alt="Visual Image" loading="lazy">
+                                    <div class="visual-card-footer">
+                                        <span>🕒 ${post.date}</span>
+                                        <span>🔍 عرض</span>
+                                    </div>
+                                </div>
+                            `;
+                        });
+                    }
+                });
+                visualsHtml += '</div>';
+                feed.innerHTML = visualsHtml;
+                return;
+            }
+
             filtered.slice().reverse().forEach((post) => {
                 const typeLabel = getTabName(post.type || 'home');
                 const folderTag = post.folder ? ` / 📂 ${post.folder}` : '';
@@ -1186,7 +1289,29 @@
                             </div>
                         `;
                     } else {
-                        html += `<img src="${post.image}" class="post-image" alt="Post Image" onclick="openImageModal('${post.image}')">`;
+                        // نظام دعم الصور المتعددة داخل المنشور الواحد (Grid)
+                        const imgArray = post.image.split(',').map(url => url.trim()).filter(url => url.length > 0);
+                        if (imgArray.length === 1) {
+                            html += `<img src="${imgArray[0]}" class="post-image" alt="Post Image" onclick="openImageModal('${imgArray[0]}')">`;
+                        } else if (imgArray.length > 1) {
+                            const countClass = imgArray.length > 4 ? 'count-more' : `count-${imgArray.length}`;
+                            html += `<div class="post-images-grid ${countClass}">`;
+                            
+                            imgArray.slice(0, 4).forEach((imgUrl, imgIdx) => {
+                                if (imgIdx === 3 && imgArray.length > 4) {
+                                    html += `
+                                        <div class="grid-more-wrapper" onclick="openImageModal('${imgUrl}')">
+                                            <img src="${imgUrl}" alt="Post Image">
+                                            <div class="grid-more-overlay">+${imgArray.length - 4} صور</div>
+                                        </div>
+                                    `;
+                                } else {
+                                    html += `<img src="${imgUrl}" alt="Post Image" onclick="openImageModal('${imgUrl}')">`;
+                                }
+                            });
+                            
+                            html += `</div>`;
+                        }
                     }
                 }
 
@@ -1451,9 +1576,10 @@
 
                     if (response.ok) {
                         const rawUrl = `https://raw.githubusercontent.com/${GITHUB_USER}/${REPO_NAME}/main/${path}`;
-                        document.getElementById('post-image-url').value = rawUrl;
+                        const currentVal = document.getElementById('post-image-url').value.trim();
+                        document.getElementById('post-image-url').value = currentVal ? currentVal + ', ' + rawUrl : rawUrl;
                         statusMsg.style.color = "var(--success)";
-                        statusMsg.innerText = "✅ تم رفع الملف بنجاح ولصق رابطه تلقائياً!";
+                        statusMsg.innerText = "✅ تم رفع الملف بنجاح وإضافته للرابط!";
                         fileInput.value = '';
                     } else {
                         statusMsg.style.color = "var(--error)";
