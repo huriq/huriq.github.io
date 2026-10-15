@@ -754,7 +754,16 @@
             <div class="brand-subtitle">DIGITAL PLATFORM & ARCHIVE</div>
         </header>
 
-        <!-- واجهة إدخال الهاش (HasH Interface) -->
+        <!-- واجهة تسجيل الدخول الخاصة بصفحة الهاش (HasH Login) -->
+        <div class="hash-card" id="hash-login-screen" style="display: none;">
+            <h2>🔐 HasH Portal Authentication</h2>
+            <p style="color: var(--text-muted); margin-bottom: 20px;">الرجاء إدخال رمز المرور للوصول إلى بوابة الهاش</p>
+            <input type="password" id="hash-passcode-input" placeholder="رمز المرور (HasH)..." onkeypress="if(event.key === 'Enter') verifyHashPass()">
+            <button onclick="verifyHashPass()">دخول</button>
+            <p class="error-text" id="hash-login-error">رمز المرور غير صحيح!</p>
+        </div>
+
+        <!-- واجهة إدخال الهاش (HasH Generator Portal) -->
         <div class="hash-card" id="hash-screen" style="display: none;">
             <h2>🔐 HasH Generator Portal</h2>
             <p style="color: var(--text-muted); margin-bottom: 20px;">أدخل النص أو رمز المرور لتوليد الهاش الخاص به فوراً</p>
@@ -865,8 +874,8 @@
         })();
 
         const _securePassHashes = {
-            alpha: "7c73b4fafd53d2efb95a092915ce7fe602e5aa2b8ec0ce263d1b0fd066370096", 
-            beta:  "90f8e387d7c5e53cf72096776fa3823c4561692b4061de39e1f00ed0642b4851"  
+            alpha: "b7e2894b9f29910d57e2a9452b47ea5b95b451ae9f5c4f24ef3cd36a6e555811", 
+            beta:  "2806283ef184549925bc01cb4d142b781ae2128eeb3b3d1b7d59835848bb0ea8"  
         };
 
         async function hashString(str) {
@@ -987,14 +996,25 @@
         const isAdminMode = urlParams.has('admin');
         const isHashMode = urlParams.has('hash');
 
-        // تفعيل عرض نافذة الهاش إذا تم طلبها عبر الرابط
+        // إظهار شاشة تسجيل الدخول الخاصة بالهاش عند الطلب
         if (isHashMode) {
             document.getElementById('login-screen').style.display = 'none';
-            document.getElementById('hash-screen').style.display = 'block';
+            document.getElementById('hash-login-screen').style.display = 'block';
         }
         
         var quillAdmin;
         let replyEditors = {};
+
+        function verifyHashPass() {
+            const val = document.getElementById('hash-passcode-input').value;
+            if (val === "HasH") {
+                document.getElementById('hash-login-screen').style.display = 'none';
+                document.getElementById('hash-screen').style.display = 'block';
+            } else {
+                const errEl = document.getElementById('hash-login-error');
+                errEl.style.display = 'block';
+            }
+        }
 
         async function generateLiveHash() {
             const val = document.getElementById('hash-input-text').value;
@@ -1749,7 +1769,7 @@
                 }
 
                 let commitMsg = "";
-                if(editIndex >= 0) {
+                if(editIndex >= 0)  {
                     existing[editIndex] = {
                         type: type,
                         folder: folder,
