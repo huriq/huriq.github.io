@@ -758,7 +758,7 @@
         <div class="hash-card" id="hash-login-screen" style="display: none;">
             <h2>🔐 HasH Portal Authentication</h2>
             <p style="color: var(--text-muted); margin-bottom: 20px;">الرجاء إدخال رمز المرور للوصول إلى بوابة الهاش</p>
-            <input type="password" id="hash-passcode-input" placeholder="رمز المرور (HasH)..." onkeypress="if(event.key === 'Enter') verifyHashPass()">
+            <input type="password" id="hash-passcode-input" placeholder="رمز المرور ..." onkeypress="if(event.key === 'Enter') verifyHashPass()">
             <button onclick="verifyHashPass()">دخول</button>
             <p class="error-text" id="hash-login-error">رمز المرور غير صحيح!</p>
         </div>
@@ -880,7 +880,7 @@
 
         async function hashString(str) {
             if (!window.crypto || !window.crypto.subtle) {
-                throw new Error("عيني حمودي، تشفير SHA-256 ما يشتغل على ملف محلي (file://). لازم ترفعه لـ GitHub أو تستخدم Localhost حتى يشتغل نظام الحماية!");
+                throw new Error("عيني، تشفير SHA-256 ما يشتغل على ملف محلي (file://). لازم ترفعه لـ GitHub أو تستخدم Localhost حتى يشتغل نظام الحماية!");
             }
             const encoder = new TextEncoder();
             const data = encoder.encode(str.trim());
