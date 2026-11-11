@@ -1164,7 +1164,6 @@
                 const res = await fetch(WEB_APP_URL + "?t=" + Date.now());
                 if (res.ok) {
                     allFetchedReplies = await res.json();
-                    // تحديث أقسام الردود بالمنشورات المعروضة حالياً بدون إعادة تحميل الصفحة
                     updateAllRenderedReplies();
                 }
             } catch(e) {
@@ -1180,29 +1179,20 @@
                     let html = `<div style="font-family:'Tajawal'; font-weight:700; color:var(--primary); font-size:0.9rem; margin-bottom:10px;">💬 الردود والمكاتبات</div>`;
                     if (postReplies.length > 0) {
                         postReplies.forEach((rep, repIdx) => {
+                            const tempRepDiv = document.createElement('div');
+                            tempRepDiv.innerHTML = rep.text || '';
+                            const repLen = (tempRepDiv.textContent || tempRepDiv.innerText || '').trim().length;
+                            const isRepTrunc = repLen > 150 && currentPostId === null;
+
                             html += `
                                 <div class="reply-item">
                                     <div class="reply-author">👤 ${rep.author} <span style="font-size:0.75rem;color:var(--text-muted);font-weight:400;">(${rep.date})</span></div>
-                                    <div class="reply-text truncated" id="reply-text-${index}-${repIdx}">${rep.text}</div>
-                                    <button class="btn-reply-read-more" id="reply-read-btn-${index}-${repIdx}" onclick="toggleReplyReadMore(${index}, ${repIdx})" style="display:none;">عرض المزيد ▼</button>
+                                    <div class="reply-text ${isRepTrunc ? 'truncated' : ''}" id="reply-text-${index}-${repIdx}">${rep.text}</div>
+                                    <button class="btn-reply-read-more" id="reply-read-btn-${index}-${repIdx}" onclick="toggleReplyReadMore(${index}, ${repIdx})" ${isRepTrunc ? '' : 'style="display:none;"'}>عرض المزيد ▼</button>
                                 </div>`;
                         });
                     }
                     container.innerHTML = html;
-                    setTimeout(() => {
-                        postReplies.forEach((rep, repIdx) => {
-                            const textEl = document.getElementById(`reply-text-${index}-${repIdx}`);
-                            const btnEl = document.getElementById(`reply-read-btn-${index}-${repIdx}`);
-                            if (textEl && btnEl) {
-                                if (textEl.scrollHeight > 80) {
-                                    btnEl.style.display = 'inline-block';
-                                } else {
-                                    textEl.classList.remove('truncated');
-                                    btnEl.style.display = 'none';
-                                }
-                            }
-                        });
-                    }, 50);
                 }
             });
         }
@@ -1333,7 +1323,6 @@
         }
 
         function renderPosts() {
-            // العرض فوري بدون أي انتظار لشبكة الردود لتفادي أي تعليق أو تهنيگ بالموبايل
             if (currentFilter === 'home' && currentPostId === null && currentFolderFilter === 'all') {
                 renderHomeTimeline();
                 return;
@@ -1471,9 +1460,14 @@
                 }
 
                 if(post.content) {
+                    const tempPostDiv = document.createElement('div');
+                    tempPostDiv.innerHTML = post.content;
+                    const plainLen = (tempPostDiv.textContent || tempPostDiv.innerText || '').trim().length;
+                    const isTruncated = plainLen > 250 && currentPostId === null;
+
                     html += `
-                        <div class="post-body truncated" id="post-body-${post.realIndex}">${post.content}</div>
-                        <button class="btn-read-more" id="read-more-btn-${post.realIndex}" onclick="toggleReadMore(${post.realIndex})" style="display:none;">عرض المزيد ▼</button>
+                        <div class="post-body ${isTruncated ? 'truncated' : ''}" id="post-body-${post.realIndex}">${post.content}</div>
+                        <button class="btn-read-more" id="read-more-btn-${post.realIndex}" onclick="toggleReadMore(${post.realIndex})" ${isTruncated ? '' : 'style="display:none;"'}>عرض المزيد ▼</button>
                     `;
                 }
 
@@ -1492,11 +1486,16 @@
                 
                 if(postReplies && postReplies.length > 0) {
                     postReplies.forEach((rep, repIdx) => {
+                        const tempRepDiv = document.createElement('div');
+                        tempRepDiv.innerHTML = rep.text || '';
+                        const repLen = (tempRepDiv.textContent || tempRepDiv.innerText || '').trim().length;
+                        const isRepTrunc = repLen > 150 && currentPostId === null;
+
                         html += `
                             <div class="reply-item">
                                 <div class="reply-author">👤 ${rep.author} <span style="font-size:0.75rem;color:var(--text-muted);font-weight:400;">(${rep.date})</span></div>
-                                <div class="reply-text truncated" id="reply-text-${post.realIndex}-${repIdx}">${rep.text}</div>
-                                <button class="btn-reply-read-more" id="reply-read-btn-${post.realIndex}-${repIdx}" onclick="toggleReplyReadMore(${post.realIndex}, ${repIdx})" style="display:none;">عرض المزيد ▼</button>
+                                <div class="reply-text ${isRepTrunc ? 'truncated' : ''}" id="reply-text-${post.realIndex}-${repIdx}">${rep.text}</div>
+                                <button class="btn-reply-read-more" id="reply-read-btn-${post.realIndex}-${repIdx}" onclick="toggleReplyReadMore(${post.realIndex}, ${repIdx})" ${isRepTrunc ? '' : 'style="display:none;"'}>عرض المزيد ▼</button>
                             </div>`;
                     });
                 }
@@ -1517,39 +1516,6 @@
                 `;
 
                 feed.innerHTML += html;
-
-                setTimeout(() => {
-                    const bodyEl = document.getElementById(`post-body-${post.realIndex}`);
-                    const btnEl = document.getElementById(`read-more-btn-${post.realIndex}`);
-                    if (bodyEl && btnEl) {
-                        if (currentPostId !== null) {
-                            bodyEl.classList.remove('truncated');
-                            btnEl.style.display = 'none';
-                        } else {
-                            if (bodyEl.scrollHeight > 145) {
-                                btnEl.style.display = 'inline-block';
-                            } else {
-                                bodyEl.classList.remove('truncated');
-                                btnEl.style.display = 'none';
-                            }
-                        }
-                    }
-
-                    if(postReplies) {
-                        postReplies.forEach((rep, repIdx) => {
-                            const textEl = document.getElementById(`reply-text-${post.realIndex}-${repIdx}`);
-                            const btnEl = document.getElementById(`reply-read-btn-${post.realIndex}-${repIdx}`);
-                            if (textEl && btnEl) {
-                                if (textEl.scrollHeight > 80) {
-                                    btnEl.style.display = 'inline-block';
-                                } else {
-                                    textEl.classList.remove('truncated');
-                                    btnEl.style.display = 'none';
-                                }
-                            }
-                        });
-                    }
-                }, 50);
             });
         }
 
@@ -1564,7 +1530,6 @@
             } else {
                 bodyEl.classList.add('truncated');
                 btnEl.innerText = "عرض المزيد ▼";
-                document.getElementById(`post-${index}`).scrollIntoView({ behavior: 'smooth', block: 'nearest' });
             }
         }
 
