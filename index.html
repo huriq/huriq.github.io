@@ -171,7 +171,7 @@
             animation: floatHeart 1.2s ease-out forwards;
         }
 
-        /* شاشة الترحيب المؤقتة للكائن الأزرق */
+        /* شاشة الترحيب المؤقتة للكائن الأزرق (بخط عريف رقعه الفخم والحجم الكبير) */
         .welcome-overlay {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -186,14 +186,15 @@
             animation: fadeIn 0.4s ease-in-out;
         }
         .welcome-text {
-            font-family: 'Tajawal', sans-serif;
-            font-size: 2.2rem;
-            font-weight: 900;
+            font-family: 'Aref Ruqaa', serif;
+            font-size: 2.8rem;
+            font-weight: 700;
             background: linear-gradient(135deg, var(--primary), var(--secondary));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            text-shadow: 0 0 30px rgba(0, 210, 255, 0.5);
+            text-shadow: 0 0 35px rgba(0, 210, 255, 0.6);
             padding: 0 20px;
+            line-height: 1.6;
         }
 
         button {
@@ -1209,7 +1210,7 @@
                         setTimeout(() => heart.remove(), 1200);
                     }
 
-                    // إظهار شاشة الترحيب المؤقتة
+                    // إظهار شاشة الترحيب المؤقتة (تم زيادة المدة لتكون كافية ومريحة للقراءة)
                     setTimeout(() => {
                         const overlay = document.createElement('div');
                         overlay.className = 'welcome-overlay';
@@ -1229,7 +1230,7 @@
                                 document.getElementById('content-area').style.display = 'block';
                                 loadPosts();
                             }
-                        }, 2200);
+                        }, 4000);
                     }, 600);
 
                 } else {
