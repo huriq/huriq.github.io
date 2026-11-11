@@ -1164,19 +1164,41 @@
                 const res = await fetch(WEB_APP_URL + "?t=" + Date.now());
                 if (res.ok) {
                     allFetchedReplies = await res.json();
-                    updateAllRenderedReplies();
+                    updateAllRenderedRepliesCount();
                 }
             } catch(e) {
                 allFetchedReplies = [];
             }
         }
 
-        function updateAllRenderedReplies() {
+        function updateAllRenderedRepliesCount() {
             allPostsData.forEach((post, index) => {
-                const container = document.getElementById(`replies-container-${index}`);
-                if (container) {
+                const countBadge = document.getElementById(`replies-count-${index}`);
+                if (countBadge) {
                     const postReplies = allFetchedReplies.filter(r => parseInt(r.postIndex) === parseInt(index));
-                    let html = `<div style="font-family:'Tajawal'; font-weight:700; color:var(--primary); font-size:0.9rem; margin-bottom:10px;">💬 الردود والمكاتبات</div>`;
+                    countBadge.innerText = `(${postReplies.length})`;
+                }
+            });
+        }
+
+        function toggleRepliesSection(index) {
+            const box = document.getElementById(`replies-box-${index}`);
+            const btn = document.getElementById(`replies-toggle-btn-${index}`);
+            if (!box || !btn) return;
+
+            if (box.style.display === 'block') {
+                box.style.display = 'none';
+                const postReplies = allFetchedReplies.filter(r => parseInt(r.postIndex) === parseInt(index));
+                btn.innerText = `💬 عرض الردود والمكاتبات (${postReplies.length})`;
+            } else {
+                box.style.display = 'block';
+                btn.innerText = `🔽 إخفاء الردود`;
+                
+                // تعبئة الردود عند الضغط حصراً لضمان السرعة المطلقة
+                const container = document.getElementById(`replies-list-container-${index}`);
+                if (container && container.innerHTML.trim() === '') {
+                    const postReplies = allFetchedReplies.filter(r => parseInt(r.postIndex) === parseInt(index));
+                    let html = '';
                     if (postReplies.length > 0) {
                         postReplies.forEach((rep, repIdx) => {
                             const tempRepDiv = document.createElement('div');
@@ -1191,10 +1213,12 @@
                                     <button class="btn-reply-read-more" id="reply-read-btn-${index}-${repIdx}" onclick="toggleReplyReadMore(${index}, ${repIdx})" ${isRepTrunc ? '' : 'style="display:none;"'}>عرض المزيد ▼</button>
                                 </div>`;
                         });
+                    } else {
+                        html = `<p style="color:var(--text-muted); font-size:0.85rem; text-align:center; padding:10px;">لا توجد ردود حتى الآن.</p>`;
                     }
                     container.innerHTML = html;
                 }
-            });
+            }
         }
 
         function switchTab(filter) {
@@ -1479,31 +1503,23 @@
                     </div>
                 `;
 
+                // نظام الـ Lazy Loading الذكي للردود (لا ينرسم إلا بضغط المستخدم لضمان السرعة المطلقة)
                 const postReplies = allFetchedReplies.filter(r => parseInt(r.postIndex) === parseInt(post.realIndex));
-
-                html += `<div class="replies-section" id="replies-container-${post.realIndex}">
-                            <div style="font-family:'Tajawal'; font-weight:700; color:var(--primary); font-size:0.9rem; margin-bottom:10px;">💬 الردود والمكاتبات</div>`;
-                
-                if(postReplies && postReplies.length > 0) {
-                    postReplies.forEach((rep, repIdx) => {
-                        const tempRepDiv = document.createElement('div');
-                        tempRepDiv.innerHTML = rep.text || '';
-                        const repLen = (tempRepDiv.textContent || tempRepDiv.innerText || '').trim().length;
-                        const isRepTrunc = repLen > 150 && currentPostId === null;
-
-                        html += `
-                            <div class="reply-item">
-                                <div class="reply-author">👤 ${rep.author} <span style="font-size:0.75rem;color:var(--text-muted);font-weight:400;">(${rep.date})</span></div>
-                                <div class="reply-text ${isRepTrunc ? 'truncated' : ''}" id="reply-text-${post.realIndex}-${repIdx}">${rep.text}</div>
-                                <button class="btn-reply-read-more" id="reply-read-btn-${post.realIndex}-${repIdx}" onclick="toggleReplyReadMore(${post.realIndex}, ${repIdx})" ${isRepTrunc ? '' : 'style="display:none;"'}>عرض المزيد ▼</button>
-                            </div>`;
-                    });
-                }
-
-                html += `</div>`;
+                const repliesCount = postReplies.length;
 
                 html += `
-                    <button class="btn-reply-toggle" onclick="toggleReplyForm(${post.realIndex})">✍️ كتابة مكتوب أو رد</button>
+                    <div class="replies-section">
+                        <button class="btn-reply-toggle" id="replies-toggle-btn-${post.realIndex}" onclick="toggleRepliesSection(${post.realIndex})">
+                            💬 عرض الردود والمكاتبات <span id="replies-count-${post.realIndex}">(${repliesCount})</span>
+                        </button>
+                        <div id="replies-box-${post.realIndex}" style="display: none; margin-top: 15px;">
+                            <div id="replies-list-container-${post.realIndex}"></div>
+                        </div>
+                    </div>
+                `;
+
+                html += `
+                    <button class="btn-reply-toggle" onclick="toggleReplyForm(${post.realIndex})" style="margin-top:10px;">✍️ كتابة مكتوب أو رد</button>
                     <div class="reply-form-box" id="reply-form-${post.realIndex}">
                         <input type="text" id="reply-author-${post.realIndex}" placeholder="اسمك الكريم..." style="margin-bottom:10px; padding:10px; font-size:0.9rem;">
                         
