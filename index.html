@@ -108,6 +108,7 @@
             box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
             text-align: center;
             margin-bottom: 30px;
+            position: relative;
         }
 
         h2 {
@@ -134,6 +135,65 @@
         input:focus, select:focus {
             border-color: var(--primary);
             box-shadow: 0 0 15px rgba(0, 210, 255, 0.2);
+        }
+
+        /* تأثيرات حقل تسجيل الدخول (اهتزاز وتوهج) */
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-10px); }
+            40%, 80% { transform: translateX(10px); }
+        }
+        .input-error-anim {
+            animation: shake 0.4s ease-in-out;
+            background-color: rgba(244, 63, 94, 0.2) !important;
+            border-color: var(--error) !important;
+        }
+
+        @keyframes blueGlow {
+            0% { box-shadow: 0 0 5px var(--primary), 0 0 15px var(--primary); border-color: var(--primary); }
+            50% { box-shadow: 0 0 20px var(--primary), 0 0 40px var(--primary), 0 0 60px var(--secondary); border-color: #fff; }
+            100% { box-shadow: 0 0 5px var(--primary), 0 0 15px var(--primary); border-color: var(--primary); }
+        }
+        .input-success-glow {
+            animation: blueGlow 1.5s infinite ease-in-out;
+        }
+
+        /* تأثير تطاير القلوب السماوية */
+        @keyframes floatHeart {
+            0% { transform: translateY(0) scale(0.6); opacity: 1; }
+            100% { transform: translateY(-120px) scale(1.4); opacity: 0; }
+        }
+        .floating-heart {
+            position: absolute;
+            color: var(--primary);
+            font-size: 1.5rem;
+            pointer-events: none;
+            animation: floatHeart 1.2s ease-out forwards;
+        }
+
+        /* شاشة الترحيب المؤقتة للكائن الأزرق */
+        .welcome-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(7, 11, 25, 0.95);
+            backdrop-filter: blur(12px);
+            z-index: 99999;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            text-align: center;
+            animation: fadeIn 0.4s ease-in-out;
+        }
+        .welcome-text {
+            font-family: 'Tajawal', sans-serif;
+            font-size: 2.2rem;
+            font-weight: 900;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 30px rgba(0, 210, 255, 0.5);
+            padding: 0 20px;
         }
 
         button {
@@ -809,7 +869,7 @@
             <p style="color: var(--text-muted); margin-bottom: 20px;">الرجاء إدخال رمز المرور للمتابعة</p>
             <input type="password" id="passcode-input" placeholder="رمز المرور..." onkeypress="if(event.key === 'Enter') verifyPass()">
             <button onclick="verifyPass()">دخول</button>
-            <p class="error-text" id="login-error">رمز المرور غير صحيح!</p>
+            <p class="error-text" id="login-error" style="color: var(--error); font-weight: 700;"></p>
         </div>
 
         <div class="admin-card" id="admin-panel" style="display: none;">
@@ -821,6 +881,7 @@
 
             <select id="post-type" onchange="toggleFolderInput()">
                 <option value="home">🏠 الصفحة الرئيسية</option>
+                <option value="updates">⚡ التحديثات</option>
                 <option value="beliefs">🌟 المعتقدات</option>
                 <option value="writings">📄 المكتوبات</option>
                 <option value="correspondence">📜 المكاتبات</option>
@@ -869,10 +930,11 @@
         <div id="content-area">
             <div class="tabs-container">
                 <button id="tab-home" class="tab-btn active" onclick="switchTab('home')">🏠 الصفحة الرئيسية</button>
+                <button id="tab-updates" class="tab-btn" onclick="switchTab('updates')">⚡ التحديثات</button>
                 <button id="tab-beliefs" class="tab-btn" onclick="switchTab('beliefs')">🌟 المعتقدات</button>
                 <button id="tab-writings" class="tab-btn" onclick="switchTab('writings')">📄 المكتوبات</button>
                 <button id="tab-correspondence" class="tab-btn" onclick="switchTab('correspondence')">📜 المكاتبات</button>
-                <button id="tab-visuals" class="tab-btn" onclick="switchTab('visuals')">🖼 والمرئيات</button>
+                <button id="tab-visuals" class="tab-btn" onclick="switchTab('visuals')">🖼️ المرئيات</button>
                 <button id="tab-audio" class="tab-btn" onclick="switchTab('audio')">🎧 المسموعات</button>
                 <button id="tab-separations" class="tab-btn" onclick="switchTab('separations')">🗣️ الفصلات</button>
                 <button id="tab-trash" class="tab-btn" onclick="switchTab('trash')">مُهمل</button>
@@ -1121,31 +1183,65 @@
         window.addEventListener('hashchange', handleHash);
 
         async function verifyPass() {
+            const passInput = document.getElementById('passcode-input');
+            const errEl = document.getElementById('login-error');
+            const val = passInput.value;
+
             try {
-                const val = document.getElementById('passcode-input').value;
                 const inputHash = await hashString(val);
                 const targetHash = isAdminMode ? _securePassHashes.beta : _securePassHashes.alpha;
 
                 if(inputHash === targetHash) {
-                    document.getElementById('login-screen').style.display = 'none';
-                    document.getElementById('login-error').style.display = 'none';
-                    if(isAdminMode) {
-                        document.getElementById('admin-panel').style.display = 'block';
-                        initAdminEditor();
-                        const savedT = localStorage.getItem('hur_gh_token');
-                        if(savedT) document.getElementById('gh-token').value = savedT;
-                        fetchPostsForAdmin();
-                    } else {
-                        document.getElementById('content-area').style.display = 'block';
-                        loadPosts();
+                    errEl.style.display = 'none';
+                    passInput.classList.remove('input-error-anim');
+                    passInput.classList.add('input-success-glow');
+
+                    // تطاير قلوب سماوية لطيفة حول الحقل
+                    const card = document.getElementById('login-screen');
+                    for (let i = 0; i < 6; i++) {
+                        const heart = document.createElement('div');
+                        heart.className = 'floating-heart';
+                        heart.innerHTML = '🩵';
+                        heart.style.left = (passInput.offsetLeft + Math.random() * passInput.offsetWidth) + 'px';
+                        heart.style.top = (passInput.offsetTop + 'px');
+                        heart.style.animationDelay = (i * 0.15) + 's';
+                        card.appendChild(heart);
+                        setTimeout(() => heart.remove(), 1200);
                     }
+
+                    // إظهار شاشة الترحيب المؤقتة
+                    setTimeout(() => {
+                        const overlay = document.createElement('div');
+                        overlay.className = 'welcome-overlay';
+                        overlay.innerHTML = `<div class="welcome-text">أَهْلاً وَمَرحَبًا.. أَيُّهَا الكَائِنُ الأَزرَق🩵</div>`;
+                        document.body.appendChild(overlay);
+
+                        setTimeout(() => {
+                            overlay.remove();
+                            document.getElementById('login-screen').style.display = 'none';
+                            if(isAdminMode) {
+                                document.getElementById('admin-panel').style.display = 'block';
+                                initAdminEditor();
+                                const savedT = localStorage.getItem('hur_gh_token');
+                                if(savedT) document.getElementById('gh-token').value = savedT;
+                                fetchPostsForAdmin();
+                            } else {
+                                document.getElementById('content-area').style.display = 'block';
+                                loadPosts();
+                            }
+                        }, 2200);
+                    }, 600);
+
                 } else {
-                    document.getElementById('login-error').innerText = "رمز المرور غير صحيح!";
-                    document.getElementById('login-error').style.display = 'block';
+                    passInput.classList.remove('input-success-glow');
+                    passInput.classList.add('input-error-anim');
+                    errEl.innerText = "عُذرًا أنت لا تملك حق الوصول للبيت الأزرق!";
+                    errEl.style.display = 'block';
+                    setTimeout(() => passInput.classList.remove('input-error-anim'), 500);
                 }
             } catch (e) {
-                document.getElementById('login-error').innerText = e.message;
-                document.getElementById('login-error').style.display = 'block';
+                errEl.innerText = e.message;
+                errEl.style.display = 'block';
             }
         }
 
@@ -1262,6 +1358,7 @@
         function getTabName(type) {
             switch(type) {
                 case 'home': return 'الصفحة الرئيسية';
+                case 'updates': return 'التحديثات';
                 case 'beliefs': return 'المعتقدات';
                 case 'writings': return 'المكتوبات';
                 case 'correspondence': return 'المكاتبات';
@@ -1301,7 +1398,7 @@
         }
 
         function isPostPublished(post) {
-            if (!post.scheduledTime) return true; // منشور فوري
+            if (!post.scheduledTime) return true;
             const scheduledDate = new Date(post.scheduledTime).getTime();
             const now = new Date().getTime();
             return now >= scheduledDate;
@@ -1382,7 +1479,7 @@
             feed.innerHTML = '';
 
             let filtered = allPostsData.map((post, i) => ({...post, realIndex: i})).filter(p => {
-                if (!isPostPublished(p)) return false; // إخفاء المنشورات المجدولة التي لم يحن وقتها بعد
+                if (!isPostPublished(p)) return false;
                 if (currentPostId !== null) {
                     return p.realIndex === currentPostId;
                 }
@@ -1433,9 +1530,10 @@
                 const typeLabel = getTabName(post.type || 'home');
                 const folderTag = post.folder ? ` / 📂 ${post.folder}` : '';
                 const tabId = post.type || 'home';
+                const isUpdatesTab = (post.type === 'updates');
                 
                 let html = `
-                    <div class="post-card" id="post-${post.realIndex}">
+                    <div class="post-card" id="post-${post.realIndex}" ${isUpdatesTab ? 'style="border-color: rgba(0, 210, 255, 0.4); background: linear-gradient(135deg, rgba(15, 23, 42, 0.9), rgba(2, 6, 23, 0.9));"' : ''}>
                         <div class="post-header">
                             <div>
                                 <span class="post-tag">${typeLabel}${folderTag}</span>
@@ -1534,32 +1632,35 @@
                     </div>
                 `;
 
-                const postReplies = repliesMap[post.realIndex] || [];
-                const repliesCount = postReplies.length;
+                // قسم التحديثات لا يحتوي على ردود أو مكاتبات
+                if (!isUpdatesTab) {
+                    const postReplies = repliesMap[post.realIndex] || [];
+                    const repliesCount = postReplies.length;
 
-                html += `
-                    <div class="replies-section">
-                        <button class="btn-reply-toggle" id="replies-toggle-btn-${post.realIndex}" onclick="toggleRepliesSection(${post.realIndex})">
-                            💬 عرض الردود والمكاتبات <span id="replies-count-${post.realIndex}">(${repliesCount})</span>
-                        </button>
-                        <div id="replies-box-${post.realIndex}" style="display: none; margin-top: 15px;">
-                            <div id="replies-list-container-${post.realIndex}"></div>
+                    html += `
+                        <div class="replies-section">
+                            <button class="btn-reply-toggle" id="replies-toggle-btn-${post.realIndex}" onclick="toggleRepliesSection(${post.realIndex})">
+                                💬 عرض الردود والمكاتبات <span id="replies-count-${post.realIndex}">(${repliesCount})</span>
+                            </button>
+                            <div id="replies-box-${post.realIndex}" style="display: none; margin-top: 15px;">
+                                <div id="replies-list-container-${post.realIndex}"></div>
+                            </div>
                         </div>
-                    </div>
-                `;
+                    `;
 
-                html += `
-                    <button class="btn-reply-toggle" onclick="toggleReplyForm(${post.realIndex})" style="margin-top:10px;">✍️ كتابة مكتوب أو رد</button>
-                    <div class="reply-form-box" id="reply-form-${post.realIndex}">
-                        <input type="text" id="reply-author-${post.realIndex}" placeholder="اسمك الكريم..." style="margin-bottom:10px; padding:10px; font-size:0.9rem;">
-                        
-                        <div class="editor-container reply-editor-container">
-                            <div id="reply-editor-${post.realIndex}"></div>
+                    html += `
+                        <button class="btn-reply-toggle" onclick="toggleReplyForm(${post.realIndex})" style="margin-top:10px;">✍️ كتابة مكتوب أو رد</button>
+                        <div class="reply-form-box" id="reply-form-${post.realIndex}">
+                            <input type="text" id="reply-author-${post.realIndex}" placeholder="اسمك الكريم..." style="margin-bottom:10px; padding:10px; font-size:0.9rem;">
+                            
+                            <div class="editor-container reply-editor-container">
+                                <div id="reply-editor-${post.realIndex}"></div>
+                            </div>
+
+                            <button id="reply-btn-${post.realIndex}" onclick="submitPublicReply(${post.realIndex})" style="padding:10px; font-size:0.95rem;">إرسال المكتوب</button>
                         </div>
-
-                        <button id="reply-btn-${post.realIndex}" onclick="submitPublicReply(${post.realIndex})" style="padding:10px; font-size:0.95rem;">إرسال المكتوب</button>
-                    </div>
-                `;
+                    `;
+                }
 
                 feed.innerHTML += html;
             });
