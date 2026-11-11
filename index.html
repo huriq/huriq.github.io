@@ -1002,7 +1002,7 @@
         const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxWqUyDQ3uIdD2hmMy25c9rwCgxSGYsBMGM0FUr9sOeO3msyBB198ndlDLBPbW67FJ0Wg/exec";
 
         let allPostsData = [];
-        let allFetchedReplies = [];
+        let repliesMap = {}; // خريطة مفهرسة فائقة السرعة للردود
         let currentFilter = 'home';
         let currentFolderFilter = 'all';
         let currentPostId = null; 
@@ -1150,8 +1150,8 @@
                 loader.style.display = 'none';
                 handleHash();
                 
-                // جلب الردود في الخلفية بصمت وبدون أي تعطيل للواجهة
-                loadAllRepliesCacheInBackground();
+                // جلب الردود بشكل مفهرس فائق السرعة بالخلفية
+                loadRepliesIndexedInBackground();
             } catch(e) {
                 loader.style.display = 'none';
                 allPostsData = [];
@@ -1159,15 +1159,21 @@
             }
         }
 
-        async function loadAllRepliesCacheInBackground() {
+        async function loadRepliesIndexedInBackground() {
             try {
                 const res = await fetch(WEB_APP_URL + "?t=" + Date.now());
                 if (res.ok) {
-                    allFetchedReplies = await res.json();
+                    const list = await res.json();
+                    repliesMap = {};
+                    list.forEach(r => {
+                        const pIdx = parseInt(r.postIndex);
+                        if (!repliesMap[pIdx]) repliesMap[pIdx] = [];
+                        repliesMap[pIdx].push(r);
+                    });
                     updateAllRenderedRepliesCount();
                 }
             } catch(e) {
-                allFetchedReplies = [];
+                repliesMap = {};
             }
         }
 
@@ -1175,7 +1181,7 @@
             allPostsData.forEach((post, index) => {
                 const countBadge = document.getElementById(`replies-count-${index}`);
                 if (countBadge) {
-                    const postReplies = allFetchedReplies.filter(r => parseInt(r.postIndex) === parseInt(index));
+                    const postReplies = repliesMap[index] || [];
                     countBadge.innerText = `(${postReplies.length})`;
                 }
             });
@@ -1186,18 +1192,17 @@
             const btn = document.getElementById(`replies-toggle-btn-${index}`);
             if (!box || !btn) return;
 
+            const postReplies = repliesMap[index] || [];
+
             if (box.style.display === 'block') {
                 box.style.display = 'none';
-                const postReplies = allFetchedReplies.filter(r => parseInt(r.postIndex) === parseInt(index));
                 btn.innerText = `💬 عرض الردود والمكاتبات (${postReplies.length})`;
             } else {
                 box.style.display = 'block';
                 btn.innerText = `🔽 إخفاء الردود`;
                 
-                // تعبئة الردود عند الضغط حصراً لضمان السرعة المطلقة
                 const container = document.getElementById(`replies-list-container-${index}`);
                 if (container && container.innerHTML.trim() === '') {
-                    const postReplies = allFetchedReplies.filter(r => parseInt(r.postIndex) === parseInt(index));
                     let html = '';
                     if (postReplies.length > 0) {
                         postReplies.forEach((rep, repIdx) => {
@@ -1503,8 +1508,8 @@
                     </div>
                 `;
 
-                // نظام الـ Lazy Loading الذكي للردود (لا ينرسم إلا بضغط المستخدم لضمان السرعة المطلقة)
-                const postReplies = allFetchedReplies.filter(r => parseInt(r.postIndex) === parseInt(post.realIndex));
+                // استخدام الخريطة المفهرسة السريعة (O(1) Lookup) لسرعة صاروخية
+                const postReplies = repliesMap[post.realIndex] || [];
                 const repliesCount = postReplies.length;
 
                 html += `
@@ -1564,7 +1569,7 @@
         }
 
         async function refreshRepliesForPost(postIndex) {
-            await loadAllRepliesCacheInBackground();
+            await loadRepliesIndexedInBackground();
         }
 
         function toggleReplyForm(index) {
@@ -1898,6 +1903,7 @@
             const token = document.getElementById('gh-token').value.trim();
             const feedback = document.getElementById('admin-feedback');
 
+            if(!token).       alert("الرجاء إدخال الـ GitHub Token أولاً!");
             if(!token) {
                 alert("الرجاء إدخال الـ GitHub Token أولاً!");
                 return;
