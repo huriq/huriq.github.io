@@ -909,7 +909,7 @@
 
         async function hashString(str) {
             if (!window.crypto || !window.crypto.subtle) {
-                throw new Error("عيني حمودي، تشفير SHA-256 ما يشتغل على ملف محلي (file://). لازم ترفعه لـ GitHub أو تستخدم Localhost حتى يشتغل نظام الحماية!");
+                throw new Error("، تشفير SHA-256 ما يشتغل على ملف محلي (file://). لازم ترفعه لـ GitHub أو تستخدم Localhost حتى يشتغل نظام الحماية!");
             }
             const encoder = new TextEncoder();
             const data = encoder.encode(str.trim());
