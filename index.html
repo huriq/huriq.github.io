@@ -1002,7 +1002,7 @@
         const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxWqUyDQ3uIdD2hmMy25c9rwCgxSGYsBMGM0FUr9sOeO3msyBB198ndlDLBPbW67FJ0Wg/exec";
 
         let allPostsData = [];
-        let repliesMap = {}; // خريطة مفهرسة فائقة السرعة للردود
+        let repliesMap = {}; 
         let currentFilter = 'home';
         let currentFolderFilter = 'all';
         let currentPostId = null; 
@@ -1150,7 +1150,6 @@
                 loader.style.display = 'none';
                 handleHash();
                 
-                // جلب الردود بشكل مفهرس فائق السرعة بالخلفية
                 loadRepliesIndexedInBackground();
             } catch(e) {
                 loader.style.display = 'none';
@@ -1508,7 +1507,6 @@
                     </div>
                 `;
 
-                // استخدام الخريطة المفهرسة السريعة (O(1) Lookup) لسرعة صاروخية
                 const postReplies = repliesMap[post.realIndex] || [];
                 const repliesCount = postReplies.length;
 
@@ -1903,7 +1901,6 @@
             const token = document.getElementById('gh-token').value.trim();
             const feedback = document.getElementById('admin-feedback');
 
-            if(!token).       alert("الرجاء إدخال الـ GitHub Token أولاً!");
             if(!token) {
                 alert("الرجاء إدخال الـ GitHub Token أولاً!");
                 return;
