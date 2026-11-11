@@ -909,7 +909,7 @@
 
         async function hashString(str) {
             if (!window.crypto || !window.crypto.subtle) {
-                throw new Error("، تشفير SHA-256 ما يشتغل على ملف محلي (file://). لازم ترفعه لـ GitHub أو تستخدم Localhost حتى يشتغل نظام الحماية!");
+                throw new Error("عيني حمودي، تشفير SHA-256 ما يشتغل على ملف محلي (file://). لازم ترفعه لـ GitHub أو تستخدم Localhost حتى يشتغل نظام الحماية!");
             }
             const encoder = new TextEncoder();
             const data = encoder.encode(str.trim());
@@ -1007,6 +1007,8 @@
         let currentFolderFilter = 'all';
         let currentPostId = null; 
         
+        let visiblePostsCount = 1; // المتغير المسؤول عن عدد المنشورات المعروضة تدريجياً
+        
         let currentModalImages = [];
         let currentModalIndex = 0;
         
@@ -1096,6 +1098,8 @@
             currentFilter = parts[0] || 'home';
             currentFolderFilter = parts[1] ? decodeURIComponent(parts[1]) : 'all';
             currentPostId = parts[2] ? parseInt(parts[2]) : null;
+
+            visiblePostsCount = 1; // إعادة تعيين عدد المنشورات المرئية عند كل تغيير للتبويب أو الفولدر
 
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
             const targetBtn = document.getElementById(`tab-${currentFilter}`);
@@ -1350,6 +1354,11 @@
             feed.innerHTML = html;
         }
 
+        function loadMorePosts() {
+            visiblePostsCount += 1; // زيادة عدد المنشورات المرئية بمقدار منشور واحد عند كل ضغطة
+            renderPosts();
+        }
+
         function renderPosts() {
             if (currentFilter === 'home' && currentPostId === null && currentFolderFilter === 'all') {
                 renderHomeTimeline();
@@ -1402,7 +1411,11 @@
                 return;
             }
 
-            filtered.slice().reverse().forEach((post) => {
+            const reversedFiltered = filtered.slice().reverse();
+            const visibleSlice = reversedFiltered.slice(0, visiblePostsCount);
+            const hasMore = visiblePostsCount < reversedFiltered.length;
+
+            visibleSlice.forEach((post) => {
                 const typeLabel = getTabName(post.type || 'home');
                 const folderTag = post.folder ? ` / 📂 ${post.folder}` : '';
                 const tabId = post.type || 'home';
@@ -1536,6 +1549,16 @@
 
                 feed.innerHTML += html;
             });
+
+            if (hasMore) {
+                feed.innerHTML += `
+                    <div style="text-align: center; margin: 30px 0;">
+                        <button onclick="loadMorePosts()" style="background: linear-gradient(135deg, var(--primary), var(--secondary)); color: #070b19; padding: 14px 28px; border-radius: 16px; font-weight: 700; font-family: 'Tajawal', sans-serif; font-size: 1.05rem; box-shadow: 0 5px 20px rgba(0, 210, 255, 0.3); cursor: pointer; width: auto; display: inline-flex; align-items: center; gap: 10px;">
+                            <span>📥</span> إظهار المزيد من المنشورات (${reversedFiltered.length - visiblePostsCount} متبقي)
+                        </button>
+                    </div>
+                `;
+            }
         }
 
         function toggleReadMore(index) {
