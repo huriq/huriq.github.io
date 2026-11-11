@@ -1149,6 +1149,9 @@
                 allPostsData = await res.json();
                 loader.style.display = 'none';
                 handleHash();
+                
+                // جلب الردود في الخلفية بصمت وبدون أي تعطيل للواجهة
+                loadAllRepliesCacheInBackground();
             } catch(e) {
                 loader.style.display = 'none';
                 allPostsData = [];
@@ -1156,15 +1159,52 @@
             }
         }
 
-        async function loadAllRepliesCache() {
+        async function loadAllRepliesCacheInBackground() {
             try {
                 const res = await fetch(WEB_APP_URL + "?t=" + Date.now());
                 if (res.ok) {
                     allFetchedReplies = await res.json();
+                    // تحديث أقسام الردود بالمنشورات المعروضة حالياً بدون إعادة تحميل الصفحة
+                    updateAllRenderedReplies();
                 }
             } catch(e) {
                 allFetchedReplies = [];
             }
+        }
+
+        function updateAllRenderedReplies() {
+            allPostsData.forEach((post, index) => {
+                const container = document.getElementById(`replies-container-${index}`);
+                if (container) {
+                    const postReplies = allFetchedReplies.filter(r => parseInt(r.postIndex) === parseInt(index));
+                    let html = `<div style="font-family:'Tajawal'; font-weight:700; color:var(--primary); font-size:0.9rem; margin-bottom:10px;">💬 الردود والمكاتبات</div>`;
+                    if (postReplies.length > 0) {
+                        postReplies.forEach((rep, repIdx) => {
+                            html += `
+                                <div class="reply-item">
+                                    <div class="reply-author">👤 ${rep.author} <span style="font-size:0.75rem;color:var(--text-muted);font-weight:400;">(${rep.date})</span></div>
+                                    <div class="reply-text truncated" id="reply-text-${index}-${repIdx}">${rep.text}</div>
+                                    <button class="btn-reply-read-more" id="reply-read-btn-${index}-${repIdx}" onclick="toggleReplyReadMore(${index}, ${repIdx})" style="display:none;">عرض المزيد ▼</button>
+                                </div>`;
+                        });
+                    }
+                    container.innerHTML = html;
+                    setTimeout(() => {
+                        postReplies.forEach((rep, repIdx) => {
+                            const textEl = document.getElementById(`reply-text-${index}-${repIdx}`);
+                            const btnEl = document.getElementById(`reply-read-btn-${index}-${repIdx}`);
+                            if (textEl && btnEl) {
+                                if (textEl.scrollHeight > 80) {
+                                    btnEl.style.display = 'inline-block';
+                                } else {
+                                    textEl.classList.remove('truncated');
+                                    btnEl.style.display = 'none';
+                                }
+                            }
+                        });
+                    }, 50);
+                }
+            });
         }
 
         function switchTab(filter) {
@@ -1292,11 +1332,8 @@
             feed.innerHTML = html;
         }
 
-        async function renderPosts() {
-            if (allFetchedReplies.length === 0) {
-                await loadAllRepliesCache();
-            }
-
+        function renderPosts() {
+            // العرض فوري بدون أي انتظار لشبكة الردود لتفادي أي تعليق أو تهنيگ بالموبايل
             if (currentFilter === 'home' && currentPostId === null && currentFolderFilter === 'all') {
                 renderHomeTimeline();
                 return;
@@ -1546,41 +1583,7 @@
         }
 
         async function refreshRepliesForPost(postIndex) {
-            await loadAllRepliesCache();
-            const postReplies = allFetchedReplies.filter(r => parseInt(r.postIndex) === parseInt(postIndex));
-            
-            const container = document.getElementById(`replies-container-${postIndex}`);
-            if (!container) return;
-            
-            let html = '';
-            if (postReplies.length > 0) {
-                postReplies.forEach((rep, repIdx) => {
-                    html += `
-                        <div class="reply-item">
-                            <div class="reply-author">👤 ${rep.author} <span style="font-size:0.75rem;color:var(--text-muted);font-weight:400;">(${rep.date})</span></div>
-                            <div class="reply-text truncated" id="reply-text-${postIndex}-${repIdx}">${rep.text}</div>
-                            <button class="btn-reply-read-more" id="reply-read-btn-${postIndex}-${repIdx}" onclick="toggleReplyReadMore(${postIndex}, ${repIdx})" style="display:none;">عرض المزيد ▼</button>
-                        </div>`;
-                });
-            }
-            
-            const titleHtml = `<div style="font-family:'Tajawal'; font-weight:700; color:var(--primary); font-size:0.9rem; margin-bottom:10px;">💬 الردود والمكاتبات</div>`;
-            container.innerHTML = titleHtml + html;
-
-            setTimeout(() => {
-                postReplies.forEach((rep, repIdx) => {
-                    const textEl = document.getElementById(`reply-text-${postIndex}-${repIdx}`);
-                    const btnEl = document.getElementById(`reply-read-btn-${postIndex}-${repIdx}`);
-                    if (textEl && btnEl) {
-                        if (textEl.scrollHeight > 80) {
-                            btnEl.style.display = 'inline-block';
-                        } else {
-                            textEl.classList.remove('truncated');
-                            btnEl.style.display = 'none';
-                        }
-                    }
-                });
-            }, 50);
+            await loadAllRepliesCacheInBackground();
         }
 
         function toggleReplyForm(index) {
