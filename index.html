@@ -1577,26 +1577,28 @@
             } else {
                 box.style.display = 'block';
                 if (!replyEditors[index]) {
-                    replyEditors[index] = new Quill(`#reply-editor-${index}`, {
-                        theme: 'snow',
-                        placeholder: 'اكتب مكتوبك هنا ونسقه براحتك...',
-                        modules: {
-                            toolbar: [
-                                ['bold', 'italic', 'underline'],
-                                [{ 'color': [] }],
-                                [{ 'align': [] }],
-                                ['clean']
-                            ]
-                        }
-                    });
+                    setTimeout(() => {
+                        replyEditors[index] = new Quill(`#reply-editor-${index}`, {
+                            theme: 'snow',
+                            placeholder: 'اكتب مكتوبك هنا ونسقه براحتك...',
+                            modules: {
+                                toolbar: [
+                                    ['bold', 'italic', 'underline'],
+                                    [{ 'color': [] }],
+                                    [{ 'align': [] }],
+                                    ['clean']
+                                ]
+                            }
+                        });
+                    }, 50);
                 }
             }
         }
 
         async function submitPublicReply(index) {
             const author = document.getElementById(`reply-author-${index}`).value.trim();
-            const textHTML = replyEditors[index].root.innerHTML;
-            const textPlain = replyEditors[index].getText().trim();
+            const textHTML = replyEditors[index] ? replyEditors[index].root.innerHTML : '';
+            const textPlain = replyEditors[index] ? replyEditors[index].getText().trim() : '';
 
             if(!author || textPlain.length === 0) {
                 alert("حبيبي، يرجى كتابة الاسم والمحتوى!");
@@ -1622,7 +1624,7 @@
                 });
                 
                 alert("تم إرسال مكتوبك بنجاح!");
-                replyEditors[index].root.innerHTML = '';
+                if(replyEditors[index]) replyEditors[index].root.innerHTML = '';
                 document.getElementById(`reply-author-${index}`).value = '';
                 toggleReplyForm(index);
                 refreshRepliesForPost(index);
