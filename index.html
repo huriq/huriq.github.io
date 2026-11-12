@@ -68,27 +68,40 @@
             font-size: 0.9rem;
             color: var(--primary);
             backdrop-filter: blur(10px);
+        }
+
+        /* بار أدوات التصفح والبحث الحديث أسفل التبويبات */
+        .content-tools-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--surface-glass);
+            border: 1px solid var(--border);
+            padding: 12px 20px;
+            border-radius: 14px;
+            margin-bottom: 25px;
+            backdrop-filter: blur(10px);
             position: relative;
         }
 
-        .search-toggle-btn {
+        .search-toggle-btn, .refresh-btn {
             background: rgba(0, 210, 255, 0.1);
             border: 1px solid var(--border);
             color: var(--primary);
-            padding: 6px 14px;
+            padding: 8px 16px;
             border-radius: 10px;
             cursor: pointer;
             font-family: 'Tajawal', sans-serif;
             font-weight: 700;
-            font-size: 0.85rem;
+            font-size: 0.9rem;
             display: inline-flex;
             align-items: center;
-            gap: 6px;
+            gap: 8px;
             transition: all 0.3s ease;
             box-shadow: none;
             width: auto;
         }
-        .search-toggle-btn:hover {
+        .search-toggle-btn:hover, .refresh-btn:hover {
             background: var(--primary);
             color: #070b19;
             box-shadow: 0 0 15px rgba(0, 210, 255, 0.4);
@@ -98,7 +111,7 @@
         /* حاوية البحث المنسدلة الفخمة */
         .search-dropdown-container {
             position: absolute;
-            top: 60px;
+            top: 70px;
             left: 20px;
             right: 20px;
             background: rgba(15, 23, 42, 0.95);
@@ -357,7 +370,7 @@
             display: flex;
             justify-content: center;
             gap: 10px;
-            margin-bottom: 25px;
+            margin-bottom: 20px;
             flex-wrap: wrap;
         }
 
@@ -934,17 +947,6 @@
             <div class="header-top-bar">
                 <span id="live-date">📅 جاري التحميل...</span>
                 <span id="live-clock" style="font-weight: 700; letter-spacing: 1px;">⏰ 00:00:00 AM</span>
-                <button class="search-toggle-btn" onclick="toggleSearchBox()">
-                    <span>🔍</span> بحث عام
-                </button>
-                
-                <!-- حاوية البحث المنبثقة الفخمة -->
-                <div class="search-dropdown-container" id="searchDropdown">
-                    <input type="text" id="globalSearchInput" class="search-input-box" placeholder="ابحث عن أي كلمة أو جملة في المنصة..." oninput="executeGlobalSearch()">
-                    <div class="search-results-list" id="searchResultsList">
-                        <p style="color: var(--text-muted); text-align: center; font-size: 0.85rem; padding: 10px;">اكتب شيئاً للبحث في أرشيف المنصة...</p>
-                    </div>
-                </div>
             </div>
             <div class="brand-logo" onclick="resetToHome()">HUR</div>
             <div class="brand-subtitle">DIGITAL PLATFORM & ARCHIVE</div>
@@ -1046,6 +1048,24 @@
                 <button id="tab-archives" class="tab-btn" onclick="switchTab('archives')">📁 المحفوظات</button>
             </div>
 
+            <!-- بار الأدوات الحديث (بحث + تحديث) -->
+            <div class="content-tools-bar">
+                <button class="search-toggle-btn" onclick="toggleSearchBox()">
+                    <span>🔍</span> بحث
+                </button>
+                <button class="refresh-btn" onclick="refreshPlatformContent()">
+                    <span>🔄</span> تحديث الصفحة
+                </button>
+                
+                <!-- حاوية البحث المنبثقة الفخمة -->
+                <div class="search-dropdown-container" id="searchDropdown">
+                    <input type="text" id="globalSearchInput" class="search-input-box" placeholder="ابحث عن أي كلمة أو جملة في المنشورات أو الردود..." oninput="executeGlobalSearch()">
+                    <div class="search-results-list" id="searchResultsList">
+                        <p style="color: var(--text-muted); text-align: center; font-size: 0.85rem; padding: 10px;">اكتب شيئاً للبحث في أرشيف المنصة والردود...</p>
+                    </div>
+                </div>
+            </div>
+
             <div class="back-home-bar" id="back-bar">
                 <button class="btn-3d-back" onclick="resetToHome()">
                     <span>↩ العودة للرئيسية</span>
@@ -1060,7 +1080,7 @@
 
         <footer>
             <div style="margin-bottom: 8px;">© Designed by HUR</div>
-            <div style="font-size: 0.75rem; color: var(--text-muted); opacity: 0.6; letter-spacing: 0.5px;">v1.5.1</div>
+            <div style="font-size: 0.75rem; color: var(--text-muted); opacity: 0.6; letter-spacing: 0.5px;">v1.6.1</div>
         </footer>
     </div>
 
@@ -1082,7 +1102,7 @@
 
         async function hashString(str) {
             if (!window.crypto || !window.crypto.subtle) {
-                throw new Error("عيني حمودي، تشفير SHA-256 ما يشتغل على ملف محلي (file://). لازم ترفعه لـ GitHub أو تستخدم Localhost حتى يشتغل نظام الحماية!");
+                throw new Error("عيني ، تشفير SHA-256 ما يشتغل على ملف محلي (file://). لازم ترفعه لـ GitHub أو تستخدم Localhost حتى يشتغل نظام الحماية!");
             }
             const encoder = new TextEncoder();
             const data = encoder.encode(str.trim());
@@ -1284,16 +1304,25 @@
             }
         });
 
+        // دالة تحديث المنصة
+        async function refreshPlatformContent() {
+            alert("جاري تحديث المحتوى وجلب أحدث المنشورات والردود... 🔄✨");
+            await loadPosts();
+        }
+
+        // محرك البحث الشامل الذكي (يشمل المنشورات والردود والمكاتبات)
         function executeGlobalSearch() {
             const query = document.getElementById('globalSearchInput').value.trim().toLowerCase();
             const listContainer = document.getElementById('searchResultsList');
             
             if (!query) {
-                listContainer.innerHTML = `<p style="color: var(--text-muted); text-align: center; font-size: 0.85rem; padding: 10px;">اكتب شيئاً للبحث في أرشيف المنصة...</p>`;
+                listContainer.innerHTML = `<p style="color: var(--text-muted); text-align: center; font-size: 0.85rem; padding: 10px;">اكتب شيئاً للبحث في أرشيف المنصة والردود...</p>`;
                 return;
             }
 
-            const matchedPosts = [];
+            const searchResults = [];
+
+            // 1. البحث في المنشورات
             allPostsData.forEach((post, idx) => {
                 if (!isPostPublished(post)) return;
                 
@@ -1302,27 +1331,62 @@
                 const plainText = (tempDiv.textContent || tempDiv.innerText || '').toLowerCase();
 
                 if (plainText.includes(query) || (post.folder && post.folder.toLowerCase().includes(query))) {
-                    matchedPosts.push({ post, idx, plainText });
+                    searchResults.push({
+                        type: 'post',
+                        idx: idx,
+                        post: post,
+                        snippet: plainText.substring(0, 75) + '...'
+                    });
                 }
             });
 
-            if (matchedPosts.length === 0) {
-                listContainer.innerHTML = `<p style="color: var(--text-muted); text-align: center; font-size: 0.85rem; padding: 10px;">لم يتم العثور على نتائج تطابق بحثك.</p>`;
+            // 2. البحث في الردود والمكاتبات
+            Object.keys(repliesMap).forEach(postIdxStr => {
+                const pIdx = parseInt(postIdxStr);
+                const postReplies = repliesMap[pIdx] || [];
+                const post = allPostsData[pIdx];
+
+                if (post && isPostPublished(post)) {
+                    postReplies.forEach(rep => {
+                        const tempRepDiv = document.createElement('div');
+                        tempRepDiv.innerHTML = rep.text || '';
+                        const repText = (tempRepDiv.textContent || tempRepDiv.innerText || '').toLowerCase();
+                        const authorLower = (rep.author || '').toLowerCase();
+
+                        if (repText.includes(query) || authorLower.includes(query)) {
+                            // تجنب تكرار إدراج نفس المنشور إذا وجدنا أكثر من رد مطابق
+                            const alreadyAdded = searchResults.some(r => r.type === 'post' && r.idx === pIdx);
+                            if (!alreadyAdded) {
+                                searchResults.push({
+                                    type: 'reply',
+                                    idx: pIdx,
+                                    post: post,
+                                    replyAuthor: rep.author,
+                                    snippet: `رد من (${rep.author}): ${repText.substring(0, 60)}...`
+                                });
+                            }
+                        }
+                    });
+                }
+            });
+
+            if (searchResults.length === 0) {
+                listContainer.innerHTML = `<p style="color: var(--text-muted); text-align: center; font-size: 0.85rem; padding: 10px;">لم يتم العثور على نتائج تطابق بحثك في المنشورات أو الردود.</p>`;
                 return;
             }
 
             let html = '';
-            matchedPosts.forEach(item => {
+            searchResults.forEach(item => {
                 const tabName = getTabName(item.post.type || 'home');
                 const folderStr = item.post.folder ? ` ◂ ${item.post.folder}` : '';
                 const tabSafe = item.post.type || 'home';
                 const folderSafe = item.post.folder || 'all';
-                const snippet = item.plainText.substring(0, 70) + '...';
+                const badgeLabel = item.type === 'reply' ? '💬 [نتيجة في الردود] ' : '📄 ';
 
                 html += `
-                    <div class="search-result-item" onclick="goToSearchResult('${tabSafe}', '${folderSafe}', ${item.idx})">
-                        <div class="search-result-breadcrumb">${tabName}${folderStr}</div>
-                        <div class="search-result-snippet">${toArabicNumbers(snippet)}</div>
+                    <div class="search-result-item" onclick="goToSearchResult('${tabSafe}', '${folderSafe}', ${item.idx}, ${item.type === 'reply'})">
+                        <div class="search-result-breadcrumb">${badgeLabel}${tabName}${folderStr}</div>
+                        <div class="search-result-snippet">${toArabicNumbers(item.snippet)}</div>
                     </div>
                 `;
             });
@@ -1330,10 +1394,16 @@
             listContainer.innerHTML = html;
         }
 
-        function goToSearchResult(tab, folder, id) {
+        function goToSearchResult(tab, folder, id, isReplyMatch) {
             document.getElementById('searchDropdown').style.display = 'none';
             document.getElementById('globalSearchInput').value = '';
             goToPost(tab, folder, id);
+
+            if (isReplyMatch) {
+                setTimeout(() => {
+                    toggleRepliesSection(id);
+                }, 400);
+            }
         }
 
         function initAdminEditor() {
@@ -1594,17 +1664,14 @@
         // دالة الحصول على الوقت الحالي الدقيق بتوقيت بغداد لتصحيح الجدولة
         function getBaghdadCurrentTime() {
             const now = new Date();
-            // تحويل الوقت الحالي إلى وقت بغداد بمعيارية ISO/UTC+3
             const baghdadTimeStr = now.toLocaleString("en-US", { timeZone: "Asia/Baghdad" });
             return new Date(baghdadTimeStr).getTime();
         }
 
         function isPostPublished(post) {
             if (!post.scheduledTime) return true;
-            // معالجة وقت الجدولة واعتماد توقيت بغداد بدقة متناهية للمقارنة
             const scheduledLocalStr = post.scheduledTime.replace('T', ' ');
             const scheduledTimeObj = new Date(scheduledLocalStr);
-            // نأخذ التوقيت الخاص ببغداد
             const scheduledBaghdadStr = scheduledTimeObj.toLocaleString("en-US", { timeZone: "Asia/Baghdad" });
             const scheduledTime = new Date(scheduledBaghdadStr).getTime();
             
