@@ -70,7 +70,7 @@
             backdrop-filter: blur(10px);
         }
 
-        /* بار أدوات التصفح والبحث الحديث أسفل التبويبات */
+        /* بار أدوات التصفح والبحث الحديث أسفل التبويبات مع وضع Relative وحماية Z-Index للبحث */
         .content-tools-bar {
             display: flex;
             justify-content: space-between;
@@ -82,9 +82,10 @@
             margin-bottom: 25px;
             backdrop-filter: blur(10px);
             position: relative;
+            z-index: 100;
         }
 
-        .search-toggle-btn, .refresh-btn {
+        .search-toggle-btn {
             background: rgba(0, 210, 255, 0.1);
             border: 1px solid var(--border);
             color: var(--primary);
@@ -101,26 +102,55 @@
             box-shadow: none;
             width: auto;
         }
-        .search-toggle-btn:hover, .refresh-btn:hover {
+        .search-toggle-btn:hover {
             background: var(--primary);
             color: #070b19;
             box-shadow: 0 0 15px rgba(0, 210, 255, 0.4);
             transform: translateY(-1px);
         }
 
-        /* حاوية البحث المنسدلة الفخمة */
+        /* زر التحديث الفخم (أيقونة فقط بدون نص) */
+        .refresh-btn {
+            background: rgba(0, 210, 255, 0.1);
+            border: 1px solid var(--border);
+            color: var(--primary);
+            width: 42px;
+            height: 42px;
+            border-radius: 10px;
+            cursor: pointer;
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+            transition: all 0.3s ease;
+            box-shadow: none;
+        }
+        .refresh-btn span {
+            font-size: 1.15rem;
+            transition: transform 0.4s ease;
+        }
+        .refresh-btn:hover {
+            background: var(--primary);
+            color: #070b19;
+            box-shadow: 0 0 15px rgba(0, 210, 255, 0.4);
+            transform: translateY(-1px);
+        }
+        .refresh-btn:hover span {
+            transform: rotate(180deg);
+        }
+
+        /* حاوية البحث المنسدلة المطلقة (Absolute) لضمان عدم التداخل مع المنشورات وتحتفظ بـ Z-Index أعلى بكثير */
         .search-dropdown-container {
             position: absolute;
             top: 70px;
             left: 20px;
             right: 20px;
-            background: rgba(15, 23, 42, 0.95);
+            background: rgba(15, 23, 42, 0.98);
             backdrop-filter: blur(16px);
             border: 1px solid var(--primary);
             border-radius: 14px;
             padding: 15px;
-            box-shadow: 0 15px 35px rgba(0,0,0,0.6);
-            z-index: 9999;
+            box-shadow: 0 20px 45px rgba(0,0,0,0.8);
+            z-index: 99999;
             display: none;
             animation: fadeIn 0.3s ease-in-out;
             text-align: right;
@@ -1048,16 +1078,16 @@
                 <button id="tab-archives" class="tab-btn" onclick="switchTab('archives')">📁 المحفوظات</button>
             </div>
 
-            <!-- بار الأدوات الحديث (بحث + تحديث) -->
+            <!-- بار الأدوات الحديث (بحث + تحديث) مع تعديل زر التحديث ليصبح أيقونة فقط -->
             <div class="content-tools-bar">
                 <button class="search-toggle-btn" onclick="toggleSearchBox()">
                     <span>🔍</span> بحث
                 </button>
-                <button class="refresh-btn" onclick="refreshPlatformContent()">
-                    <span>🔄</span> تحديث الصفحة
+                <button class="refresh-btn" onclick="refreshPlatformContent()" title="تحديث المحتوى">
+                    <span>🔄</span>
                 </button>
                 
-                <!-- حاوية البحث المنبثقة الفخمة -->
+                <!-- حاوية البحث المنبثقة الفخمة (Absolute) -->
                 <div class="search-dropdown-container" id="searchDropdown">
                     <input type="text" id="globalSearchInput" class="search-input-box" placeholder="ابحث عن أي كلمة أو جملة في المنشورات أو الردود..." oninput="executeGlobalSearch()">
                     <div class="search-results-list" id="searchResultsList">
@@ -1080,7 +1110,7 @@
 
         <footer>
             <div style="margin-bottom: 8px;">© Designed by HUR</div>
-            <div style="font-size: 0.75rem; color: var(--text-muted); opacity: 0.6; letter-spacing: 0.5px;">v1.6.1</div>
+            <div style="font-size: 0.75rem; color: var(--text-muted); opacity: 0.6; letter-spacing: 0.5px;">v1.7.2</div>
         </footer>
     </div>
 
@@ -1304,9 +1334,8 @@
             }
         });
 
-        // دالة تحديث المنصة
+        // دالة تحديث المنصة (تبقى داخل الجلسة الحالية وبدون الرجوع لشاشة الدخول)
         async function refreshPlatformContent() {
-            alert("جاري تحديث المحتوى وجلب أحدث المنشورات والردود... 🔄✨");
             await loadPosts();
         }
 
@@ -1354,7 +1383,6 @@
                         const authorLower = (rep.author || '').toLowerCase();
 
                         if (repText.includes(query) || authorLower.includes(query)) {
-                            // تجنب تكرار إدراج نفس المنشور إذا وجدنا أكثر من رد مطابق
                             const alreadyAdded = searchResults.some(r => r.type === 'post' && r.idx === pIdx);
                             if (!alreadyAdded) {
                                 searchResults.push({
@@ -1661,7 +1689,6 @@
             });
         }
 
-        // دالة الحصول على الوقت الحالي الدقيق بتوقيت بغداد لتصحيح الجدولة
         function getBaghdadCurrentTime() {
             const now = new Date();
             const baghdadTimeStr = now.toLocaleString("en-US", { timeZone: "Asia/Baghdad" });
@@ -2385,7 +2412,6 @@
             }
         }
 
-        // نظام الفحص التلقائي بالثانية للمنشورات المجدولة بتوقيت بغداد
         setInterval(() => {
             if (allPostsData.length > 0 && !isAdminMode) {
                 let hasChanges = false;
