@@ -279,5 +279,14 @@
     "scheduledTime": null,
     "date": "13/11/2026 01:18:49 AM",
     "replies": []
+  },
+  {
+    "type": "updates",
+    "folder": "",
+    "content": "<p class=\"ql-direction-rtl\">تحديث v1.1.1</p><p><br></p><p class=\"ql-direction-rtl\">إضافة وتحديث:</p><p class=\"ql-direction-rtl\">تمت إضافة آيقونة البحث داخل المنصة للبحث عن أي كلمة أو جملة موجودة.. وتم تصميم حقل البحث بشكل أنيق ومتوافق مع الثيم العام وجعل نتائج البحث تظهر بقائمة منسدلة.. وعند النقر على أي نتيجة يتم الانتقال إلها مباشرةً بكل سلاسة.</p><p><br></p>",
+    "image": "",
+    "scheduledTime": null,
+    "date": "13/11/2026 01:25:23 AM",
+    "replies": []
   }
 ]
