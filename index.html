@@ -955,7 +955,8 @@
         </div>
 
         <footer>
-            © Designed by HUR
+            <div>© Designed by HUR</div>
+            <div style="font-size: 0.75rem; color: var(--text-muted); opacity: 0.6; margin-top: 55px; letter-spacing: 0.5px;">v1.4.1</div>
         </footer>
     </div>
 
@@ -977,7 +978,7 @@
 
         async function hashString(str) {
             if (!window.crypto || !window.crypto.subtle) {
-                throw new Error("عيني ، تشفير SHA-256 ما يشتغل على ملف محلي (file://). لازم ترفعه لـ GitHub أو تستخدم Localhost حتى يشتغل نظام الحماية!");
+                throw new Error("عيني حمودي، تشفير SHA-256 ما يشتغل على ملف محلي (file://). لازم ترفعه لـ GitHub أو تستخدم Localhost حتى يشتغل نظام الحماية!");
             }
             const encoder = new TextEncoder();
             const data = encoder.encode(str.trim());
@@ -1128,6 +1129,16 @@
             }
         }
 
+        // دالة مساعدة لتوحيد الأرقام إلى الأرقام العربية القياسية 123
+        function toArabicNumbers(str) {
+            if (str === null || str === undefined) return '';
+            const arabicNumbers = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
+            return String(str).replace(/[0-9]/g, function(w) {
+                // نعيدها للأرقام العربية القياسية 123 حسب رغبة حمودي
+                return w; 
+            });
+        }
+
         function updateClockAndDate() {
             const now = new Date();
             let hours = now.getHours();
@@ -1135,8 +1146,17 @@
             const seconds = String(now.getSeconds()).padStart(2, '0');
             const ampm = hours >= 12 ? 'PM' : 'AM';
             hours = hours % 12 || 12;
+            
             document.getElementById('live-clock').innerText = `⏰ ${String(hours).padStart(2,'0')}:${minutes}:${seconds} ${ampm}`;
-            document.getElementById('live-date').innerText = `📅 ${now.toLocaleDateString('ar-IQ', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}`;
+            
+            // الصيغة المطلوبة بالتاريخ العلوي: يوم الأسبوع، DD/MM/YYYY بأرقام عربية صافية بدون أسماء شهور
+            const options = { weekday: 'long' };
+            const weekday = now.toLocaleDateString('ar-IQ', options);
+            const day = String(now.getDate()).padStart(2, '0');
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const year = now.getFullYear();
+            
+            document.getElementById('live-date').innerText = `📅 ${weekday}، ${day}/${month}/${year}`;
         }
         setInterval(updateClockAndDate, 1000);
         updateClockAndDate();
@@ -1210,7 +1230,7 @@
                         setTimeout(() => heart.remove(), 1200);
                     }
 
-                    // إظهار شاشة الترحيب المؤقتة (تم زيادة المدة لتكون كافية ومريحة للقراءة)
+                    // إظهار شاشة الترحيب المؤقتة
                     setTimeout(() => {
                         const overlay = document.createElement('div');
                         overlay.className = 'welcome-overlay';
@@ -1318,7 +1338,7 @@
 
                             html += `
                                 <div class="reply-item">
-                                    <div class="reply-author">👤 ${rep.author} <span style="font-size:0.75rem;color:var(--text-muted);font-weight:400;">(${rep.date})</span></div>
+                                    <div class="reply-author">👤 ${rep.author} <span style="font-size:0.75rem;color:var(--text-muted);font-weight:400;">(${toArabicNumbers(rep.date)})</span></div>
                                     <div class="reply-text ${isRepTrunc ? 'truncated' : ''}" id="reply-text-${index}-${repIdx}">${rep.text}</div>
                                     <button class="btn-reply-read-more" id="reply-read-btn-${index}-${repIdx}" onclick="toggleReplyReadMore(${index}, ${repIdx})" ${isRepTrunc ? '' : 'style="display:none;"'}>عرض المزيد ▼</button>
                                 </div>`;
@@ -1400,6 +1420,7 @@
 
         function isPostPublished(post) {
             if (!post.scheduledTime) return true;
+            // معالجة دقيقة لوقت الجدولة بدون فرق توقيت (Local time match)
             const scheduledDate = new Date(post.scheduledTime).getTime();
             const now = new Date().getTime();
             return now >= scheduledDate;
@@ -1451,7 +1472,7 @@
                 html += `
                 <div class="timeline-card" onclick="goToPost('${tabSafe}', '${folderSafe}', ${post.realIndex})">
                     <div class="timeline-breadcrumb">
-                        <span>${tabName}</span>${folderStr} ◂ <span>🕒 ${post.date}</span>
+                        <span>${tabName}</span>${folderStr} ◂ <span>🕒 ${toArabicNumbers(post.date)}</span>
                     </div>
                     <div class="timeline-preview">
                         <span class="type-icon">${typeIcon}</span>
@@ -1509,7 +1530,7 @@
                                     <div class="visual-card" onclick="goToPost('visuals', 'all', ${post.realIndex})">
                                         <img src="${imgUrl}" alt="Visual Image" loading="lazy">
                                         <div class="visual-card-footer">
-                                            <span>🕒 ${post.date}</span>
+                                            <span>🕒 ${toArabicNumbers(post.date)}</span>
                                             <span>🔍 عرض</span>
                                         </div>
                                     </div>
@@ -1539,7 +1560,7 @@
                             <div>
                                 <span class="post-tag">${typeLabel}${folderTag}</span>
                             </div>
-                            <span class="post-date">🕒 ${post.date}</span>
+                            <span class="post-date">🕒 ${toArabicNumbers(post.date)}</span>
                         </div>`;
                 
                 if(post.image) {
@@ -1633,7 +1654,6 @@
                     </div>
                 `;
 
-                // قسم التحديثات لا يحتوي على ردود أو مكاتبات
                 if (!isUpdatesTab) {
                     const postReplies = repliesMap[post.realIndex] || [];
                     const repliesCount = postReplies.length;
@@ -1641,7 +1661,7 @@
                     html += `
                         <div class="replies-section">
                             <button class="btn-reply-toggle" id="replies-toggle-btn-${post.realIndex}" onclick="toggleRepliesSection(${post.realIndex})">
-                                💬 عرض الردود والمكاتبات <span id="replies-count-${post.realIndex}">(${repliesCount})</span>
+                                💬 عرض الردود والمكاتبات <span id="replies-count-${post.realIndex}">(${toArabicNumbers(repliesCount)})</span>
                             </button>
                             <div id="replies-box-${post.realIndex}" style="display: none; margin-top: 15px;">
                                 <div id="replies-list-container-${post.realIndex}"></div>
@@ -1670,7 +1690,7 @@
                 feed.innerHTML += `
                     <div style="text-align: center; margin: 30px 0;">
                         <button onclick="loadMorePosts()" style="background: linear-gradient(135deg, var(--primary), var(--secondary)); color: #070b19; padding: 14px 28px; border-radius: 16px; font-weight: 700; font-family: 'Tajawal', sans-serif; font-size: 1.05rem; box-shadow: 0 5px 20px rgba(0, 210, 255, 0.3); cursor: pointer; width: auto; display: inline-flex; align-items: center; gap: 10px;">
-                            <span>📥</span> إظهار المزيد من المنشورات (${reversedFiltered.length - visiblePostsCount} متبقي)
+                            <span>📥</span> إظهار المزيد من المنشورات (${toArabicNumbers(reversedFiltered.length - visiblePostsCount)} متبقي)
                         </button>
                     </div>
                 `;
@@ -1748,12 +1768,15 @@
             btn.innerText = "جاري إرسال المكتوب...";
             btn.disabled = true;
 
+            const now = new Date();
+            const formattedDate = `${String(now.getDate()).padStart(2, '0')}/${String(now.getMonth() + 1).padStart(2, '0')}/${now.getFullYear()} ${now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true })}`;
+
             try {
                 const payload = {
                     author: author,
                     postIndex: index,
                     message: textHTML,
-                    date: new Date().toLocaleString('ar-IQ')
+                    date: formattedDate
                 };
 
                 await fetch(WEB_APP_URL, {
@@ -1905,7 +1928,7 @@
                 if (item.scheduledTime) {
                     const isScheduledActive = new Date().getTime() < new Date(item.scheduledTime).getTime();
                     if (isScheduledActive) {
-                        scheduleBadge = ` <span style="color: var(--warning); font-size: 0.75rem;">(⏳ مجدول لـ: ${item.scheduledTime.replace('T', ' ')})</span>`;
+                        scheduleBadge = ` <span style="color: var(--warning); font-size: 0.75rem;">(⏳ مجدول لـ: ${toArabicNumbers(item.scheduledTime.replace('T', ' '))})</span>`;
                     } else {
                         scheduleBadge = ` <span style="color: var(--success); font-size: 0.75rem;">(✅ منشور مجدول)</span>`;
                     }
@@ -1915,7 +1938,7 @@
                     <div class="manage-item">
                         <div class="manage-info">
                             <div class="manage-text"><strong>[${tLabel}${fLabel}]</strong>: ${snippet} ${scheduleBadge}</div>
-                            <div style="font-size:0.75rem; color:var(--text-muted);">${item.date}</div>
+                            <div style="font-size:0.75rem; color:var(--text-muted);">${toArabicNumbers(item.date)}</div>
                         </div>
                         <div class="manage-actions">
                             <button class="btn-edit" onclick="prepareEdit(${item.realIndex})">تعديل</button>
@@ -1985,6 +2008,9 @@
 
             const apiUrl = `https://api.github.com/repos/${GITHUB_USER}/${REPO_NAME}/contents/posts.json`;
 
+            const now = new Date();
+            const formattedDate = `${String(now.getDate()).padStart(2, '0')}/${String(now.getMonth() + 1).padStart(2, '0')}/${now.getFullYear()} ${now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true })}`;
+
             try {
                 const getRes = await fetch(apiUrl, { headers: { 'Authorization': `token ${token}` } });
                 let sha = null;
@@ -2017,7 +2043,7 @@
                         content: isContentEmpty ? "" : contentHTML,
                         image: image,
                         scheduledTime: scheduledTime || null,
-                        date: new Date().toLocaleString('ar-IQ'),
+                        date: formattedDate,
                         replies: []
                     });
                     commitMsg = `Add new ${type} post (scheduled)`;
