@@ -955,8 +955,8 @@
         </div>
 
         <footer>
-            <div>© Designed by HUR</div>
-            <div style="font-size: 0.75rem; color: var(--text-muted); opacity: 0.6; margin-top: 55px; letter-spacing: 0.5px;">v1.4.1</div>
+            <div style="margin-bottom: 8px;">© Designed by HUR</div>
+            <div style="font-size: 0.75rem; color: var(--text-muted); opacity: 0.6; letter-spacing: 0.5px;">v1.4.1</div>
         </footer>
     </div>
 
@@ -1129,13 +1129,12 @@
             }
         }
 
-        // دالة مساعدة لتوحيد الأرقام إلى الأرقام العربية القياسية 123
+        // دالة تحويل الأرقام الهندية القديمة (١٢٣) إلى أرقام عربية قياسية (123)
         function toArabicNumbers(str) {
             if (str === null || str === undefined) return '';
-            const arabicNumbers = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
-            return String(str).replace(/[0-9]/g, function(w) {
-                // نعيدها للأرقام العربية القياسية 123 حسب رغبة حمودي
-                return w; 
+            const hindiMap = {'٠':'0', '١':'1', '٢':'2', '٣':'3', '٤':'4', '٥':'5', '٦':'6', '٧':'7', '٨':'8', '٩':'9'};
+            return String(str).replace(/[٠-٩]/g, function(d) {
+                return hindiMap[d] !== undefined ? hindiMap[d] : d;
             });
         }
 
@@ -1149,7 +1148,6 @@
             
             document.getElementById('live-clock').innerText = `⏰ ${String(hours).padStart(2,'0')}:${minutes}:${seconds} ${ampm}`;
             
-            // الصيغة المطلوبة بالتاريخ العلوي: يوم الأسبوع، DD/MM/YYYY بأرقام عربية صافية بدون أسماء شهور
             const options = { weekday: 'long' };
             const weekday = now.toLocaleDateString('ar-IQ', options);
             const day = String(now.getDate()).padStart(2, '0');
@@ -1217,7 +1215,6 @@
                     passInput.classList.remove('input-error-anim');
                     passInput.classList.add('input-success-glow');
 
-                    // تطاير قلوب سماوية لطيفة حول الحقل
                     const card = document.getElementById('login-screen');
                     for (let i = 0; i < 6; i++) {
                         const heart = document.createElement('div');
@@ -1230,7 +1227,6 @@
                         setTimeout(() => heart.remove(), 1200);
                     }
 
-                    // إظهار شاشة الترحيب المؤقتة
                     setTimeout(() => {
                         const overlay = document.createElement('div');
                         overlay.className = 'welcome-overlay';
@@ -1307,7 +1303,7 @@
                 const countBadge = document.getElementById(`replies-count-${index}`);
                 if (countBadge) {
                     const postReplies = repliesMap[index] || [];
-                    countBadge.innerText = `(${postReplies.length})`;
+                    countBadge.innerText = `(${toArabicNumbers(postReplies.length)})`;
                 }
             });
         }
@@ -1321,7 +1317,7 @@
 
             if (box.style.display === 'block') {
                 box.style.display = 'none';
-                btn.innerText = `💬 عرض الردود والمكاتبات (${postReplies.length})`;
+                btn.innerText = `💬 عرض الردود والمكاتبات (${toArabicNumbers(postReplies.length)})`;
             } else {
                 box.style.display = 'block';
                 btn.innerText = `🔽 إخفاء الردود`;
@@ -1418,12 +1414,25 @@
             });
         }
 
+        // دالة الحصول على الوقت الحالي الدقيق بتوقيت بغداد لتصحيح الجدولة
+        function getBaghdadCurrentTime() {
+            const now = new Date();
+            // تحويل الوقت الحالي إلى وقت بغداد بمعيارية ISO/UTC+3
+            const baghdadTimeStr = now.toLocaleString("en-US", { timeZone: "Asia/Baghdad" });
+            return new Date(baghdadTimeStr).getTime();
+        }
+
         function isPostPublished(post) {
             if (!post.scheduledTime) return true;
-            // معالجة دقيقة لوقت الجدولة بدون فرق توقيت (Local time match)
-            const scheduledDate = new Date(post.scheduledTime).getTime();
-            const now = new Date().getTime();
-            return now >= scheduledDate;
+            // معالجة وقت الجدولة واعتماد توقيت بغداد بدقة متناهية للمقارنة
+            const scheduledLocalStr = post.scheduledTime.replace('T', ' ');
+            const scheduledTimeObj = new Date(scheduledLocalStr);
+            // نأخذ التوقيت الخاص ببغداد
+            const scheduledBaghdadStr = scheduledTimeObj.toLocaleString("en-US", { timeZone: "Asia/Baghdad" });
+            const scheduledTime = new Date(scheduledBaghdadStr).getTime();
+            
+            const now = getBaghdadCurrentTime();
+            return now >= scheduledTime;
         }
 
         function renderHomeTimeline() {
@@ -1476,7 +1485,7 @@
                     </div>
                     <div class="timeline-preview">
                         <span class="type-icon">${typeIcon}</span>
-                        <span class="preview-text">${previewText}</span>
+                        <span class="preview-text">${toArabicNumbers(previewText)}</span>
                     </div>
                 </div>
                 `;
@@ -1622,7 +1631,7 @@
                                 html += `
                                     <div class="grid-more-wrapper" onclick="openImageModal('${imgUrl}', ${arrJson})">
                                         <img src="${imgUrl}" alt="Post Image">
-                                        <div class="grid-more-overlay">+${imageItems.length - 4} صور</div>
+                                        <div class="grid-more-overlay">+${toArabicNumbers(imageItems.length - 4)} صور</div>
                                     </div>
                                 `;
                             } else {
@@ -1926,7 +1935,11 @@
                 
                 let scheduleBadge = '';
                 if (item.scheduledTime) {
-                    const isScheduledActive = new Date().getTime() < new Date(item.scheduledTime).getTime();
+                    const scheduledLocalStr = item.scheduledTime.replace('T', ' ');
+                    const scheduledTimeObj = new Date(scheduledLocalStr);
+                    const scheduledBaghdadStr = scheduledTimeObj.toLocaleString("en-US", { timeZone: "Asia/Baghdad" });
+                    const isScheduledActive = getBaghdadCurrentTime() < new Date(scheduledBaghdadStr).getTime();
+                    
                     if (isScheduledActive) {
                         scheduleBadge = ` <span style="color: var(--warning); font-size: 0.75rem;">(⏳ مجدول لـ: ${toArabicNumbers(item.scheduledTime.replace('T', ' '))})</span>`;
                     } else {
@@ -1937,7 +1950,7 @@
                 listContainer.innerHTML += `
                     <div class="manage-item">
                         <div class="manage-info">
-                            <div class="manage-text"><strong>[${tLabel}${fLabel}]</strong>: ${snippet} ${scheduleBadge}</div>
+                            <div class="manage-text"><strong>[${tLabel}${fLabel}]</strong>: ${toArabicNumbers(snippet)} ${scheduleBadge}</div>
                             <div style="font-size:0.75rem; color:var(--text-muted);">${toArabicNumbers(item.date)}</div>
                         </div>
                         <div class="manage-actions">
@@ -2123,15 +2136,19 @@
             }
         }
 
-        // نظام الفحص التلقائي بالثانية للمنشورات المجدولة
+        // نظام الفحص التلقائي بالثانية للمنشورات المجدولة بتوقيت بغداد
         setInterval(() => {
             if (allPostsData.length > 0 && !isAdminMode) {
-                const now = new Date().getTime();
                 let hasChanges = false;
+                const nowBaghdad = getBaghdadCurrentTime();
                 allPostsData.forEach(p => {
                     if (p.scheduledTime) {
-                        const sTime = new Date(p.scheduledTime).getTime();
-                        if (now >= sTime && !p._wasRenderedActive) {
+                        const scheduledLocalStr = p.scheduledTime.replace('T', ' ');
+                        const scheduledTimeObj = new Date(scheduledLocalStr);
+                        const scheduledBaghdadStr = scheduledTimeObj.toLocaleString("en-US", { timeZone: "Asia/Baghdad" });
+                        const sTime = new Date(scheduledBaghdadStr).getTime();
+                        
+                        if (nowBaghdad >= sTime && !p._wasRenderedActive) {
                             p._wasRenderedActive = true;
                             hasChanges = true;
                         }
