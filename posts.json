@@ -333,5 +333,14 @@
     "scheduledTime": "2026-11-13T03:13",
     "date": "13/11/2026 03:13:00 AM",
     "replies": []
+  },
+  {
+    "type": "updates",
+    "folder": "",
+    "content": "<p class=\"ql-direction-rtl\">تحديث v1.2.6</p><p class=\"ql-direction-rtl\">إصلاحات وتحسينات:</p><p class=\"ql-direction-rtl\">خفيت الردود إلّي بأسفل البوستات وضفتلها زر خاص بيها لعرضها.. حتى أرفع مستوى السرعة وأخلي التنقل بين التبويبات والفولدرات إلّي بداخلها يكون أسلس وأسرع بعد!</p><p class=\"ql-direction-rtl\"><br></p><p class=\"ql-direction-rtl\">وهسة صار فتح التبويبات والتنقل بينها سريع وسلس بمتصفحات الفون، وانحلت المشكلة كُلّها.</p><p><br></p>",
+    "image": "",
+    "scheduledTime": "2026-11-13T03:33",
+    "date": "13/11/2026 03:33:00 AM",
+    "replies": []
   }
 ]
