@@ -1778,7 +1778,7 @@
             btn.disabled = true;
 
             const now = new Date();
-            const formattedDate = `${String(now.getDate()).padStart(2, '0')}/${String(now.getMonth() + 1).padStart(2, '0')}/${now.getFullYear()} ${now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true })}`;
+            const formattedDate = `${String(now.getDate()).padStart(2, '0')}/${String(now.getMonth() + 1).padStart(2, '0')}/${now.getFullYear()} ${now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true })}`;
 
             try {
                 const payload = {
@@ -2022,7 +2022,14 @@
             const apiUrl = `https://api.github.com/repos/${GITHUB_USER}/${REPO_NAME}/contents/posts.json`;
 
             const now = new Date();
-            const formattedDate = `${String(now.getDate()).padStart(2, '0')}/${String(now.getMonth() + 1).padStart(2, '0')}/${now.getFullYear()} ${now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true })}`;
+            
+            // تحديد وقت وثاريخ النشر الحقيقي: إذا كان هناك وقت مجدول، نأخذ وقت الجدولة ونضبطه مع الثواني، وإلا فوقت الحفظ الفوري
+            let targetDateObj = now;
+            if (scheduledTime) {
+                targetDateObj = new Date(scheduledTime.replace('T', ' '));
+            }
+            
+            const formattedDate = `${String(targetDateObj.getDate()).padStart(2, '0')}/${String(targetDateObj.getMonth() + 1).padStart(2, '0')}/${targetDateObj.getFullYear()} ${targetDateObj.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true })}`;
 
             try {
                 const getRes = await fetch(apiUrl, { headers: { 'Authorization': `token ${token}` } });
@@ -2045,7 +2052,7 @@
                         content: isContentEmpty ? "" : contentHTML,
                         image: image,
                         scheduledTime: scheduledTime || null,
-                        date: existing[editIndex].date,
+                        date: formattedDate, // تحديث التاريخ البصري ليعكس وقت الجدولة الحقيقي أو التعديل
                         replies: existing[editIndex].replies || []
                     };
                     commitMsg = `Update post index ${editIndex}`;
@@ -2056,7 +2063,7 @@
                         content: isContentEmpty ? "" : contentHTML,
                         image: image,
                         scheduledTime: scheduledTime || null,
-                        date: formattedDate,
+                        date: formattedDate, // ضبط التاريخ البصري ليكون وقت الجدولة أو وقت النشر الفوري بالثواني
                         replies: []
                     });
                     commitMsg = `Add new ${type} post (scheduled)`;
