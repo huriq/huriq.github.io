@@ -270,5 +270,14 @@
     "scheduledTime": "2026-11-12T21:49",
     "date": "12/11/2026 09:47 PM",
     "replies": []
+  },
+  {
+    "type": "updates",
+    "folder": "",
+    "content": "<p class=\"ql-direction-rtl\">تحديث v1.0.1</p><p class=\"ql-direction-rtl\"><br></p><p class=\"ql-direction-rtl\">تحسينات أمنية:</p><p class=\"ql-direction-rtl\">تم رفع مستوى الحماية واستخدام دوال التشفير بأكثر من مرحلة.. واستبدلت الذكر الصريح للباس كودز بترميز الهاش محليًا.</p><p><br></p>",
+    "image": "",
+    "scheduledTime": null,
+    "date": "13/11/2026 01:18:49 AM",
+    "replies": []
   }
 ]
