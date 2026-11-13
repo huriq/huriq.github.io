@@ -417,7 +417,7 @@ async function verifyPass() {
                         document.getElementById('content-area').style.display = 'block';
                         loadPosts();
                     }
-                }, 4000);
+                }, 2500);
             }, 600);
 
         } else {
