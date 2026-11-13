@@ -360,5 +360,14 @@
     "scheduledTime": "2026-11-13T21:39",
     "date": "13/11/2026 09:39:00 PM",
     "replies": []
+  },
+  {
+    "type": "updates",
+    "folder": "",
+    "content": "<p class=\"ql-direction-rtl\">تحديث v1.3.9</p><p class=\"ql-direction-rtl\"><br></p><p class=\"ql-direction-rtl\">إضافات وتحسينات:</p><p class=\"ql-direction-rtl\">تمت إضافة أزرار جانبية للتنقل أو الذهاب مباشرة لنهاية وبداية الصفحة بسرعة وسلاسة.</p><p class=\"ql-direction-rtl\"><br></p><p class=\"ql-direction-rtl\">تم تغيير نوع الخط الخاص برسالة الخطأ عند كتابة الباس كود بشكل خاطئ؛ لأن السابق چان خط عادي ومدري شلونه.</p><p><br></p>",
+    "image": "",
+    "scheduledTime": null,
+    "date": "14/11/2026 12:50:00 AM",
+    "replies": []
   }
 ]
