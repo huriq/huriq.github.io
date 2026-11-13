@@ -354,7 +354,48 @@
         }
         button:disabled { background: #334155; color: #64748b; cursor: not-allowed; box-shadow: none; }
 
-        .error-text { color: var(--error); margin-top: 10px; font-size: 0.9rem; display: none; }
+        /* تعديل خط رسالة الخطأ ليطابق خط المنشورات الفخم */
+        .error-text { 
+            color: var(--error); 
+            margin-top: 10px; 
+            font-size: 0.95rem; 
+            display: none; 
+            font-family: 'Noto Kufi Arabic', sans-serif; 
+            font-weight: 700;
+        }
+
+        /* أزرار التنقل السريع العائمة الفخمة (الصعود والنزول) */
+        .scroll-nav-container {
+            position: fixed;
+            bottom: 30px;
+            left: 30px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 9999;
+            display: none; /* يتم تفعيلها برمجياً إذا زاد عدد المنشورات عن 5 */
+        }
+        .scroll-nav-btn {
+            background: rgba(15, 23, 42, 0.9);
+            border: 1px solid var(--primary);
+            color: var(--primary);
+            width: 46px;
+            height: 46px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            box-shadow: 0 5px 20px rgba(0, 210, 255, 0.3);
+            transition: all 0.3s ease;
+            font-size: 1.1rem;
+        }
+        .scroll-nav-btn:hover {
+            background: var(--primary);
+            color: #070b19;
+            transform: scale(1.1);
+            box-shadow: 0 0 20px rgba(0, 210, 255, 0.6);
+        }
 
         .editor-container {
             margin-bottom: 20px;
@@ -965,6 +1006,12 @@
 </head>
 <body>
 
+    <!-- أزرار التنقل السريع العائمة (تظهر إذا زاد عدد المنشورات عن 5) -->
+    <div class="scroll-nav-container" id="scrollNavContainer">
+        <button class="scroll-nav-btn" onclick="scrollToTopPage()" title="الذهاب إلى بداية الصفحة">▲</button>
+        <button class="scroll-nav-btn" onclick="scrollToBottomPage()" title="الذهاب إلى نهاية الصفحة">▼</button>
+    </div>
+
     <div class="image-modal" id="imgModal">
         <span class="modal-close" onclick="closeImageModal()">&times;</span>
         <div class="modal-nav-btn modal-prev" onclick="slideModalImages(-1)">&#10095;</div>
@@ -1110,7 +1157,7 @@
 
         <footer>
             <div style="margin-bottom: 8px;">© Designed by HUR</div>
-            <div style="font-size: 0.75rem; color: var(--text-muted); opacity: 0.6; letter-spacing: 0.5px;">v1.7.2</div>
+            <div style="font-size: 0.75rem; color: var(--text-muted); opacity: 0.6; letter-spacing: 0.5px;">v1.2.8</div>
         </footer>
     </div>
 
@@ -1337,6 +1384,26 @@
         // دالة تحديث المنصة (تبقى داخل الجلسة الحالية وبدون الرجوع لشاشة الدخول)
         async function refreshPlatformContent() {
             await loadPosts();
+        }
+
+        // وظائف أزرار التنقل السريع (الصعود والنزول)
+        function scrollToTopPage() {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function scrollToBottomPage() {
+            window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+        }
+
+        function checkScrollNavVisibility(totalCount) {
+            const navContainer = document.getElementById('scrollNavContainer');
+            if (navContainer) {
+                if (totalCount > 5) {
+                    navContainer.style.display = 'flex';
+                } else {
+                    navContainer.style.display = 'none';
+                }
+            }
         }
 
         // محرك البحث الشامل الذكي (يشمل المنشورات والردود والمكاتبات)
@@ -1714,6 +1781,9 @@
                                             .filter(p => isPostPublished(p))
                                             .slice().reverse();
 
+            // فحص عرض أزرار الصعود والنزول (أكثر من 5)
+            checkScrollNavVisibility(timelinePosts.length);
+
             if(timelinePosts.length === 0) {
                 feed.innerHTML = `<p class="empty-msg">لا توجد أي منشورات أو أحداث حتى الآن.</p>`;
                 return;
@@ -1792,6 +1862,9 @@
                 }
                 return true;
             });
+
+            // فحص عرض أزرار الصعود والنزول (أكثر من 5)
+            checkScrollNavVisibility(filtered.length);
 
             if(filtered.length === 0) {
                 feed.innerHTML = `<p class="empty-msg">لا توجد منشورات في هذا القسم حالياً.</p>`;
