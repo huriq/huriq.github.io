@@ -369,5 +369,14 @@
     "scheduledTime": null,
     "date": "14/11/2026 12:50:00 AM",
     "replies": []
+  },
+  {
+    "type": "updates",
+    "folder": "",
+    "content": "<p class=\"ql-direction-rtl\">تحديث v1.4.10</p><p class=\"ql-direction-rtl\"><br></p><p class=\"ql-direction-rtl\">تحديث برمجي شامل:</p><p class=\"ql-direction-rtl\">تم تحديث ملف الكود الأساسي وتقسيمه لملفات منفصلة خاصة، وأصبح كُل ملف يحتوي بداخله الكود الخاص فيه! بدل أن يكون الكود كله في ملف واحد!</p><p class=\"ql-direction-rtl\"><br></p><p class=\"ql-direction-rtl\">لأن المشروع صار ضخم أكثر مما توقعت! بحيث عدد اللاينات بآخر تحديث وصل أكثر من 2500 لاين!</p><p class=\"ql-direction-rtl\"><br></p><p class=\"ql-direction-rtl\">&lt;يعني آني من كاتب ومشتغل كل شي بملف واحد چنت مثل المُجرم! بس بحق نفسه😅! بحيث خطأ واحد يفلش كل شي! أو يعذبني أيام وممكن حتى أسابيع!&gt;</p><p><br></p>",
+    "image": "",
+    "scheduledTime": "2026-11-14T01:01",
+    "date": "14/11/2026 01:01:00 AM",
+    "replies": []
   }
 ]
