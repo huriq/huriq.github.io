@@ -414,5 +414,14 @@
     "scheduledTime": "2026-11-15T14:12",
     "date": "15/11/2026 02:12:00 PM",
     "replies": []
+  },
+  {
+    "type": "visuals",
+    "folder": "M.P",
+    "content": "",
+    "image": "https://raw.githubusercontent.com/huriq/huriq.github.io/main/uploads/images/1794742301792_691F794C-F3D0-467F-AB75-2BFDB5F7D4C0.png",
+    "scheduledTime": null,
+    "date": "15/11/2026 02:32:26 PM",
+    "replies": []
   }
 ]
