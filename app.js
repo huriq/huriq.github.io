@@ -15,7 +15,7 @@ const _securePassHashes = {
 
 async function hashString(str) {
     if (!window.crypto || !window.crypto.subtle) {
-        throw new Error(" ، تشفير SHA-256 ما يشتغل على ملف محلي (file://). لازم ترفعه لـ GitHub أو تستخدم Localhost حتى يشتغل نظام الحماية!");
+        throw new Error("عيني حمودي، تشفير SHA-256 ما يشتغل على ملف محلي (file://). لازم ترفعه لـ GitHub أو تستخدم Localhost حتى يشتغل نظام الحماية!");
     }
     const encoder = new TextEncoder();
     const data = encoder.encode(str.trim());
@@ -129,6 +129,7 @@ if (isHashMode) {
 
 var quillAdmin;
 let replyEditors = {};
+var fidaaEditor = null; // محرر تبويب م.الفِدَاء
 
 function verifyHashPass() {
     const val = document.getElementById('hash-passcode-input').value;
@@ -417,7 +418,7 @@ async function verifyPass() {
                         document.getElementById('content-area').style.display = 'block';
                         loadPosts();
                     }
-                }, 2222);
+                }, 4000);
             }, 600);
 
         } else {
@@ -553,6 +554,7 @@ function getTabName(type) {
         case 'visuals': return 'المرئيات';
         case 'audio': return 'المسموعات';
         case 'separations': return 'الفصلات';
+        case 'fidaa': return 'م.الفِدَاء';
         case 'trash': return 'مُهمل';
         case 'archives': return 'المحفوظات';
         default: return 'الصفحة الرئيسية';
@@ -677,6 +679,12 @@ function renderPosts() {
 
     const feed = document.getElementById('posts-feed');
     feed.innerHTML = '';
+
+    // معالجة خاصة لتبويب "م.الفِدَاء" (عرض المنشورات الأساسية الخاصة به بالإضافة إلى ما يُنشر عبر الردود كمحتوى للمستخدمين)
+    if (currentFilter === 'fidaa' && currentPostId === null) {
+        renderFidaaTabContent(feed);
+        return;
+    }
 
     let filtered = allPostsData.map((post, i) => ({...post, realIndex: i})).filter(p => {
         if (!isPostPublished(p)) return false;
@@ -840,7 +848,7 @@ function renderPosts() {
 
             html += `
                 <div class="replies-section">
-                    <button class="btn-reply-toggle" id="replies-toggle-btn-${post.realIndex}" onclick="toggleRepliesSection(${post.realIndex})">
+                    <button class="btn-reply-toggle" id="replies-toggle-btn-${post.realIndex}" onclick="toggleRepliesSection(post.realIndex)">
                         💬 عرض الردود والمكاتبات <span id="replies-count-${post.realIndex}">(${toArabicNumbers(repliesCount)})</span>
                     </button>
                     <div id="replies-box-${post.realIndex}" style="display: none; margin-top: 15px;">
@@ -874,6 +882,182 @@ function renderPosts() {
                 </button>
             </div>
         `;
+    }
+}
+
+// دالة عرض محتوى تبويب "م.الفِدَاء" الذكي (زر الإضافة العائم وبوكس النشر بدون حقل اسم + عرض المنشورات والمشاركات)
+function renderFidaaTabContent(feed) {
+    let html = `
+        <div style="text-align: center; margin-bottom: 30px;">
+            <button onclick="toggleFidaaForm()" id="fidaa-toggle-btn" style="background: linear-gradient(135deg, var(--primary), var(--secondary)); color: #070b19; padding: 14px 28px; border-radius: 16px; font-weight: 700; font-family: 'Tajawal', sans-serif; font-size: 1.1rem; box-shadow: 0 5px 20px rgba(0, 210, 255, 0.3); cursor: pointer; width: auto; display: inline-flex; align-items: center; gap: 10px;">
+                <span>✍️</span> إضافة مكتوب، منشور..
+            </button>
+            
+            <div id="fidaa-form-box" style="display: none; margin-top: 20px; background: var(--surface-glass); border: 1px solid var(--border); padding: 25px; border-radius: 16px; text-align: right; backdrop-filter: blur(12px);">
+                <p style="color: var(--primary); font-weight: 700; margin-bottom: 12px; font-size: 0.95rem;">اكتب مكتوبك أو منشورك بكل حرية:</p>
+                
+                <div class="editor-container" style="margin-bottom: 15px;">
+                    <div id="fidaa-editor"></div>
+                </div>
+
+                <button id="fidaa-submit-btn" onclick="submitFidaaPost()" style="padding: 12px 24px; width: auto; font-size: 1rem;">نشر</button>
+                <p id="fidaa-status-msg" style="margin-top: 10px; font-weight: 700; font-size: 0.9rem; display: none;"></p>
+            </div>
+        </div>
+    `;
+
+    // 1. جلب المنشورات الأساسية الخاصة بـ "م.الفِدَاء" (إن وجدت من لوحة التحكم)
+    let fidaaPosts = allPostsData.map((post, i) => ({...post, realIndex: i})).filter(p => isPostPublished(p) && (p.type === 'fidaa'));
+    
+    let combinedFeedItems = [];
+
+    // إضافة المنشورات الرسمية للتبويب
+    fidaaPosts.slice().reverse().forEach(post => {
+        combinedFeedItems.push({
+            isOfficial: true,
+            realIndex: post.realIndex,
+            date: post.date,
+            content: post.content,
+            image: post.image,
+            folder: post.folder
+        });
+    });
+
+    // 2. تتبع المنشورات المرسلة عبر نظام الردود كـ "منشورات للزوار" (باستخدام فهرس افتراضي مثلاً المنشور رقم 0 أو فهرس مخصص 99999 أو الردود الموجهة لتبويب الفداء)
+    // لتسهيل الأمر واختيار بوست رئيسي مخصص لاستقبال مشاركات الفداء (مثلاً أول بوست في النظام أو بوست مخصص برقم 0)، سنعرض الردود الخاصة بالبوست رقم 0 كمنشورات مستقلة للزوار هنا:
+    const visitorPosts = repliesMap[0] || [];
+    visitorPosts.slice().reverse().forEach((rep, rIdx) => {
+        combinedFeedItems.push({
+            isOfficial: false,
+            date: rep.date,
+            content: rep.text,
+            author: rep.author
+        });
+    });
+
+    if (combinedFeedItems.length === 0) {
+        html += `<p class="empty-msg">لا توجد أي مكتوبات أو منشورات في هذا القسم حتى الآن.</p>`;
+    } else {
+        combinedFeedItems.forEach((item, idx) => {
+            if (item.isOfficial) {
+                // عرض المنشور الرسمي للتبويب
+                html += `
+                    <div class="post-card">
+                        <div class="post-header">
+                            <div><span class="post-tag">🖋️ م.الفِدَاء ${item.folder ? `/ 📂 ${item.folder}` : ''}</span></div>
+                            <span class="post-date">🕒 ${toArabicNumbers(item.date)}</span>
+                        </div>
+                        <div class="post-body">${item.content}</div>
+                        <div class="post-footer-actions">
+                            <button class="btn-copy-link-fakhfakha" onclick="copyDeepLink('fidaa', '${item.folder || ''}', ${item.realIndex})">
+                                <span>🔗</span> نسخ رابط المنشور
+                            </button>
+                        </div>
+                    </div>
+                `;
+            } else {
+                // عرض منشور الزائر بطريقة طبيعية كأنه منشور رئيسي ناشره أنت
+                html += `
+                    <div class="post-card" style="border-color: rgba(0, 210, 255, 0.3);">
+                        <div class="post-header">
+                            <div><span class="post-tag">🖋️ م.الفِدَاء</span></div>
+                            <span class="post-date">🕒 ${toArabicNumbers(item.date)}</span>
+                        </div>
+                        <div class="post-body">${item.content}</div>
+                    </div>
+                `;
+            }
+        });
+    }
+
+    feed.innerHTML = html;
+}
+
+function toggleFidaaForm() {
+    const box = document.getElementById('fidaa-form-box');
+    const btn = document.getElementById('fidaa-toggle-btn');
+    if (!box || !btn) return;
+
+    if (box.style.display === 'block') {
+        box.style.display = 'none';
+        btn.innerText = "✍️ إضافة مكتوب، منشور..";
+    } else {
+        box.style.display = 'block';
+        btn.innerText = "🔽 إخفاء خانة الكتابة";
+        if (!fidaaEditor) {
+            setTimeout(() => {
+                fidaaEditor = new Quill('#fidaa-editor', {
+                    theme: 'snow',
+                    placeholder: 'اكتب مكتوبك أو منشورك هنا...',
+                    modules: {
+                        toolbar: [
+                            [{ 'header': [1, 2, 3, false] }],
+                            ['bold', 'italic', 'underline', 'strike'],
+                            [{ 'color': [] }, { 'background': [] }],
+                            [{ 'align': [] }],
+                            ['clean']
+                        ]
+                    }
+                });
+            }, 50);
+        }
+    }
+}
+
+async function submitFidaaPost() {
+    const contentHTML = fidaaEditor ? fidaaEditor.root.innerHTML : '';
+    const contentPlain = fidaaEditor ? fidaaEditor.getText().trim() : '';
+
+    if (contentPlain.length === 0) {
+        alert("حبيبي، يرجى كتابة محتوى المنشور أو المكتوب!");
+        return;
+    }
+
+    const submitBtn = document.getElementById('fidaa-submit-btn');
+    const statusMsg = document.getElementById('fidaa-status-msg');
+
+    submitBtn.innerText = "جاري النشر...";
+    submitBtn.disabled = true;
+
+    const now = new Date();
+    const formattedDate = `${String(now.getDate()).padStart(2, '0')}/${String(now.getMonth() + 1).padStart(2, '0')}/${now.getFullYear()} ${now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true })}`;
+
+    try {
+        // إرسال المنشور خلف الكواليس كـ "رد" موجه للبوست رقم 0 مع اسم افتراضي غير مرئي للزائر (مثلاً "مكتوب حر")
+        const payload = {
+            author: "مكتوب حر",
+            postIndex: 0,
+            message: contentHTML,
+            date: formattedDate
+        };
+
+        await fetch(WEB_APP_URL, {
+            method: "POST",
+            headers: { "Content-Type": "text/plain;charset=utf-8" },
+            body: JSON.stringify(payload)
+        });
+
+        statusMsg.style.display = "block";
+        statusMsg.style.color = "var(--success)";
+        statusMsg.innerText = "✨ تم النشر بنجاح";
+
+        if (fidaaEditor) fidaaEditor.root.innerHTML = '';
+
+        setTimeout(() => {
+            statusMsg.style.display = "none";
+            toggleFidaaForm(); // انطواء البوكس بسلاسة
+            loadRepliesIndexedInBackground().then(() => {
+                renderPosts(); // إعادة تحديث العرض لتظهر المشاركة الجديدة فوراً
+            });
+        }, 1500);
+
+    } catch(e) {
+        statusMsg.style.display = "block";
+        statusMsg.style.color = "var(--error)";
+        statusMsg.innerText = "❌ حدثت مشكلة في الاتصال أثناء النشر.";
+    } finally {
+        submitBtn.innerText = "نشر";
+        submitBtn.disabled = false;
     }
 }
 
@@ -1285,7 +1469,7 @@ async function deletePost(index) {
         const getRes = await fetch(apiUrl, { headers: { 'Authorization': `token ${token}` } });
         if(!getRes.ok) throw new Error("فشل الاتصال بـ GitHub.");
         
-        fileData = await getRes.json();
+        let fileData = await getRes.json();
         let existing = JSON.parse(new TextDecoder().decode(Uint8Array.from(atob(fileData.content), c => c.charCodeAt(0))));
 
         existing.splice(index, 1);
