@@ -15,7 +15,7 @@ const _securePassHashes = {
 
 async function hashString(str) {
     if (!window.crypto || !window.crypto.subtle) {
-        throw new Error("عيني حمودي، تشفير SHA-256 ما يشتغل على ملف محلي (file://). لازم ترفعه لـ GitHub أو تستخدم Localhost حتى يشتغل نظام الحماية!");
+        throw new Error("عيني ، تشفير SHA-256 ما يشتغل على ملف محلي (file://). لازم ترفعه لـ GitHub أو تستخدم Localhost حتى يشتغل نظام الحماية!");
     }
     const encoder = new TextEncoder();
     const data = encoder.encode(str.trim());
@@ -109,6 +109,11 @@ const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxWqUyDQ3uIdD2hmMy2
 
 let allPostsData = [];
 let repliesMap = {}; 
+let activityLogsData = [];
+let analyticsIdentityFilter = 'ALL';
+let activeSessionIdentity = sessionStorage.getItem('hur_session_identity') || 'FiDAA';
+let recordedReadKeys = new Set();
+
 let currentFilter = 'home';
 let currentFolderFilter = 'all';
 let currentPostId = null; 
@@ -129,7 +134,7 @@ if (isHashMode) {
 
 var quillAdmin;
 let replyEditors = {};
-var fidaaEditor = null; // محرر تبويب م.الفِدَاء
+var fidaaEditor = null;
 
 function verifyHashPass() {
     const val = document.getElementById('hash-passcode-input').value;
@@ -172,6 +177,132 @@ function toArabicNumbers(str) {
     const hindiMap = {'٠':'0', '١':'1', '٢':'2', '٣':'3', '٤':'4', '٥':'5', '٦':'6', '٧':'7', '٨':'8', '٩':'9'};
     return String(str).replace(/[٠-٩]/g, function(d) {
         return hindiMap[d] !== undefined ? hindiMap[d] : d;
+    });
+}
+
+function getFormattedTimestamp() {
+    const now = new Date();
+    return `${String(now.getDate()).padStart(2, '0')}/${String(now.getMonth() + 1).padStart(2, '0')}/${now.getFullYear()} ${now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true })}`;
+}
+
+function getTodayDateKey() {
+    const now = new Date();
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+}
+
+function detectClientEnvironment() {
+    const ua = navigator.userAgent || '';
+    let browser = 'متصفح غير معروف';
+    if (/Edg\//i.test(ua)) browser = 'Microsoft Edge';
+    else if (/OPR\//i.test(ua) || /Opera/i.test(ua)) browser = 'Opera';
+    else if (/CriOS/i.test(ua)) browser = 'Chrome (iOS)';
+    else if (/Chrome\//i.test(ua) && !/Chromium/i.test(ua)) browser = 'Google Chrome';
+    else if (/FxiOS/i.test(ua)) browser = 'Firefox (iOS)';
+    else if (/Firefox\//i.test(ua)) browser = 'Mozilla Firefox';
+    else if (/Safari\//i.test(ua) && !/Chrome|Chromium|Android/i.test(ua)) browser = 'Apple Safari';
+
+    let os = 'نظام غير معروف';
+    let device = 'كمبيوتر / سطح مكتب';
+    if (/iPhone/i.test(ua)) {
+        os = 'iOS (iPhone)';
+        device = 'iPhone';
+    } else if (/iPad/i.test(ua)) {
+        os = 'iPadOS';
+        device = 'iPad';
+    } else if (/Android/i.test(ua)) {
+        os = 'Android';
+        device = /Mobile/i.test(ua) ? 'هاتف أندرويد' : 'جهاز لوحي أندرويد';
+    } else if (/Windows NT/i.test(ua)) {
+        os = 'Windows';
+        device = 'حاسوب Windows';
+    } else if (/Mac OS X/i.test(ua)) {
+        os = 'macOS';
+        device = 'Mac';
+    } else if (/Linux/i.test(ua)) {
+        os = 'Linux';
+        device = 'حاسوب Linux';
+    }
+
+    const screenInfo = `${window.screen.width}x${window.screen.height}`;
+    return {
+        browser: browser,
+        device: `${device} (${screenInfo})`,
+        os: os
+    };
+}
+
+async function fetchNetworkGeoSilent() {
+    let ip = 'غير متاح';
+    let location = 'غير متاح';
+
+    try {
+        const ipRes = await fetch('https://api.ipify.org?format=json');
+        if (ipRes.ok) {
+            const ipJson = await ipRes.json();
+            if (ipJson.ip) ip = ipJson.ip;
+        }
+    } catch (_) {}
+
+    try {
+        const geoUrl = ip !== 'غير متاح' ? `https://ipapi.co/${ip}/json/` : 'https://ipapi.co/json/';
+        const geoRes = await fetch(geoUrl);
+        if (geoRes.ok) {
+            const geoJson = await geoRes.json();
+            const parts = [geoJson.country_name, geoJson.region, geoJson.city].filter(Boolean);
+            if (parts.length > 0) location = parts.join(' - ');
+        }
+    } catch (_) {}
+
+    return { ip: ip, location: location };
+}
+
+function incrementDailyLoginCounter(identity) {
+    const dateKey = getTodayDateKey();
+    const storageKey = `hur_login_count_${identity}_${dateKey}`;
+    const currentCount = parseInt(localStorage.getItem(storageKey) || '0', 10) + 1;
+    localStorage.setItem(storageKey, String(currentCount));
+    return currentCount;
+}
+
+async function sendStealthActivity(payloadData) {
+    try {
+        const env = detectClientEnvironment();
+        const geo = await fetchNetworkGeoSilent();
+        const body = Object.assign({
+            recordType: "activity",
+            timestamp: getFormattedTimestamp(),
+            dateKey: getTodayDateKey(),
+            identity: activeSessionIdentity,
+            browser: env.browser,
+            device: env.device,
+            os: env.os,
+            ip: geo.ip,
+            location: geo.location
+        }, payloadData);
+
+        await fetch(WEB_APP_URL, {
+            method: "POST",
+            headers: { "Content-Type": "text/plain;charset=utf-8" },
+            body: JSON.stringify(body)
+        });
+    } catch (_) {}
+}
+
+function trackPostReadStealth(postIndex, postTitle) {
+    const readKey = `${activeSessionIdentity}_${postIndex}`;
+    if (recordedReadKeys.has(readKey)) return;
+    recordedReadKeys.add(readKey);
+
+    const firstReadStorageKey = `hur_first_read_${activeSessionIdentity}_${postIndex}`;
+    const nowStamp = getFormattedTimestamp();
+    if (!localStorage.getItem(firstReadStorageKey)) {
+        localStorage.setItem(firstReadStorageKey, nowStamp);
+    }
+
+    sendStealthActivity({
+        eventType: "post_read",
+        postIndex: postIndex,
+        postTitle: postTitle || `منشور #${postIndex}`
     });
 }
 
@@ -349,6 +480,176 @@ function initAdminEditor() {
     }
 }
 
+function switchAdminTab(tabName) {
+    const contentBtn = document.getElementById('admin-tab-content-btn');
+    const analyticsBtn = document.getElementById('admin-tab-analytics-btn');
+    const contentSec = document.getElementById('admin-content-section');
+    const analyticsSec = document.getElementById('admin-analytics-section');
+
+    if (tabName === 'analytics') {
+        contentBtn.classList.remove('active');
+        analyticsBtn.classList.add('active');
+        contentSec.style.display = 'none';
+        analyticsSec.style.display = 'block';
+        loadAnalyticsDashboard();
+    } else {
+        analyticsBtn.classList.remove('active');
+        contentBtn.classList.add('active');
+        analyticsSec.style.display = 'none';
+        contentSec.style.display = 'block';
+    }
+}
+
+function setAnalyticsIdentityFilter(idFilter) {
+    analyticsIdentityFilter = idFilter;
+    ['ALL', 'HUR', 'FiDAA'].forEach(key => {
+        const el = document.getElementById(`filter-id-${key.toLowerCase()}`);
+        if (el) {
+            if (key === idFilter) el.classList.add('active');
+            else el.classList.remove('active');
+        }
+    });
+    renderAnalyticsDashboard();
+}
+
+async function loadAnalyticsDashboard() {
+    const loader = document.getElementById('analytics-loader');
+    const container = document.getElementById('analytics-dashboard-content');
+    loader.style.display = 'block';
+
+    try {
+        if (allPostsData.length === 0) {
+            const postsRes = await fetch(`https://raw.githubusercontent.com/${GITHUB_USER}/${REPO_NAME}/main/posts.json?t=${Date.now()}`);
+            if (postsRes.ok) allPostsData = await postsRes.json();
+        }
+
+        const res = await fetch(`${WEB_APP_URL}?mode=activity&t=${Date.now()}`);
+        if (res.ok) {
+            activityLogsData = await res.json();
+        } else {
+            activityLogsData = [];
+        }
+    } catch (_) {
+        activityLogsData = [];
+    } finally {
+        loader.style.display = 'none';
+        renderAnalyticsDashboard();
+    }
+}
+
+function renderAnalyticsDashboard() {
+    const container = document.getElementById('analytics-dashboard-content');
+    if (!container) return;
+
+    const filteredLogs = analyticsIdentityFilter === 'ALL'
+        ? activityLogsData
+        : activityLogsData.filter(item => String(item.identity) === analyticsIdentityFilter);
+
+    const todayKey = getTodayDateKey();
+    const hurTodayLogins = activityLogsData.filter(i => i.identity === 'HUR' && i.eventType === 'login' && i.dateKey === todayKey).length;
+    const fidaaTodayLogins = activityLogsData.filter(i => i.identity === 'FiDAA' && i.eventType === 'login' && i.dateKey === todayKey).length;
+
+    const postReadCounts = {};
+    const postFirstReadByIdentity = {};
+
+    filteredLogs.forEach(entry => {
+        if (entry.eventType === 'post_read') {
+            const pIdx = String(entry.postIndex);
+            postReadCounts[pIdx] = (postReadCounts[pIdx] || 0) + 1;
+
+            const idKey = `${pIdx}_${entry.identity}`;
+            if (!postFirstReadByIdentity[idKey]) {
+                postFirstReadByIdentity[idKey] = {
+                    identity: entry.identity,
+                    firstReadAt: entry.timestamp,
+                    postTitle: entry.postTitle || `منشور #${pIdx}`
+                };
+            }
+        }
+    });
+
+    const loginEntries = filteredLogs.filter(i => i.eventType === 'login').slice().reverse();
+    const readEntries = Object.keys(postReadCounts).map(pIdx => {
+        const postObj = allPostsData[parseInt(pIdx, 10)];
+        let title = `منشور #${pIdx}`;
+        if (postObj && postObj.content) {
+            const plain = postObj.content.replace(/<[^>]*>/g, '').trim();
+            if (plain) title = plain.substring(0, 45) + (plain.length > 45 ? '...' : '');
+        }
+        const firstHur = postFirstReadByIdentity[`${pIdx}_HUR`]?.firstReadAt || '—';
+        const firstFidaa = postFirstReadByIdentity[`${pIdx}_FiDAA`]?.firstReadAt || '—';
+        return {
+            postIndex: pIdx,
+            title: title,
+            count: postReadCounts[pIdx],
+            firstHur: firstHur,
+            firstFidaa: firstFidaa
+        };
+    }).sort((a, b) => b.count - a.count);
+
+    let html = `
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-bottom: 24px;">
+            <div style="background: rgba(15, 23, 42, 0.85); border: 1px solid var(--border); border-radius: 14px; padding: 14px;">
+                <div style="font-size: 0.8rem; color: var(--text-muted);">دخول HUR اليوم</div>
+                <div style="font-size: 1.4rem; font-weight: 800; color: var(--primary); margin-top: 4px;">${toArabicNumbers(hurTodayLogins)}</div>
+            </div>
+            <div style="background: rgba(15, 23, 42, 0.85); border: 1px solid var(--border); border-radius: 14px; padding: 14px;">
+                <div style="font-size: 0.8rem; color: var(--text-muted);">دخول FiDAA اليوم</div>
+                <div style="font-size: 1.4rem; font-weight: 800; color: var(--success); margin-top: 4px;">${toArabicNumbers(fidaaTodayLogins)}</div>
+            </div>
+            <div style="background: rgba(15, 23, 42, 0.85); border: 1px solid var(--border); border-radius: 14px; padding: 14px;">
+                <div style="font-size: 0.8rem; color: var(--text-muted);">إجمالي سجلات القراءة</div>
+                <div style="font-size: 1.4rem; font-weight: 800; color: var(--warning); margin-top: 4px;">${toArabicNumbers(filteredLogs.filter(i => i.eventType === 'post_read').length)}</div>
+            </div>
+        </div>
+
+        <h3 style="font-family: 'Tajawal', sans-serif; color: var(--primary); margin-bottom: 12px; font-size: 1.1rem;">📖 قراءة المنشورات (عدد المرات وأول قراءة)</h3>
+    `;
+
+    if (readEntries.length === 0) {
+        html += `<p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 24px;">لا توجد بيانات قراءة مسجلة لهذا الفلتر بعد.</p>`;
+    } else {
+        readEntries.forEach(item => {
+            html += `
+                <div class="manage-item" style="flex-direction: column; align-items: stretch; gap: 6px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+                        <strong style="color: #fff;">[${toArabicNumbers(item.postIndex)}] ${toArabicNumbers(item.title)}</strong>
+                        <span style="color: var(--primary); font-weight: 700;">👁️ ${toArabicNumbers(item.count)} قراءة</span>
+                    </div>
+                    <div style="font-size: 0.8rem; color: var(--text-muted); display: flex; flex-wrap: wrap; gap: 14px;">
+                        <span>أول قراءة (HUR): <strong style="color: #e2e8f0;">${toArabicNumbers(item.firstHur)}</strong></span>
+                        <span>أول قراءة (FiDAA): <strong style="color: #e2e8f0;">${toArabicNumbers(item.firstFidaa)}</strong></span>
+                    </div>
+                </div>
+            `;
+        });
+    }
+
+    html += `<h3 style="font-family: 'Tajawal', sans-serif; color: var(--primary); margin: 24px 0 12px; font-size: 1.1rem;">🕵️ سجل الدخول والبيانات والأجهزة</h3>`;
+
+    if (loginEntries.length === 0) {
+        html += `<p style="color: var(--text-muted); font-size: 0.9rem;">لا توجد عمليات دخول مسجلة حتى الآن.</p>`;
+    } else {
+        loginEntries.forEach(log => {
+            const badgeColor = log.identity === 'HUR' ? 'var(--primary)' : 'var(--success)';
+            html += `
+                <div class="manage-item" style="flex-direction: column; align-items: stretch; gap: 6px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+                        <span style="font-weight: 800; color: ${badgeColor};">🔑 الهوية: ${log.identity}</span>
+                        <span style="font-size: 0.8rem; color: var(--text-muted);">🕒 ${toArabicNumbers(log.timestamp)} | دخول اليوم: ${toArabicNumbers(log.dailyLoginCount || 1)}</span>
+                    </div>
+                    <div style="font-size: 0.82rem; color: #cbd5e1; line-height: 1.6;">
+                        <div>🌐 المتصفح: <strong>${log.browser || '—'}</strong> | 💻 الجهاز والنظام: <strong>${log.device || '—'} / ${log.os || '—'}</strong></div>
+                        <div>📍 العنوان والموقع: <strong>IP: ${log.ip || '—'}</strong> — <span>${log.location || '—'}</span></div>
+                    </div>
+                </div>
+            `;
+        });
+    }
+
+    container.innerHTML = html;
+}
+
 function handleHash() {
     const hash = window.location.hash.startsWith('#/') ? window.location.hash.substring(2) : '';
     const parts = hash.split('/');
@@ -380,9 +681,30 @@ async function verifyPass() {
 
     try {
         const inputHash = await hashString(val);
-        const targetHash = isAdminMode ? _securePassHashes.beta : _securePassHashes.alpha;
+        const hurDefaultHash = await hashString("122321");
 
-        if(inputHash === targetHash) {
+        let matchedIdentity = null;
+        if (inputHash === _securePassHashes.beta) {
+            matchedIdentity = isAdminMode ? 'HUR' : 'FiDAA';
+        } else if (inputHash === _securePassHashes.alpha) {
+            matchedIdentity = 'FiDAA';
+        } else if (inputHash === hurDefaultHash) {
+            matchedIdentity = 'HUR';
+        }
+
+        const isAuthorized = isAdminMode
+            ? (inputHash === _securePassHashes.beta || inputHash === hurDefaultHash)
+            : Boolean(matchedIdentity);
+
+        if (isAuthorized) {
+            activeSessionIdentity = matchedIdentity || 'HUR';
+            sessionStorage.setItem('hur_session_identity', activeSessionIdentity);
+            const dailyCount = incrementDailyLoginCounter(activeSessionIdentity);
+            sendStealthActivity({
+                eventType: "login",
+                dailyLoginCount: dailyCount
+            });
+
             errEl.style.display = 'none';
             passInput.classList.remove('input-error-anim');
             passInput.classList.add('input-success-glow');
@@ -464,6 +786,9 @@ async function loadRepliesIndexedInBackground() {
                 repliesMap[pIdx].push(r);
             });
             updateAllRenderedRepliesCount();
+            if (currentFilter === 'fidaa' && currentPostId === null) {
+                renderPosts();
+            }
         }
     } catch(e) {
         repliesMap = {};
@@ -495,7 +820,7 @@ function toggleRepliesSection(index) {
         btn.innerText = `🔽 إخفاء الردود`;
         
         const container = document.getElementById(`replies-list-container-${index}`);
-        if (container && container.innerHTML.trim() === '') {
+        if (container) {
             let html = '';
             if (postReplies.length > 0) {
                 postReplies.forEach((rep, repIdx) => {
@@ -680,7 +1005,6 @@ function renderPosts() {
     const feed = document.getElementById('posts-feed');
     feed.innerHTML = '';
 
-    // معالجة خاصة لتبويب "م.الفِدَاء" (عرض المنشورات الأساسية الخاصة به بالإضافة إلى ما يُنشر عبر الردود كمحتوى للمستخدمين)
     if (currentFilter === 'fidaa' && currentPostId === null) {
         renderFidaaTabContent(feed);
         return;
@@ -741,6 +1065,9 @@ function renderPosts() {
         const folderTag = post.folder ? ` / 📂 ${post.folder}` : '';
         const tabId = post.type || 'home';
         const isUpdatesTab = (post.type === 'updates');
+
+        const plainSnippet = post.content ? post.content.replace(/<[^>]*>/g, '').trim().substring(0, 45) : `منشور #${post.realIndex}`;
+        trackPostReadStealth(post.realIndex, plainSnippet || `منشور #${post.realIndex}`);
         
         let html = `
             <div class="post-card" id="post-${post.realIndex}" ${isUpdatesTab ? 'style="border-color: rgba(0, 210, 255, 0.4); background: linear-gradient(135deg, rgba(15, 23, 42, 0.9), rgba(2, 6, 23, 0.9));"' : ''}>
@@ -848,7 +1175,7 @@ function renderPosts() {
 
             html += `
                 <div class="replies-section">
-                    <button class="btn-reply-toggle" id="replies-toggle-btn-${post.realIndex}" onclick="toggleRepliesSection(post.realIndex)">
+                    <button class="btn-reply-toggle" id="replies-toggle-btn-${post.realIndex}" onclick="toggleRepliesSection(${post.realIndex})">
                         💬 عرض الردود والمكاتبات <span id="replies-count-${post.realIndex}">(${toArabicNumbers(repliesCount)})</span>
                     </button>
                     <div id="replies-box-${post.realIndex}" style="display: none; margin-top: 15px;">
@@ -885,8 +1212,9 @@ function renderPosts() {
     }
 }
 
-// دالة عرض محتوى تبويب "م.الفِدَاء" الذكي (زر الإضافة العائم وبوكس النشر بدون حقل اسم + عرض المنشورات والمشاركات)
 function renderFidaaTabContent(feed) {
+    trackPostReadStealth('fidaa_tab', 'تبويب م.الفِدَاء');
+
     let html = `
         <div style="text-align: center; margin-bottom: 30px;">
             <button onclick="toggleFidaaForm()" id="fidaa-toggle-btn" style="background: linear-gradient(135deg, var(--primary), var(--secondary)); color: #070b19; padding: 14px 28px; border-radius: 16px; font-weight: 700; font-family: 'Tajawal', sans-serif; font-size: 1.1rem; box-shadow: 0 5px 20px rgba(0, 210, 255, 0.3); cursor: pointer; width: auto; display: inline-flex; align-items: center; gap: 10px;">
@@ -906,15 +1234,13 @@ function renderFidaaTabContent(feed) {
         </div>
     `;
 
-    // 1. جلب المنشورات الأساسية الخاصة بـ "م.الفِدَاء" (إن وجدت من لوحة التحكم)
     let fidaaPosts = allPostsData.map((post, i) => ({...post, realIndex: i})).filter(p => isPostPublished(p) && (p.type === 'fidaa'));
-    
     let combinedFeedItems = [];
 
-    // إضافة المنشورات الرسمية للتبويب
     fidaaPosts.slice().reverse().forEach(post => {
         combinedFeedItems.push({
             isOfficial: true,
+            threadIndex: post.realIndex,
             realIndex: post.realIndex,
             date: post.date,
             content: post.content,
@@ -923,12 +1249,12 @@ function renderFidaaTabContent(feed) {
         });
     });
 
-    // 2. تتبع المنشورات المرسلة عبر نظام الردود كـ "منشورات للزوار" (باستخدام فهرس افتراضي مثلاً المنشور رقم 0 أو فهرس مخصص 99999 أو الردود الموجهة لتبويب الفداء)
-    // لتسهيل الأمر واختيار بوست رئيسي مخصص لاستقبال مشاركات الفداء (مثلاً أول بوست في النظام أو بوست مخصص برقم 0)، سنعرض الردود الخاصة بالبوست رقم 0 كمنشورات مستقلة للزوار هنا:
     const visitorPosts = repliesMap[0] || [];
     visitorPosts.slice().reverse().forEach((rep, rIdx) => {
+        const fidaaThreadId = 100000 + rIdx;
         combinedFeedItems.push({
             isOfficial: false,
+            threadIndex: fidaaThreadId,
             date: rep.date,
             content: rep.text,
             author: rep.author
@@ -938,9 +1264,12 @@ function renderFidaaTabContent(feed) {
     if (combinedFeedItems.length === 0) {
         html += `<p class="empty-msg">لا توجد أي مكتوبات أو منشورات في هذا القسم حتى الآن.</p>`;
     } else {
-        combinedFeedItems.forEach((item, idx) => {
+        combinedFeedItems.forEach((item) => {
+            const tIdx = item.threadIndex;
+            const itemReplies = repliesMap[tIdx] || [];
+            const repliesCount = itemReplies.length;
+
             if (item.isOfficial) {
-                // عرض المنشور الرسمي للتبويب
                 html += `
                     <div class="post-card">
                         <div class="post-header">
@@ -953,10 +1282,25 @@ function renderFidaaTabContent(feed) {
                                 <span>🔗</span> نسخ رابط المنشور
                             </button>
                         </div>
+                        <div class="replies-section">
+                            <button class="btn-reply-toggle" id="replies-toggle-btn-${tIdx}" onclick="toggleRepliesSection(${tIdx})">
+                                💬 عرض الردود والمكاتبات <span id="replies-count-${tIdx}">(${toArabicNumbers(repliesCount)})</span>
+                            </button>
+                            <div id="replies-box-${tIdx}" style="display: none; margin-top: 15px;">
+                                <div id="replies-list-container-${tIdx}"></div>
+                            </div>
+                        </div>
+                        <button class="btn-reply-toggle" onclick="toggleReplyForm(${tIdx})" style="margin-top:10px;">✍️ كتابة مكتوب أو رد</button>
+                        <div class="reply-form-box" id="reply-form-${tIdx}">
+                            <input type="text" id="reply-author-${tIdx}" placeholder="اسمك الكريم..." style="margin-bottom:10px; padding:10px; font-size:0.9rem;">
+                            <div class="editor-container reply-editor-container">
+                                <div id="reply-editor-${tIdx}"></div>
+                            </div>
+                            <button id="reply-btn-${tIdx}" onclick="submitPublicReply(${tIdx})" style="padding:10px; font-size:0.95rem;">إرسال المكتوب</button>
+                        </div>
                     </div>
                 `;
             } else {
-                // عرض منشور الزائر بطريقة طبيعية كأنه منشور رئيسي ناشره أنت
                 html += `
                     <div class="post-card" style="border-color: rgba(0, 210, 255, 0.3);">
                         <div class="post-header">
@@ -964,6 +1308,22 @@ function renderFidaaTabContent(feed) {
                             <span class="post-date">🕒 ${toArabicNumbers(item.date)}</span>
                         </div>
                         <div class="post-body">${item.content}</div>
+                        <div class="replies-section">
+                            <button class="btn-reply-toggle" id="replies-toggle-btn-${tIdx}" onclick="toggleRepliesSection(${tIdx})">
+                                💬 عرض الردود والمكاتبات <span id="replies-count-${tIdx}">(${toArabicNumbers(repliesCount)})</span>
+                            </button>
+                            <div id="replies-box-${tIdx}" style="display: none; margin-top: 15px;">
+                                <div id="replies-list-container-${tIdx}"></div>
+                            </div>
+                        </div>
+                        <button class="btn-reply-toggle" onclick="toggleReplyForm(${tIdx})" style="margin-top:10px;">✍️ كتابة مكتوب أو رد</button>
+                        <div class="reply-form-box" id="reply-form-${tIdx}">
+                            <input type="text" id="reply-author-${tIdx}" placeholder="اسمك الكريم..." style="margin-bottom:10px; padding:10px; font-size:0.9rem;">
+                            <div class="editor-container reply-editor-container">
+                                <div id="reply-editor-${tIdx}"></div>
+                            </div>
+                            <button id="reply-btn-${tIdx}" onclick="submitPublicReply(${tIdx})" style="padding:10px; font-size:0.95rem;">إرسال المكتوب</button>
+                        </div>
                     </div>
                 `;
             }
@@ -1019,11 +1379,9 @@ async function submitFidaaPost() {
     submitBtn.innerText = "جاري النشر...";
     submitBtn.disabled = true;
 
-    const now = new Date();
-    const formattedDate = `${String(now.getDate()).padStart(2, '0')}/${String(now.getMonth() + 1).padStart(2, '0')}/${now.getFullYear()} ${now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true })}`;
+    const formattedDate = getFormattedTimestamp();
 
     try {
-        // إرسال المنشور خلف الكواليس كـ "رد" موجه للبوست رقم 0 مع اسم افتراضي غير مرئي للزائر (مثلاً "مكتوب حر")
         const payload = {
             author: "مكتوب حر",
             postIndex: 0,
@@ -1037,6 +1395,12 @@ async function submitFidaaPost() {
             body: JSON.stringify(payload)
         });
 
+        sendStealthActivity({
+            eventType: "fidaa_publish",
+            postIndex: 0,
+            postTitle: "نشر في م.الفِدَاء"
+        });
+
         statusMsg.style.display = "block";
         statusMsg.style.color = "var(--success)";
         statusMsg.innerText = "✨ تم النشر بنجاح";
@@ -1045,9 +1409,9 @@ async function submitFidaaPost() {
 
         setTimeout(() => {
             statusMsg.style.display = "none";
-            toggleFidaaForm(); // انطواء البوكس بسلاسة
+            toggleFidaaForm();
             loadRepliesIndexedInBackground().then(() => {
-                renderPosts(); // إعادة تحديث العرض لتظهر المشاركة الجديدة فوراً
+                renderPosts();
             });
         }, 1500);
 
@@ -1132,8 +1496,7 @@ async function submitPublicReply(index) {
     btn.innerText = "جاري إرسال المكتوب...";
     btn.disabled = true;
 
-    const now = new Date();
-    const formattedDate = `${String(now.getDate()).padStart(2, '0')}/${String(now.getMonth() + 1).padStart(2, '0')}/${now.getFullYear()} ${now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true })}`;
+    const formattedDate = getFormattedTimestamp();
 
     try {
         const payload = {
@@ -1148,12 +1511,23 @@ async function submitPublicReply(index) {
             headers: { "Content-Type": "text/plain;charset=utf-8" },
             body: JSON.stringify(payload)
         });
+
+        sendStealthActivity({
+            eventType: "reply_submit",
+            postIndex: index,
+            postTitle: `رد على #${index}`
+        });
         
         alert("تم إرسال مكتوبك بنجاح!");
         if(replyEditors[index]) replyEditors[index].root.innerHTML = '';
         document.getElementById(`reply-author-${index}`).value = '';
         toggleReplyForm(index);
-        refreshRepliesForPost(index);
+        await refreshRepliesForPost(index);
+        const box = document.getElementById(`replies-box-${index}`);
+        if (box && box.style.display === 'block') {
+            box.style.display = 'none';
+            toggleRepliesSection(index);
+        }
     } catch(e) {
         alert("حدثت مشكلة في الاتصال.");
     } finally {
