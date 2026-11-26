@@ -16,7 +16,7 @@ const _securePassHashes = {
 
 async function hashString(str) {
     if (!window.crypto || !window.crypto.subtle) {
-        throw new Error("عيني ، تشفير SHA-256 ما يشتغل على ملف محلي (file://). لازم ترفعه لـ GitHub أو تستخدم Localhost حتى يشتغل نظام الحماية!");
+        throw new Error("عيني حمودي، تشفير SHA-256 ما يشتغل على ملف محلي (file://). لازم ترفعه لـ GitHub أو تستخدم Localhost حتى يشتغل نظام الحماية!");
     }
     const encoder = new TextEncoder();
     const data = encoder.encode(str.trim());
@@ -545,16 +545,16 @@ function switchAdminTab(tabName) {
     const analyticsSec = document.getElementById('admin-analytics-section');
 
     if (tabName === 'analytics') {
-        if (contentBtn) contentBtn.classList.remove('active');
-        if (analyticsBtn) analyticsBtn.classList.add('active');
-        if (contentSec) contentSec.style.display = 'none';
-        if (analyticsSec) analyticsSec.style.display = 'block';
+        contentBtn.classList.remove('active');
+        analyticsBtn.classList.add('active');
+        contentSec.style.display = 'none';
+        analyticsSec.style.display = 'block';
         loadAnalyticsDashboard();
     } else {
-        if (analyticsBtn) analyticsBtn.classList.remove('active');
-        if (contentBtn) contentBtn.classList.add('active');
-        if (analyticsSec) analyticsSec.style.display = 'none';
-        if (contentSec) contentSec.style.display = 'block';
+        analyticsBtn.classList.remove('active');
+        contentBtn.classList.add('active');
+        analyticsSec.style.display = 'none';
+        contentSec.style.display = 'block';
     }
 }
 
@@ -573,7 +573,7 @@ function setAnalyticsIdentityFilter(idFilter) {
 async function loadAnalyticsDashboard() {
     const loader = document.getElementById('analytics-loader');
     const container = document.getElementById('analytics-dashboard-content');
-    if (loader) loader.style.display = 'block';
+    loader.style.display = 'block';
 
     try {
         if (allPostsData.length === 0) {
@@ -594,7 +594,7 @@ async function loadAnalyticsDashboard() {
     } catch (_) {
         activityLogsData = [];
     } finally {
-        if (loader) loader.style.display = 'none';
+        loader.style.display = 'none';
         renderAnalyticsDashboard();
     }
 }
@@ -813,7 +813,7 @@ async function verifyPass() {
                         loadPosts();
                     }
                 }, 2007);
-            }, 600);
+            }, 555);
 
         } else {
             passInput.classList.remove('input-success-glow');
@@ -899,6 +899,17 @@ function updateAllRenderedRepliesCount() {
     });
 }
 
+function applyPostBodyFontToReplies(container) {
+    if (!container) return;
+    const postBodyRef = document.querySelector('.post-body');
+    const refFont = postBodyRef ? window.getComputedStyle(postBodyRef).fontFamily : '';
+    container.querySelectorAll('.reply-text').forEach(el => {
+        if (refFont) {
+            el.style.fontFamily = refFont;
+        }
+    });
+}
+
 function toggleRepliesSection(index) {
     const box = document.getElementById(`replies-box-${index}`);
     const btn = document.getElementById(`replies-toggle-btn-${index}`);
@@ -934,6 +945,7 @@ function toggleRepliesSection(index) {
                 html = `<p style="color:var(--text-muted); font-size:0.85rem; text-align:center; padding:10px;">لا توجد ردود حتى الآن.</p>`;
             }
             container.innerHTML = html;
+            applyPostBodyFontToReplies(container);
         }
     }
 }
