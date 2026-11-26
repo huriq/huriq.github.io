@@ -105,7 +105,7 @@ async function decryptText(encryptedBase64, password) {
 
 const GITHUB_USER = 'huriq'; 
 const REPO_NAME = 'huriq.github.io';
-const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxWqUyDQ3uIdD2hmMy25c9rwCgxSGYsBMGM0FUr9sOeO3msyBB198ndlDLBPbW67FJ0Wg/exec";
+const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzzefYuMiW3kEuH3DplbpIWVoJBsA6acq2CwiuNaI1zT3nZ37jltJKe6Q5tb6ykiB1DuA/exec";
 
 let allPostsData = [];
 let repliesMap = {}; 
