@@ -11,7 +11,7 @@
 const _securePassHashes = {
     alpha: "7c73b4fafd53d2efb95a092915ce7fe602e5aa2b8ec0ce263d1b0fd066370096", 
     beta:  "90f8e387d7c5e53cf72096776fa3823c4561692b4061de39e1f00ed0642b4851",
-    hurIdentity: "6674a6680183a241593c9c92a43bc76424a782f684fd7f2ca6141a647b59a7b9"
+    hurIdentity: "2adfe30b76af871a0e65896689cbe46cf05435c05b12abd670ef53c634312234"
 };
 
 async function hashString(str) {
