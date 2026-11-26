@@ -10,7 +10,8 @@
 
 const _securePassHashes = {
     alpha: "7c73b4fafd53d2efb95a092915ce7fe602e5aa2b8ec0ce263d1b0fd066370096", 
-    beta:  "90f8e387d7c5e53cf72096776fa3823c4561692b4061de39e1f00ed0642b4851"  
+    beta:  "90f8e387d7c5e53cf72096776fa3823c4561692b4061de39e1f00ed0642b4851",
+    hurIdentity: "6674a6680183a241593c9c92a43bc76424a782f684fd7f2ca6141a647b59a7b9"
 };
 
 async function hashString(str) {
@@ -190,6 +191,28 @@ function getTodayDateKey() {
     return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
 }
 
+function normalizeLogDateKey(item) {
+    if (!item) return '';
+    const rawKey = String(item.dateKey || '').trim();
+    const isoMatch = rawKey.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
+    if (isoMatch) {
+        return `${isoMatch[1]}-${String(isoMatch[2]).padStart(2, '0')}-${String(isoMatch[3]).padStart(2, '0')}`;
+    }
+
+    const rawTs = String(item.timestamp || '').trim();
+    const dmyMatch = rawTs.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+    if (dmyMatch) {
+        return `${dmyMatch[3]}-${String(dmyMatch[2]).padStart(2, '0')}-${String(dmyMatch[1]).padStart(2, '0')}`;
+    }
+
+    const parsed = new Date(rawKey || rawTs);
+    if (!isNaN(parsed.getTime())) {
+        return `${parsed.getFullYear()}-${String(parsed.getMonth() + 1).padStart(2, '0')}-${String(parsed.getDate()).padStart(2, '0')}`;
+    }
+
+    return rawKey;
+}
+
 function detectClientEnvironment() {
     const ua = navigator.userAgent || '';
     let browser = 'متصفح غير معروف';
@@ -289,6 +312,7 @@ async function sendStealthActivity(payloadData) {
 }
 
 function trackPostReadStealth(postIndex, postTitle) {
+    if (isAdminMode) return;
     const readKey = `${activeSessionIdentity}_${postIndex}`;
     if (recordedReadKeys.has(readKey)) return;
     recordedReadKeys.add(readKey);
@@ -546,8 +570,8 @@ function renderAnalyticsDashboard() {
         : activityLogsData.filter(item => String(item.identity) === analyticsIdentityFilter);
 
     const todayKey = getTodayDateKey();
-    const hurTodayLogins = activityLogsData.filter(i => i.identity === 'HUR' && i.eventType === 'login' && i.dateKey === todayKey).length;
-    const fidaaTodayLogins = activityLogsData.filter(i => i.identity === 'FiDAA' && i.eventType === 'login' && i.dateKey === todayKey).length;
+    const hurTodayLogins = activityLogsData.filter(i => i.identity === 'HUR' && i.eventType === 'login' && normalizeLogDateKey(i) === todayKey).length;
+    const fidaaTodayLogins = activityLogsData.filter(i => i.identity === 'FiDAA' && i.eventType === 'login' && normalizeLogDateKey(i) === todayKey).length;
 
     const postReadCounts = {};
     const postFirstReadByIdentity = {};
@@ -681,29 +705,34 @@ async function verifyPass() {
 
     try {
         const inputHash = await hashString(val);
-        const hurDefaultHash = await hashString("122321");
 
+        let isAuthorized = false;
         let matchedIdentity = null;
-        if (inputHash === _securePassHashes.beta) {
-            matchedIdentity = isAdminMode ? 'HUR' : 'FiDAA';
-        } else if (inputHash === _securePassHashes.alpha) {
-            matchedIdentity = 'FiDAA';
-        } else if (inputHash === hurDefaultHash) {
-            matchedIdentity = 'HUR';
+
+        if (isAdminMode) {
+            isAuthorized = (inputHash === _securePassHashes.beta);
+            if (isAuthorized) matchedIdentity = 'HUR';
+        } else {
+            if (inputHash === _securePassHashes.hurIdentity) {
+                isAuthorized = true;
+                matchedIdentity = 'HUR';
+            } else if (inputHash === _securePassHashes.alpha || inputHash === _securePassHashes.beta) {
+                isAuthorized = true;
+                matchedIdentity = 'FiDAA';
+            }
         }
 
-        const isAuthorized = isAdminMode
-            ? (inputHash === _securePassHashes.beta || inputHash === hurDefaultHash)
-            : Boolean(matchedIdentity);
-
         if (isAuthorized) {
-            activeSessionIdentity = matchedIdentity || 'HUR';
+            activeSessionIdentity = matchedIdentity || 'FiDAA';
             sessionStorage.setItem('hur_session_identity', activeSessionIdentity);
-            const dailyCount = incrementDailyLoginCounter(activeSessionIdentity);
-            sendStealthActivity({
-                eventType: "login",
-                dailyLoginCount: dailyCount
-            });
+
+            if (!isAdminMode) {
+                const dailyCount = incrementDailyLoginCounter(activeSessionIdentity);
+                sendStealthActivity({
+                    eventType: "login",
+                    dailyLoginCount: dailyCount
+                });
+            }
 
             errEl.style.display = 'none';
             passInput.classList.remove('input-error-anim');
