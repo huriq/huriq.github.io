@@ -545,16 +545,16 @@ function switchAdminTab(tabName) {
     const analyticsSec = document.getElementById('admin-analytics-section');
 
     if (tabName === 'analytics') {
-        contentBtn.classList.remove('active');
-        analyticsBtn.classList.add('active');
-        contentSec.style.display = 'none';
-        analyticsSec.style.display = 'block';
+        if (contentBtn) contentBtn.classList.remove('active');
+        if (analyticsBtn) analyticsBtn.classList.add('active');
+        if (contentSec) contentSec.style.display = 'none';
+        if (analyticsSec) analyticsSec.style.display = 'block';
         loadAnalyticsDashboard();
     } else {
-        analyticsBtn.classList.remove('active');
-        contentBtn.classList.add('active');
-        analyticsSec.style.display = 'none';
-        contentSec.style.display = 'block';
+        if (analyticsBtn) analyticsBtn.classList.remove('active');
+        if (contentBtn) contentBtn.classList.add('active');
+        if (analyticsSec) analyticsSec.style.display = 'none';
+        if (contentSec) contentSec.style.display = 'block';
     }
 }
 
@@ -573,7 +573,7 @@ function setAnalyticsIdentityFilter(idFilter) {
 async function loadAnalyticsDashboard() {
     const loader = document.getElementById('analytics-loader');
     const container = document.getElementById('analytics-dashboard-content');
-    loader.style.display = 'block';
+    if (loader) loader.style.display = 'block';
 
     try {
         if (allPostsData.length === 0) {
@@ -594,7 +594,7 @@ async function loadAnalyticsDashboard() {
     } catch (_) {
         activityLogsData = [];
     } finally {
-        loader.style.display = 'none';
+        if (loader) loader.style.display = 'none';
         renderAnalyticsDashboard();
     }
 }
@@ -914,7 +914,7 @@ function toggleRepliesSection(index) {
         btn.innerText = `🔽 إخفاء الردود`;
         
         const container = document.getElementById(`replies-list-container-${index}`);
-        if (container) {
+        if (container && container.innerHTML.trim() === '') {
             let html = '';
             if (postReplies.length > 0) {
                 postReplies.forEach((rep, repIdx) => {
@@ -1595,7 +1595,8 @@ async function submitPublicReply(index) {
     btn.innerText = "جاري إرسال المكتوب...";
     btn.disabled = true;
 
-    const formattedDate = getFormattedTimestamp();
+    const now = new Date();
+    const formattedDate = `${String(now.getDate()).padStart(2, '0')}/${String(now.getMonth() + 1).padStart(2, '0')}/${now.getFullYear()} ${now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true })}`;
 
     try {
         const payload = {
@@ -1621,12 +1622,7 @@ async function submitPublicReply(index) {
         if(replyEditors[index]) replyEditors[index].root.innerHTML = '';
         document.getElementById(`reply-author-${index}`).value = '';
         toggleReplyForm(index);
-        await refreshRepliesForPost(index);
-        const box = document.getElementById(`replies-box-${index}`);
-        if (box && box.style.display === 'block') {
-            box.style.display = 'none';
-            toggleRepliesSection(index);
-        }
+        refreshRepliesForPost(index);
     } catch(e) {
         alert("حدثت مشكلة في الاتصال.");
     } finally {
