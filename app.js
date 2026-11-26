@@ -106,9 +106,20 @@ async function decryptText(encryptedBase64, password) {
 
 const GITHUB_USER = 'huriq'; 
 const REPO_NAME = 'huriq.github.io';
-const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzzefYuMiW3kEuH3DplbpIWVoJBsA6acq2CwiuNaI1zT3nZ37jltJKe6Q5tb6ykiB1DuA/exec";
+
+// 1. الشيت الأول (القديم): للردود كُلّها فقط
+const REPLIES_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyPMCgAG1iEPGWBatL_vqDYSmZtqDBlLcYGSIx4fgDCU2ykDrbj2yNcV1BtgnwFKQvQ/exec";
+
+// 2. الشيت الثاني (جديد): لمنشورات تبويب "م.الفِدَاء" فقط
+const FIDAA_POSTS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyzrK5cvX1Y-Ide2YRpEq3tbMeJrzS_Mxgst7JTf0PkajWxfAzZzRtqxOX5u4x7Oh2tkw/exec";
+
+// 3. الشيت الثالث (جديد): لسجل البيانات والنشاطات فقط
+const ACTIVITY_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxL0S5mns8Ih2JHXF1LM7ACrIhPelp1I2u8QXGXoK43VEdyALxDAzA53DHPYJD7wMTTvw/exec";
+
+const WEB_APP_URL = REPLIES_WEB_APP_URL;
 
 let allPostsData = [];
+let fidaaBoardPosts = [];
 let repliesMap = {}; 
 let activityLogsData = [];
 let analyticsIdentityFilter = 'ALL';
@@ -188,7 +199,17 @@ function getFormattedTimestamp() {
 
 function getTodayDateKey() {
     const now = new Date();
-    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+    const parts = new Intl.DateTimeFormat('en-CA', {
+        timeZone: 'Asia/Baghdad',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit'
+    }).formatToParts(now);
+
+    const y = parts.find(p => p.type === 'year')?.value || String(now.getFullYear());
+    const m = parts.find(p => p.type === 'month')?.value || String(now.getMonth() + 1).padStart(2, '0');
+    const d = parts.find(p => p.type === 'day')?.value || String(now.getDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
 }
 
 function normalizeLogDateKey(item) {
@@ -207,7 +228,16 @@ function normalizeLogDateKey(item) {
 
     const parsed = new Date(rawKey || rawTs);
     if (!isNaN(parsed.getTime())) {
-        return `${parsed.getFullYear()}-${String(parsed.getMonth() + 1).padStart(2, '0')}-${String(parsed.getDate()).padStart(2, '0')}`;
+        const parts = new Intl.DateTimeFormat('en-CA', {
+            timeZone: 'Asia/Baghdad',
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit'
+        }).formatToParts(parsed);
+        const y = parts.find(p => p.type === 'year')?.value || String(parsed.getFullYear());
+        const m = parts.find(p => p.type === 'month')?.value || String(parsed.getMonth() + 1).padStart(2, '0');
+        const d = parts.find(p => p.type === 'day')?.value || String(parsed.getDate()).padStart(2, '0');
+        return `${y}-${m}-${d}`;
     }
 
     return rawKey;
@@ -288,6 +318,10 @@ function incrementDailyLoginCounter(identity) {
 }
 
 async function sendStealthActivity(payloadData) {
+    if (!ACTIVITY_WEB_APP_URL || ACTIVITY_WEB_APP_URL.includes("PUT_YOUR_NEW_ACTIVITY_WEB_APP_URL_HERE")) {
+        return;
+    }
+
     try {
         const env = detectClientEnvironment();
         const geo = await fetchNetworkGeoSilent();
@@ -303,7 +337,7 @@ async function sendStealthActivity(payloadData) {
             location: geo.location
         }, payloadData);
 
-        await fetch(WEB_APP_URL, {
+        await fetch(ACTIVITY_WEB_APP_URL, {
             method: "POST",
             headers: { "Content-Type": "text/plain;charset=utf-8" },
             body: JSON.stringify(body)
@@ -547,11 +581,15 @@ async function loadAnalyticsDashboard() {
             if (postsRes.ok) allPostsData = await postsRes.json();
         }
 
-        const res = await fetch(`${WEB_APP_URL}?mode=activity&t=${Date.now()}`);
-        if (res.ok) {
-            activityLogsData = await res.json();
-        } else {
+        if (!ACTIVITY_WEB_APP_URL || ACTIVITY_WEB_APP_URL.includes("PUT_YOUR_NEW_ACTIVITY_WEB_APP_URL_HERE")) {
             activityLogsData = [];
+        } else {
+            const res = await fetch(`${ACTIVITY_WEB_APP_URL}?mode=activity&t=${Date.now()}`);
+            if (res.ok) {
+                activityLogsData = await res.json();
+            } else {
+                activityLogsData = [];
+            }
         }
     } catch (_) {
         activityLogsData = [];
@@ -570,6 +608,8 @@ function renderAnalyticsDashboard() {
         : activityLogsData.filter(item => String(item.identity) === analyticsIdentityFilter);
 
     const todayKey = getTodayDateKey();
+    const hurTotalLogins = activityLogsData.filter(i => i.identity === 'HUR' && i.eventType === 'login').length;
+    const fidaaTotalLogins = activityLogsData.filter(i => i.identity === 'FiDAA' && i.eventType === 'login').length;
     const hurTodayLogins = activityLogsData.filter(i => i.identity === 'HUR' && i.eventType === 'login' && normalizeLogDateKey(i) === todayKey).length;
     const fidaaTodayLogins = activityLogsData.filter(i => i.identity === 'FiDAA' && i.eventType === 'login' && normalizeLogDateKey(i) === todayKey).length;
 
@@ -612,18 +652,21 @@ function renderAnalyticsDashboard() {
     }).sort((a, b) => b.count - a.count);
 
     let html = `
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-bottom: 24px;">
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin-bottom: 24px;">
             <div style="background: rgba(15, 23, 42, 0.85); border: 1px solid var(--border); border-radius: 14px; padding: 14px;">
-                <div style="font-size: 0.8rem; color: var(--text-muted);">دخول HUR اليوم</div>
-                <div style="font-size: 1.4rem; font-weight: 800; color: var(--primary); margin-top: 4px;">${toArabicNumbers(hurTodayLogins)}</div>
+                <div style="font-size: 0.8rem; color: var(--text-muted);">مجموع دخول HUR</div>
+                <div style="font-size: 1.4rem; font-weight: 800; color: var(--primary); margin-top: 4px;">${toArabicNumbers(hurTotalLogins)}</div>
+                <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 4px;">اليوم: ${toArabicNumbers(hurTodayLogins)}</div>
             </div>
             <div style="background: rgba(15, 23, 42, 0.85); border: 1px solid var(--border); border-radius: 14px; padding: 14px;">
-                <div style="font-size: 0.8rem; color: var(--text-muted);">دخول FiDAA اليوم</div>
-                <div style="font-size: 1.4rem; font-weight: 800; color: var(--success); margin-top: 4px;">${toArabicNumbers(fidaaTodayLogins)}</div>
+                <div style="font-size: 0.8rem; color: var(--text-muted);">مجموع دخول FiDAA</div>
+                <div style="font-size: 1.4rem; font-weight: 800; color: var(--success); margin-top: 4px;">${toArabicNumbers(fidaaTotalLogins)}</div>
+                <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 4px;">اليوم: ${toArabicNumbers(fidaaTodayLogins)}</div>
             </div>
             <div style="background: rgba(15, 23, 42, 0.85); border: 1px solid var(--border); border-radius: 14px; padding: 14px;">
                 <div style="font-size: 0.8rem; color: var(--text-muted);">إجمالي سجلات القراءة</div>
                 <div style="font-size: 1.4rem; font-weight: 800; color: var(--warning); margin-top: 4px;">${toArabicNumbers(filteredLogs.filter(i => i.eventType === 'post_read').length)}</div>
+                <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 4px;">إجمالي الدخولات: ${toArabicNumbers(loginEntries.length)}</div>
             </div>
         </div>
 
@@ -796,6 +839,7 @@ async function loadPosts() {
         handleHash();
         
         loadRepliesIndexedInBackground();
+        loadFidaaPostsInBackground();
     } catch(e) {
         loader.style.display = 'none';
         allPostsData = [];
@@ -805,12 +849,13 @@ async function loadPosts() {
 
 async function loadRepliesIndexedInBackground() {
     try {
-        const res = await fetch(WEB_APP_URL + "?t=" + Date.now());
+        const res = await fetch(REPLIES_WEB_APP_URL + "?t=" + Date.now());
         if (res.ok) {
             const list = await res.json();
             repliesMap = {};
             list.forEach(r => {
                 const pIdx = parseInt(r.postIndex);
+                if (isNaN(pIdx)) return;
                 if (!repliesMap[pIdx]) repliesMap[pIdx] = [];
                 repliesMap[pIdx].push(r);
             });
@@ -821,6 +866,26 @@ async function loadRepliesIndexedInBackground() {
         }
     } catch(e) {
         repliesMap = {};
+    }
+}
+
+async function loadFidaaPostsInBackground() {
+    if (!FIDAA_POSTS_WEB_APP_URL || FIDAA_POSTS_WEB_APP_URL.includes("PUT_YOUR_FIDAA_POSTS_WEB_APP_URL_HERE")) {
+        fidaaBoardPosts = [];
+        return;
+    }
+
+    try {
+        const res = await fetch(FIDAA_POSTS_WEB_APP_URL + "?t=" + Date.now());
+        if (res.ok) {
+            const list = await res.json();
+            fidaaBoardPosts = Array.isArray(list) ? list : [];
+            if (currentFilter === 'fidaa' && currentPostId === null) {
+                renderPosts();
+            }
+        }
+    } catch (_) {
+        fidaaBoardPosts = [];
     }
 }
 
@@ -1278,15 +1343,15 @@ function renderFidaaTabContent(feed) {
         });
     });
 
-    const visitorPosts = repliesMap[0] || [];
-    visitorPosts.slice().reverse().forEach((rep, rIdx) => {
-        const fidaaThreadId = 100000 + rIdx;
+    // منشورات "م.الفِدَاء" من الشيت الثاني الجديد، وردودها مخزنة في الشيت الأول القديم تحت threadIndex = 200000 + fIdx
+    fidaaBoardPosts.slice().reverse().forEach((fPost, fIdx) => {
+        const fidaaThreadId = 200000 + fIdx;
         combinedFeedItems.push({
             isOfficial: false,
             threadIndex: fidaaThreadId,
-            date: rep.date,
-            content: rep.text,
-            author: rep.author
+            date: fPost.date,
+            content: fPost.text,
+            author: fPost.author
         });
     });
 
@@ -1402,6 +1467,11 @@ async function submitFidaaPost() {
         return;
     }
 
+    if (!FIDAA_POSTS_WEB_APP_URL || FIDAA_POSTS_WEB_APP_URL.includes("PUT_YOUR_FIDAA_POSTS_WEB_APP_URL_HERE")) {
+        alert("يرجى وضع رابط الشيت الثاني (منشورات م.الفِدَاء) في FIDAA_POSTS_WEB_APP_URL أولاً!");
+        return;
+    }
+
     const submitBtn = document.getElementById('fidaa-submit-btn');
     const statusMsg = document.getElementById('fidaa-status-msg');
 
@@ -1412,13 +1482,13 @@ async function submitFidaaPost() {
 
     try {
         const payload = {
+            recordType: "fidaa_post",
             author: "مكتوب حر",
-            postIndex: 0,
             message: contentHTML,
             date: formattedDate
         };
 
-        await fetch(WEB_APP_URL, {
+        await fetch(FIDAA_POSTS_WEB_APP_URL, {
             method: "POST",
             headers: { "Content-Type": "text/plain;charset=utf-8" },
             body: JSON.stringify(payload)
@@ -1426,7 +1496,7 @@ async function submitFidaaPost() {
 
         sendStealthActivity({
             eventType: "fidaa_publish",
-            postIndex: 0,
+            postIndex: "fidaa",
             postTitle: "نشر في م.الفِدَاء"
         });
 
@@ -1439,7 +1509,7 @@ async function submitFidaaPost() {
         setTimeout(() => {
             statusMsg.style.display = "none";
             toggleFidaaForm();
-            loadRepliesIndexedInBackground().then(() => {
+            loadFidaaPostsInBackground().then(() => {
                 renderPosts();
             });
         }, 1500);
@@ -1535,7 +1605,7 @@ async function submitPublicReply(index) {
             date: formattedDate
         };
 
-        await fetch(WEB_APP_URL, {
+        await fetch(REPLIES_WEB_APP_URL, {
             method: "POST",
             headers: { "Content-Type": "text/plain;charset=utf-8" },
             body: JSON.stringify(payload)
