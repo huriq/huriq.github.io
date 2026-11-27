@@ -812,8 +812,8 @@ async function verifyPass() {
                         document.getElementById('content-area').style.display = 'block';
                         loadPosts();
                     }
-                }, 2007);
-            }, 555);
+                }, 4000);
+            }, 600);
 
         } else {
             passInput.classList.remove('input-success-glow');
@@ -899,17 +899,6 @@ function updateAllRenderedRepliesCount() {
     });
 }
 
-function applyPostBodyFontToReplies(container) {
-    if (!container) return;
-    const postBodyRef = document.querySelector('.post-body');
-    const refFont = postBodyRef ? window.getComputedStyle(postBodyRef).fontFamily : '';
-    container.querySelectorAll('.reply-text').forEach(el => {
-        if (refFont) {
-            el.style.fontFamily = refFont;
-        }
-    });
-}
-
 function toggleRepliesSection(index) {
     const box = document.getElementById(`replies-box-${index}`);
     const btn = document.getElementById(`replies-toggle-btn-${index}`);
@@ -925,7 +914,7 @@ function toggleRepliesSection(index) {
         btn.innerText = `🔽 إخفاء الردود`;
         
         const container = document.getElementById(`replies-list-container-${index}`);
-        if (container && container.innerHTML.trim() === '') {
+        if (container) {
             let html = '';
             if (postReplies.length > 0) {
                 postReplies.forEach((rep, repIdx) => {
@@ -945,7 +934,6 @@ function toggleRepliesSection(index) {
                 html = `<p style="color:var(--text-muted); font-size:0.85rem; text-align:center; padding:10px;">لا توجد ردود حتى الآن.</p>`;
             }
             container.innerHTML = html;
-            applyPostBodyFontToReplies(container);
         }
     }
 }
@@ -1607,8 +1595,7 @@ async function submitPublicReply(index) {
     btn.innerText = "جاري إرسال المكتوب...";
     btn.disabled = true;
 
-    const now = new Date();
-    const formattedDate = `${String(now.getDate()).padStart(2, '0')}/${String(now.getMonth() + 1).padStart(2, '0')}/${now.getFullYear()} ${now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true })}`;
+    const formattedDate = getFormattedTimestamp();
 
     try {
         const payload = {
@@ -1634,7 +1621,12 @@ async function submitPublicReply(index) {
         if(replyEditors[index]) replyEditors[index].root.innerHTML = '';
         document.getElementById(`reply-author-${index}`).value = '';
         toggleReplyForm(index);
-        refreshRepliesForPost(index);
+        await refreshRepliesForPost(index);
+        const box = document.getElementById(`replies-box-${index}`);
+        if (box && box.style.display === 'block') {
+            box.style.display = 'none';
+            toggleRepliesSection(index);
+        }
     } catch(e) {
         alert("حدثت مشكلة في الاتصال.");
     } finally {
